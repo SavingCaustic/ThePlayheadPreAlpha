@@ -7,6 +7,7 @@
 #include "drivers/MidiDriver.h"
 #include <atomic>
 #include <chrono>
+#include <filesystem> // C++17 for checking if files exist
 #include <iostream>
 #include <thread>
 
@@ -28,6 +29,23 @@ PlayerEngine *rtPlayerEngine; // Global pointer to PlayerEngine
 AudioDriver *hAudioDriver;
 MidiDriver *hMidiDriver;
 
+bool ends_with(const std::string &str, const std::string &suffix) {
+    return str.size() >= suffix.size() &&
+           str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+std::string load_file_content(const std::string &filepath) {
+    std::ifstream file(filepath);
+
+    if (!file) {
+        return ""; // Return empty string if file not found
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf(); // Load the whole file into the stringstream
+    return buffer.str();
+}
+
 // Entry point of the program
 int main() {
     // Initialize the global PlayerEngine instance
@@ -43,6 +61,35 @@ int main() {
 
     CROW_ROUTE(api, "/")
     ([]() { return crow::response(200, "PLAYHEAD AUDIO SERVER"); });
+
+    namespace fs = std::filesystem;
+
+    CROW_ROUTE(api, "/fe/<string>")
+    ([](const std::string &filename) {
+        std::string filepath = "assets/fe/" + filename;
+
+        // Check if file exists
+        if (fs::exists(filepath)) {
+            std::string fileContent = load_file_content(filepath);
+
+            // Determine file type based on extension
+            std::string contentType = "text/plain";
+            if (ends_with(filename, ".html")) {
+                contentType = "text/html";
+            } else if (ends_with(filename, ".css")) {
+                contentType = "text/css";
+            } else if (ends_with(filename, ".js")) {
+                contentType = "application/javascript";
+            }
+            crow::response res;
+            res.code = 200;
+            res.set_header("Content-Type", contentType);
+            res.write(fileContent);
+            return res;
+        } else {
+            return crow::response(404, "File not found");
+        }
+    });
 
     CROW_ROUTE(api, "/shutdown")
     ([]() {
@@ -84,14 +131,14 @@ int main() {
 
     CROW_ROUTE(api, "/test/pe/ping")
     ([]() {
-        //rtPlayerEngine->ping();
-        hMidiDriver->playerPing();
+        rtPlayerEngine->ping();
+        //hMidiDriver->playerPing();
         return crow::response(200, "Ping sent from PlayerEngine"); });
 
     CROW_ROUTE(api, "/test/pe/rackSetup")
     ([]() {
-        //rtPlayerEngine->ping();
-        hMidiDriver->playerSynthSetup();
+        rtPlayerEngine->testRackSetup();
+        //hMidiDriver->playerSynthSetup();
         return crow::response(200, "Test synth setup"); });
 
     /*
@@ -126,7 +173,7 @@ int main() {
     while (!shutdown_flag.load()) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         if (DEBUG_MODE) {
-            std::cout << "sanity check.." << std::endl;
+            std::cout << "sc.. ";
         }
     }
 
