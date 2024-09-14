@@ -1,0 +1,1 @@
+READONLY directory with assets for synths etc.
