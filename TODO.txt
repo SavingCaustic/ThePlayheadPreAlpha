@@ -1,0 +1,9 @@
+* having the render-function of playerEngine being similar to php mock
+* being able to load something into a rack, like a drum machine
+* being able to load an eventor into a rack, like a ocatver or anything
+* being able to load an effect into a rack, like delay
+* So, essentialy - we wait with timing.. 
+* Maybe have an static AudioMath class, with a LUT-table of a sine.
+
+DONE:
+* Rotator

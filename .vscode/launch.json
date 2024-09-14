@@ -1,0 +1,57 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug myDaw",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/myDaw2",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "CMake: build Debug",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "logging": {
+                "moduleLoad": false,
+                "trace": false
+            },
+            "visualizerFile": "${workspaceFolder}/.vscode/gdb_visualizer.json"
+        },
+        {
+            "name": "Release myDaw",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/myDaw2",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "CMake: build Release",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "logging": {
+                "moduleLoad": false,
+                "trace": false
+            },
+            "visualizerFile": "${workspaceFolder}/.vscode/gdb_visualizer.json"
+        }
+    ]
+}
