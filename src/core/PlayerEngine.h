@@ -19,6 +19,8 @@ class PlayerEngine {
 
     void reset();
     void doReset();
+    void ping();
+    void testRackSetup();
 
     bool setupRackWithSynth(int rackId, const std::string &synthName);
     bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
@@ -31,11 +33,15 @@ class PlayerEngine {
     void clockResetMethod();
     bool pollMidiIn();
     void turnRackAndRender();
-    void sumToMaster(float *buffer, int outer);
+    void sumToMaster(float *buffer, unsigned long numFrames, int outer);
 
     std::array<std::unique_ptr<Rack>, MAX_RACKS> racks; // Fixed-size array of unique pointers to racks
     float noiseVolume;
     Rotator hRotator;        // Rotator object
     bool clockReset = false; // Clock reset flag
     bool isPlaying = false;  // Indicates if the player is currently playing
+    bool midiMultiMode = false;
+    int rackInFocus = 0;
+    std::vector<unsigned char> midiInMsg;
+    double midiInTS;
 };

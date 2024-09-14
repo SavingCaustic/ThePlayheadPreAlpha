@@ -22,7 +22,7 @@ std::atomic<bool> shutdown_flag(false);
 // Define and initialize the static variables outside the class
 int AudioDriver::gNumNoInputs = 0;
 double AudioDriver::vol = 0.7;
-PlayerEngine *rtPlayerEngine = nullptr; // Global pointer to PlayerEngine
+PlayerEngine *rtPlayerEngine; // Global pointer to PlayerEngine
 
 // Global instances of drivers
 AudioDriver *hAudioDriver;
@@ -30,12 +30,13 @@ MidiDriver *hMidiDriver;
 
 // Entry point of the program
 int main() {
-    // Create instances of PlayerEngine and drivers
-    PlayerEngine rtPlayerEngine;
-    rtPlayerEngine.doReset(); // Initialize the player engine
+    // Initialize the global PlayerEngine instance
+    rtPlayerEngine = new PlayerEngine();
+    // rtPlayerEngine->doReset(); // Initialize the player engine
 
-    hAudioDriver = new AudioDriver(&rtPlayerEngine);
-    hMidiDriver = new MidiDriver(&rtPlayerEngine);
+    // Initialize global drivers
+    hAudioDriver = new AudioDriver(rtPlayerEngine);
+    hMidiDriver = new MidiDriver(rtPlayerEngine);
 
     // Create and start the Crow app
     crow::SimpleApp api;
@@ -81,24 +82,41 @@ int main() {
         hMidiDriver->stop();
         return crow::response(200, "Midi stopped successfully"); });
 
-    /*
-    CROW_ROUTE(api, "/racks/<int>/setup")
-        .methods(crow::HTTPMethod::GET)([&rtPlayerEngine](int rackId, crow::request &req) {
-            auto synthType = req.url_params.get("synth");
-            if (synthType) {
-                std::string synthName(synthType);
+    CROW_ROUTE(api, "/test/pe/ping")
+    ([]() {
+        //rtPlayerEngine->ping();
+        hMidiDriver->playerPing();
+        return crow::response(200, "Ping sent from PlayerEngine"); });
 
-                // Call PlayerEngine method to handle rack setup
-                bool result = rtPlayerEngine.setupRackWithSynth(rackId, synthName);
-                if (result) {
-                    return crow::response(200, "Synth set up successfully.");
+    CROW_ROUTE(api, "/test/pe/rackSetup")
+    ([]() {
+        //rtPlayerEngine->ping();
+        hMidiDriver->playerSynthSetup();
+        return crow::response(200, "Test synth setup"); });
+
+    /*
+        // Endpoint to setup rack with synth
+        CROW_ROUTE(api, "/racks/<int>/setup")
+            .methods(crow::HTTPMethod::GET)([](int rackId, const crow::request &req) {
+                auto synthType = req.url_params.get("synth");
+                if (synthType) {
+                    std::string synthName(synthType);
+
+                    // Call PlayerEngine method to handle rack setup
+                    if (rtPlayerEngine) { // Check if rtPlayerEngine is valid
+                        bool result = rtPlayerEngine->setupRackWithSynth(rackId, synthName);
+                        if (result) {
+                            return crow::response(200, "Synth set up successfully.");
+                        } else {
+                            return crow::response(400, "Failed to set up synth.");
+                        }
+                    } else {
+                        return crow::response(500, "PlayerEngine instance is not initialized.");
+                    }
                 } else {
-                    return crow::response(400, "Failed to set up synth.");
+                    return crow::response(400, "Missing 'synth' parameter.");
                 }
-            } else {
-                return crow::response(400, "Missing 'synth' parameter.");
-            }
-        });
+            });
     */
 
     // Run the server in a separate thread
@@ -125,6 +143,7 @@ int main() {
     // Cleanup
     delete hAudioDriver;
     delete hMidiDriver;
+    delete rtPlayerEngine;
 
     std::cout << "Server stopped gracefully." << std::endl;
     return 0;

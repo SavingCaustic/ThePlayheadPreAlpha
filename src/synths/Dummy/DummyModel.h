@@ -28,5 +28,6 @@ class DummyModel : public SynthInterface {
 
   private:
     Rack &rack;
-    std::array<float, TPH_RACK_RENDER_SIZE> &buffer; // Use std::array to match Rack's audioBuffer type
+    std::array<float, TPH_RACK_BUFFER_SIZE> &buffer; // Use std::array to match Rack's audioBuffer type
+    float noiseVolume = 0.2;
 };

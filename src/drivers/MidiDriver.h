@@ -67,6 +67,16 @@ class MidiDriver {
         }
     }
 
+    void playerPing() {
+        // this is just a temp test since we can't reach playerEngine direcly in main.cpp
+        playerEngine->ping();
+    }
+
+    void playerSynthSetup() {
+        // same here - this should not be here but it's just a mock since the real deal isn't working.
+        playerEngine->testRackSetup();
+    }
+
   private:
     static void midiCallback(double deltatime, std::vector<unsigned char> *message, void *userData) {
         MidiDriver *driver = static_cast<MidiDriver *>(userData);

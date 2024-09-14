@@ -1,3 +1,12 @@
+* we need to focus a rack somehow. Else we can't redirect the midi and possibly parameter settings to the right rack.
+* ok, so PlayerEngine possibly have the attribute rackFocus = N
+And that means that midi messages will be read when *that* rack is being rendered, right?
+Doesn't matter an awful lot, for multitibrality we *could* also read midi and call NoteOn etc before the rack is
+being called. Wouldn't matter. So then each rack has its channel. Is that what we're testing?
+But we probably still need rackInFocus = 0-9
+and midiMultiMode = true / false
+
+
 * having the render-function of playerEngine being similar to php mock
 * being able to load something into a rack, like a drum machine
 * being able to load an eventor into a rack, like a ocatver or anything

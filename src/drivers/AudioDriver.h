@@ -92,7 +92,7 @@ class AudioDriver {
         AudioDriver *driver = static_cast<AudioDriver *>(userData);
         if (driver && driver->rtPlayerEngine) {
             float *buffer = static_cast<float *>(outputBuffer);
-            driver->rtPlayerEngine->render(buffer, framesPerBuffer);
+            driver->rtPlayerEngine->renderNextBlock(buffer, framesPerBuffer);
         }
         return paContinue;
     }

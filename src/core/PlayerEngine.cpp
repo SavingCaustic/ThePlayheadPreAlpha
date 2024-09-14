@@ -11,17 +11,30 @@ void PlayerEngine::reset() {
     noiseVolume = 0.2f;
 }
 
+void PlayerEngine::ping() {
+    std::cout << "ping from player engine" << std::endl;
+}
+
 void PlayerEngine::doReset() {
     std::cout << "Resetting player engine" << std::endl;
     reset(); // Calls the instance method
 }
 
+void PlayerEngine::testRackSetup() {
+    this->setupRackWithSynth(0, "Dummy");
+}
+
 bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) {
-    auto rack = getRack(rackId);
-    if (rack) {
-        return rack->setSynth(synthName);
+    // Check if the rack already exists
+    auto &rackPtr = racks[rackId];
+    std::cout << "setting up rack with synth now" << std::endl;
+    if (!rackPtr) {
+        // Create a new Rack if it doesn't exist
+        rackPtr = std::make_unique<Rack>(*this);
     }
-    return false; // Rack not found
+    rackPtr->setSynth(synthName);
+    //  Now, setup the synth for the rack
+    return false;
 }
 
 bool PlayerEngine::loadRack(std::unique_ptr<Rack> rack, std::size_t position) {
@@ -40,6 +53,7 @@ Rack *PlayerEngine::getRack(std::size_t position) const {
 }
 
 void PlayerEngine::render(float *buffer, unsigned long numFrames) {
+    // not used
     for (unsigned long i = 0; i < numFrames; ++i) {
         *buffer++ = noiseVolume * (((float)rand() / RAND_MAX) * 2.0f - 1.0f);
         *buffer++ = noiseVolume * (((float)rand() / RAND_MAX) * 2.0f - 1.0f);
@@ -61,7 +75,33 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     for (int outer = 0; outer < outerCnt; ++outer) {
         pollMidiIn();
         turnRackAndRender();
-        // sumToMaster(&buffer, numFrames, outer);
+        // sumToMaster(buffer, numFrames, outer);
+        // temporary fix:
+        int offset;
+        offset = outer * 2 * TPH_RACK_RENDER_SIZE;
+        for (std::size_t i = 0; i < MAX_RACKS; ++i) {
+            if (racks[i]) { // Check if the rack is initialized (i.e., not null)
+                for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE * 2; sample += 2) {
+                    *(buffer + offset + sample) = racks[i]->audioBuffer[sample];
+                    *(buffer + offset + sample + 1) = racks[i]->audioBuffer[sample + 1];
+                    //*(buffer + offset + sample) = 0.3 * (((float)rand() / RAND_MAX) * 2.0f - 1.0f);
+                    //*(buffer + offset + sample + 1) = 0.5 * (((float)rand() / RAND_MAX) * 2.0f - 1.0f);
+                }
+            }
+        }
+    }
+}
+
+void PlayerEngine::sumToMaster(float *buffer, unsigned long numFrames, int outer) {
+    // this isn't working strangely..
+    int offset = outer * 2 * TPH_RACK_RENDER_SIZE; // Offset in the master buffer
+    for (std::size_t i = 0; i < MAX_RACKS; ++i) {
+        if (racks[i]) { // Check if the rack is initialized (i.e., not null)
+            for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE * 2; sample += 2) {
+                buffer[offset + sample] += racks[i]->audioBuffer[sample];
+                buffer[offset + sample + 1] += racks[i]->audioBuffer[sample + 1];
+            }
+        }
     }
 }
 
@@ -78,8 +118,18 @@ void PlayerEngine::clockResetMethod() {
 }
 
 bool PlayerEngine::pollMidiIn() {
-    // Poll MIDI input and forward to appropriate rack
     return false; // Placeholder return value
+    /*
+    midiInTS = midiIn.getMessage(&midiInMsg);
+    // If there's a message available
+    if (!midiInMsg.empty()) {
+        std::cout << "Received MIDI message: ";
+        for (unsigned char byte : midiInMsg) {
+            std::cout << (int)byte << " ";
+        }
+        std::cout << std::endl;
+    }
+    */
 }
 
 void PlayerEngine::turnRackAndRender() {
@@ -92,18 +142,6 @@ void PlayerEngine::turnRackAndRender() {
             }
 
             racks[i]->render(1); // Call render
-        }
-    }
-}
-
-void PlayerEngine::sumToMaster(float *buffer, int outer) {
-    int offset = outer * 2 * TPH_RACK_RENDER_SIZE; // Offset in the master buffer
-    for (std::size_t i = 0; i < MAX_RACKS; ++i) {
-        if (racks[i]) { // Check if the rack is initialized (i.e., not null)
-            for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE * 2; sample += 2) {
-                buffer[offset + sample] += racks[i]->audioBuffer[sample];
-                buffer[offset + sample + 1] += racks[i]->audioBuffer[sample + 1];
-            }
         }
     }
 }
