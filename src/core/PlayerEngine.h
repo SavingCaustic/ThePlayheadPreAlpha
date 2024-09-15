@@ -1,7 +1,8 @@
 #pragma once
 
+#include "../drivers/MidiDriver.h"
 #include "Rack.h"
-#include "Rotator.h"
+#include "timing/Rotator.h"
 #include <array>
 #include <chrono>
 #include <iostream>
@@ -22,6 +23,8 @@ class PlayerEngine {
     void ping();
     void testRackSetup();
 
+    void midiEnable(MidiDriver *midiDriver);
+    void midiDisable();
     bool setupRackWithSynth(int rackId, const std::string &synthName);
     bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
     Rack *getRack(std::size_t position) const;
@@ -40,8 +43,9 @@ class PlayerEngine {
     Rotator hRotator;        // Rotator object
     bool clockReset = false; // Clock reset flag
     bool isPlaying = false;  // Indicates if the player is currently playing
-    bool midiMultiMode = false;
-    int rackInFocus = 0;
+    MidiDriver *hMidiDriver = nullptr;
+    bool midiMultiMode = false; // true if midiCh should be directed to respective rack
+    int rackInFocus = 0;        // number of rack in focus. What if no rack in focus?
     std::vector<unsigned char> midiInMsg;
-    double midiInTS;
+    double midiInTS; // probably not used, we use it when we get it.
 };

@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_executable(myDaw2
     src/main.cpp
     src/constants.cpp
-    src/core/Rotator.cpp
+    src/core/timing/Rotator.cpp
     src/core/PlayerEngine.cpp
     src/synths/Dummy/DummyModel.cpp
     # Add other source files here

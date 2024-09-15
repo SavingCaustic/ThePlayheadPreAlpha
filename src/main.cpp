@@ -1,7 +1,8 @@
 #include "constants.h"
-#include "core/AudioMath.h"
+#include "core/ErrorLogger.h"
 #include "core/PlayerEngine.h"
 #include "core/Rack.h"
+#include "core/audio/AudioMath.h"
 #include "crow.h"
 #include "drivers/AudioDriver.h"
 #include "drivers/MidiDriver.h"
@@ -49,12 +50,12 @@ std::string load_file_content(const std::string &filepath) {
 // Entry point of the program
 int main() {
     // Initialize the global PlayerEngine instance
+    hMidiDriver = new MidiDriver();
     rtPlayerEngine = new PlayerEngine();
     // rtPlayerEngine->doReset(); // Initialize the player engine
 
     // Initialize global drivers
     hAudioDriver = new AudioDriver(rtPlayerEngine);
-    hMidiDriver = new MidiDriver(rtPlayerEngine);
 
     // Create and start the Crow app
     crow::SimpleApp api;
@@ -101,6 +102,7 @@ int main() {
     ([]() {
         hAudioDriver->start();
         hMidiDriver->start();
+        rtPlayerEngine->midiEnable(hMidiDriver);
         return crow::response(200, "Services started");
     });
 
@@ -122,10 +124,13 @@ int main() {
     CROW_ROUTE(api, "/device/midi/doStart")
     ([]() {
         hMidiDriver->start();
+        //also connect it to player engine..
+        rtPlayerEngine->midiEnable(hMidiDriver);
         return crow::response(200, "Midi started successfully"); });
 
     CROW_ROUTE(api, "/device/midi/doStop")
     ([]() {
+        rtPlayerEngine->midiDisable();
         hMidiDriver->stop();
         return crow::response(200, "Midi stopped successfully"); });
 

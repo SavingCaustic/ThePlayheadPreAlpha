@@ -11,6 +11,14 @@ void PlayerEngine::reset() {
     noiseVolume = 0.2f;
 }
 
+void PlayerEngine::midiEnable(MidiDriver *midiDriver) {
+    this->hMidiDriver = midiDriver;
+}
+
+void PlayerEngine::midiDisable() {
+    this->hMidiDriver = nullptr;
+}
+
 void PlayerEngine::ping() {
     std::cout << "ping from player engine" << std::endl;
 }
@@ -73,7 +81,7 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     }
     int outerCnt = TPH_AUDIO_BUFFER_SIZE / TPH_RACK_RENDER_SIZE;
     for (int outer = 0; outer < outerCnt; ++outer) {
-        pollMidiIn();
+        pollMidiIn(); // large audio buffers is bad for midi-in accuracy. Fly low.
         turnRackAndRender();
         // sumToMaster(buffer, numFrames, outer);
         // temporary fix:
@@ -118,18 +126,20 @@ void PlayerEngine::clockResetMethod() {
 }
 
 bool PlayerEngine::pollMidiIn() {
-    return false; // Placeholder return value
-    /*
-    midiInTS = midiIn.getMessage(&midiInMsg);
-    // If there's a message available
-    if (!midiInMsg.empty()) {
-        std::cout << "Received MIDI message: ";
-        for (unsigned char byte : midiInMsg) {
-            std::cout << (int)byte << " ";
+    return false;
+    if (hMidiDriver) {
+        bool test = false; // hMidiDriver->getMessage(midiInMsg); // Pass by reference
+        // If there's a message available
+        if (!midiInMsg.empty()) {
+            std::cout << "Received MIDI message: ";
+            for (unsigned char byte : midiInMsg) {
+                std::cout << static_cast<int>(byte) << " ";
+            }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
+        return test; // Return the result of getMessage
     }
-    */
+    return false; // Return false if hMidiDriver is nullptr
 }
 
 void PlayerEngine::turnRackAndRender() {

@@ -1,21 +1,33 @@
-#include "../core/PlayerEngine.h"
+#pragma once
+#include <atomic>
+#include <iostream>
 #include <rtmidi/RtMidi.h>
+#include <vector>
+
+struct MidiMessage {
+    uint8_t cmd;
+    uint8_t param1;
+    uint8_t param2;
+
+    MidiMessage(uint8_t c = 0, uint8_t p1 = 0, uint8_t p2 = 0)
+        : cmd(c), param1(p1), param2(p2) {}
+};
 
 class MidiDriver {
   public:
-    // Constructor accepting a PlayerEngine instance
-    MidiDriver(PlayerEngine *engine) : midiIn(nullptr), is_running(false), playerEngine(engine) {}
+    static constexpr size_t BufferSize = 64; // Fixed buffer size
+
+    MidiDriver() : midiIn(nullptr), is_running(false), bufferWriteIndex(0), bufferReadIndex(0),
+                   midiInState(0), midiInCmd(0), midiInP1(0), midiInLength(0) {}
 
     ~MidiDriver() {
         stop();
     }
 
-    // Start the MIDI input service
     bool start() {
         try {
             midiIn = new RtMidiIn(RtMidi::Api::LINUX_ALSA);
 
-            // Check available ports
             unsigned int nPorts = midiIn->getPortCount();
             if (nPorts == 0) {
                 std::cerr << "No MIDI ports available!" << std::endl;
@@ -24,7 +36,6 @@ class MidiDriver {
                 return false;
             }
 
-            // Find the port that matches your MIDI device
             std::string deviceName = "Impact LX25+";
             unsigned int selectedPort = -1;
             for (unsigned int i = 0; i < nPorts; i++) {
@@ -41,10 +52,7 @@ class MidiDriver {
                 return false;
             }
 
-            // Open the selected port
             midiIn->openPort(selectedPort);
-
-            // Set the callback function
             midiIn->setCallback(&MidiDriver::midiCallback, this);
 
             is_running = true;
@@ -56,7 +64,6 @@ class MidiDriver {
         }
     }
 
-    // Stop the MIDI input service
     void stop() {
         if (is_running && midiIn != nullptr) {
             midiIn->cancelCallback();
@@ -67,36 +74,98 @@ class MidiDriver {
         }
     }
 
-    void playerPing() {
-        // this is just a temp test since we can't reach playerEngine direcly in main.cpp
-        playerEngine->ping();
+    bool bufferWrite(const MidiMessage &message) {
+        auto current_write = bufferWriteIndex.load(std::memory_order_relaxed);
+        auto next_write = (current_write + 1) & (BufferSize - 1);
+
+        if (next_write == bufferReadIndex.load(std::memory_order_acquire)) {
+            return false; // Buffer is full
+        }
+
+        buffer[current_write] = message;
+        bufferWriteIndex.store(next_write, std::memory_order_release);
+        return true;
     }
 
-    void playerSynthSetup() {
-        // same here - this should not be here but it's just a mock since the real deal isn't working.
-        playerEngine->testRackSetup();
+    bool bufferRead(MidiMessage &message) {
+        auto current_read = bufferReadIndex.load(std::memory_order_relaxed);
+        if (current_read == bufferWriteIndex.load(std::memory_order_acquire)) {
+            return false; // Buffer is empty
+        }
+
+        message = buffer[current_read];
+        bufferReadIndex.store((current_read + 1) & (BufferSize - 1), std::memory_order_release);
+        return true;
     }
 
   private:
     static void midiCallback(double deltatime, std::vector<unsigned char> *message, void *userData) {
         MidiDriver *driver = static_cast<MidiDriver *>(userData);
-        driver->handleMidiMessage(deltatime, message);
+        driver->handleMidiMessage(message);
     }
 
-    // Handle the incoming MIDI message
-    void handleMidiMessage(double deltatime, std::vector<unsigned char> *message) {
-        std::cout << "Received MIDI message: ";
+    void handleMidiMessage(std::vector<unsigned char> *message) {
         for (unsigned char byte : *message) {
-            std::cout << static_cast<int>(byte) << std::endl;
-        }
-        std::cout << std::endl;
-        // Use the PlayerEngine instance
-        if (playerEngine) {
-            playerEngine->noteOnDemo();
+            switch (midiInState) {
+            case 0:
+                // Expecting a command byte
+                midiInCmd = byte;
+                switch (midiInCmd & 0xf0) {
+                case 0x80: // Note Off
+                case 0x90: // Note On
+                case 0xa0: // Aftertouch
+                case 0xb0: // Control Change
+                case 0xe0: // Pitch Bend
+                    midiInLength = 2;
+                    break;
+                case 0xc0: // Program Change
+                case 0xd0: // Channel Pressure
+                    midiInLength = 1;
+                    break;
+                case 0xf0: // System Exclusive
+                    midiInLength = 0;
+                    return; // Ignore for now
+                default:
+                    std::cerr << "Unknown MIDI command" << std::endl;
+                    return;
+                }
+                midiInState = 1; // Expecting first parameter
+                break;
+            case 1:
+                // First parameter
+                midiInP1 = byte;
+                if (midiInLength == 1) {
+                    // Single parameter message
+                    if (!bufferWrite(MidiMessage(midiInCmd, midiInP1, 0))) {
+                        std::cerr << "Buffer full, unable to write message" << std::endl;
+                    }
+                    midiInState = 0; // Reset state
+                } else {
+                    midiInState = 2; // Expecting second parameter
+                }
+                break;
+            case 2:
+                // Second parameter
+                if (!bufferWrite(MidiMessage(midiInCmd, midiInP1, byte))) {
+                    std::cerr << "Buffer full, unable to write message" << std::endl;
+                }
+                midiInState = 0; // Reset state
+                break;
+            default:
+                std::cerr << "Invalid MIDI state" << std::endl;
+                midiInState = 0; // Reset state
+                break;
+            }
         }
     }
 
     RtMidiIn *midiIn;
     bool is_running;
-    PlayerEngine *playerEngine; // Instance of PlayerEngine
+    MidiMessage buffer[BufferSize];       // Buffer array holding MidiMessage structs
+    std::atomic<size_t> bufferWriteIndex; // Write index (producer side)
+    std::atomic<size_t> bufferReadIndex;  // Read index (consumer side)
+    uint8_t midiInState;                  // State for parsing MIDI messages
+    uint8_t midiInCmd;                    // Last received command byte
+    uint8_t midiInP1;                     // Last received parameter 1 byte
+    uint8_t midiInLength;                 // Expected length of the message
 };
