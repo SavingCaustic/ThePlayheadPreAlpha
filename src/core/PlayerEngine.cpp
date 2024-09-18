@@ -126,16 +126,12 @@ void PlayerEngine::clockResetMethod() {
 }
 
 bool PlayerEngine::pollMidiIn() {
-    return false;
     if (hMidiDriver) {
-        bool test = false; // hMidiDriver->getMessage(midiInMsg); // Pass by reference
+        MidiMessage newMessage;
+        bool test = hMidiDriver->bufferRead(newMessage);
         // If there's a message available
-        if (!midiInMsg.empty()) {
-            std::cout << "Received MIDI message: ";
-            for (unsigned char byte : midiInMsg) {
-                std::cout << static_cast<int>(byte) << " ";
-            }
-            std::cout << std::endl;
+        if (test) {
+            racks[0]->parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
         }
         return test; // Return the result of getMessage
     }

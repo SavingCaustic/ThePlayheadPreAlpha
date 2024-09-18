@@ -9,12 +9,26 @@ pre {
     <body>
         <p><img src="tph.png"></p>
 
-<pre>
-<a href="/startup" target="if">STARTUP</a>
-<a href="/test/pe/ping" target="if">PE ping</a>
-<a href="/test/pe/rackSetup" target="if">PE load synth</a>
-<a href="/shutdown" target="if">Shutdown (stops server)</a>
-</pre>
+        <h2>Start- and shop</h2>
+        <pre>
+          <a href="/startup" target="if">STARTUP</a>
+          <a href="/test/pe/ping" target="if">PE ping</a>
+          <a href="/test/pe/rackSetup" target="if">PE load synth</a>
+          <a href="/shutdown" target="if">Shutdown (stops server)</a>
+        </pre>
+
+        <h2>Synth-parameters</h2>
+        <pre>
+          <a href="/rack/0/synth/setParam?name=cutoff&val=0.5" target="if">sets a parameter of a synth</a>
+          <a href="/rack/0/synth/patchLoad?name=default" target="if">load patch into a synth</a>
+          <a href="/rack/0/synth/patchSave?new_name=false" target="if">saves parameters as a panth</a>
+        </pre>
+
+
+
+        <h2>Rack - load and save (TBA)</h2>
+
+      
 <iframe name="if" width="500" height="200"></iframe>
     </body>
 </html>

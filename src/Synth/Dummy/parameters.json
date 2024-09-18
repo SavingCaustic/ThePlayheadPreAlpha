@@ -1,0 +1,15 @@
+{
+    "pan": {
+        "type": "dec",
+        "default": 0.5
+    },
+    "filter_freq": {
+        "type": "dec",
+        "default": 0.5
+    },
+    "filter_type": {
+        "type": "opt",
+        "options": "LPF,HPF,BPF",
+        "default": 1
+    }
+}

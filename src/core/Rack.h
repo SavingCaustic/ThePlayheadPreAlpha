@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../Synth/Dummy/DummyModel.h"
+#include "../Synth/SynthInterface.h"
 #include "../constants.h"
-#include "../synths/Dummy/DummyModel.h"
-#include "../synths/SynthInterface.h"
 #include "PlayerEngine.h"
 #include <array>
 #include <iostream>

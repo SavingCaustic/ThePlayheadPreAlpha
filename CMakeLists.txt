@@ -10,21 +10,35 @@ project(MyDAW2 VERSION 1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Automatically add all source files in src directory
-# file(GLOB_RECURSE SOURCES "src/*.cpp")
+# Add a custom target to run the PHP script
+add_custom_target(
+    generate_parameters
+    COMMAND php ${CMAKE_CURRENT_SOURCE_DIR}/preParseParameters.php
+    COMMENT "Generating parameter headers from JSON files using PHP"
+)
 
-# Add executable target
-#add_executable(myDaw2 src/main.cpp)
+# Automatically collect all .cpp files in src/ and subdirectories
+file(GLOB_RECURSE SOURCES
+    "${PROJECT_SOURCE_DIR}/src/*.cpp"
+)
+
+# Add executable
+add_executable(MyDAW2 ${SOURCES})
+
 
 # Add all necessary source files
-add_executable(myDaw2
-    src/main.cpp
-    src/constants.cpp
-    src/core/timing/Rotator.cpp
-    src/core/PlayerEngine.cpp
-    src/synths/Dummy/DummyModel.cpp
-    # Add other source files here
-)
+# add_executable(MyDAW2
+#    src/main.cpp
+#    src/constants.cpp
+#    src/core/timing/Rotator.cpp
+#    src/core/PlayerEngine.cpp
+#    src/synths/Dummy/DummyModel.cpp
+#    src/core/audio/AudioMath.cpp
+#    # Add other source files here
+# )
+
+# Ensure that the header generation is done before building the project
+add_dependencies(MyDAW2 generate_parameters)
 
 # Find PortAudio, ALSA, and RtMidi
 find_package(PkgConfig REQUIRED)
@@ -41,12 +55,14 @@ endif()
 include_directories(${PORTAUDIO_INCLUDE_DIRS})
 include_directories(${RTMIDI_INCLUDE_DIR})
 include_directories(${ALSA_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)        # avoid .. of inclusions
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/ext)    # inlcude libraries that are included in source.
 
 # Link directories (for library files)
 link_directories(${PORTAUDIO_LIBRARY_DIRS})
 
 # Link libraries (proper linking order)
-target_link_libraries(myDaw2 ${PORTAUDIO_LIBRARIES} ${RTMIDI_LIBRARIES} ${ALSA_LIBRARIES} portaudio pthread asound)
+target_link_libraries(MyDAW2 ${PORTAUDIO_LIBRARIES} ${RTMIDI_LIBRARIES} ${ALSA_LIBRARIES} portaudio pthread asound)
 
 # Release vs Debug
 set(CMAKE_BUILD_TYPE Release)

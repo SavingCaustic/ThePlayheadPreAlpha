@@ -176,9 +176,9 @@ int main() {
 
     // Monitor the shutdown flag
     while (!shutdown_flag.load()) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::seconds(3));
         if (DEBUG_MODE) {
-            std::cout << "sc.. ";
+            std::cout << "housekeeping.. " << std::endl;
         }
     }
 

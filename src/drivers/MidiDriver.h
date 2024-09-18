@@ -106,11 +106,13 @@ class MidiDriver {
 
     void handleMidiMessage(std::vector<unsigned char> *message) {
         for (unsigned char byte : *message) {
+            uint8_t test = 0;
             switch (midiInState) {
             case 0:
+                test = static_cast<uint8_t>(byte & 0xf0);
                 // Expecting a command byte
                 midiInCmd = byte;
-                switch (midiInCmd & 0xf0) {
+                switch (test) {
                 case 0x80: // Note Off
                 case 0x90: // Note On
                 case 0xa0: // Aftertouch
@@ -131,6 +133,7 @@ class MidiDriver {
                 }
                 midiInState = 1; // Expecting first parameter
                 break;
+                //
             case 1:
                 // First parameter
                 midiInP1 = byte;
@@ -144,6 +147,7 @@ class MidiDriver {
                     midiInState = 2; // Expecting second parameter
                 }
                 break;
+
             case 2:
                 // Second parameter
                 if (!bufferWrite(MidiMessage(midiInCmd, midiInP1, byte))) {
@@ -151,6 +155,7 @@ class MidiDriver {
                 }
                 midiInState = 0; // Reset state
                 break;
+
             default:
                 std::cerr << "Invalid MIDI state" << std::endl;
                 midiInState = 0; // Reset state
