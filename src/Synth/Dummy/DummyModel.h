@@ -11,7 +11,10 @@ class Rack;
 #include <cstdlib> // for rand()
 #include <string>
 
-class DummyModel : public SynthInterface, public ParamInterfaceBase<src::Synth::Dummy::ParamID> {
+namespace Synth {
+namespace Dummy {
+
+class DummyModel : public SynthInterface, public ParamInterfaceBase<Synth::Dummy::ParamID> {
   public:
     // Constructor
     explicit DummyModel(Rack &rack);
@@ -28,7 +31,11 @@ class DummyModel : public SynthInterface, public ParamInterfaceBase<src::Synth::
     // Method to render the next block of audio
     bool renderNextBlock() override;
 
-    void pushParam(src::Synth::Dummy::ParamID param, float val);
+    void pushParam(const std::string &name, float val);
+
+    void doPushParam(Synth::Dummy::ParamID param, float val);
+
+    void pushParam2(std::string param, float val);
 
   private:
     Rack &rack;
@@ -44,3 +51,6 @@ class DummyModel : public SynthInterface, public ParamInterfaceBase<src::Synth::
 
     void initLPF();
 };
+
+} // namespace Dummy
+} // namespace Synth

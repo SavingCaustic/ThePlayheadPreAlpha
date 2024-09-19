@@ -1,5 +1,5 @@
 #pragma once
-namespace src::Synth::Dummy {
+namespace Synth::Dummy {
 
 #include <unordered_map>
 #include <string>
@@ -43,4 +43,4 @@ const std::unordered_map<int, Filter_typeOptions> Filter_typeOptionsMap = {
     {2, Filter_typeOptions::BPF},
 };
 
-} // namespace src::Synth::Dummy
+} // namespace Synth::Dummy

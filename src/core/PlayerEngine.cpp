@@ -4,7 +4,10 @@
 PlayerEngine::PlayerEngine()
     : noiseVolume(0.2f),
       hRotator() {
-    // racks.fill(nullptr); // Initialize racks array with nullptr
+}
+
+void PlayerEngine::BindMessageRouter(MessageRouter &hMessageRouter) {
+    messageRouter = &hMessageRouter;
 }
 
 void PlayerEngine::reset() {
@@ -76,38 +79,41 @@ void PlayerEngine::noteOnDemo() {
 }
 
 void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
+    // Get the current time in microseconds
+    // Calculate time for next frame based on sample rate and numFrames
+    double frameDurationMicroSec = (numFrames * 1'000'000.0) / TPH_DSP_SR;
+    auto nextFrameTime = std::chrono::high_resolution_clock::now() + std::chrono::microseconds(static_cast<long long>(frameDurationMicroSec));
+    //
     if (clockReset) {
-        clockResetMethod(); // Reset the clock
+        clockResetMethod(); // Reset the clock (requested by play- or stop-command)
     }
     int outerCnt = TPH_AUDIO_BUFFER_SIZE / TPH_RACK_RENDER_SIZE;
     for (int outer = 0; outer < outerCnt; ++outer) {
         pollMidiIn(); // large audio buffers is bad for midi-in accuracy. Fly low.
         turnRackAndRender();
-        // sumToMaster(buffer, numFrames, outer);
-        // temporary fix:
-        int offset;
-        offset = outer * 2 * TPH_RACK_RENDER_SIZE;
-        for (std::size_t i = 0; i < MAX_RACKS; ++i) {
-            if (racks[i]) { // Check if the rack is initialized (i.e., not null)
-                for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE * 2; sample += 2) {
-                    *(buffer + offset + sample) = racks[i]->audioBuffer[sample];
-                    *(buffer + offset + sample + 1) = racks[i]->audioBuffer[sample + 1];
-                    //*(buffer + offset + sample) = 0.3 * (((float)rand() / RAND_MAX) * 2.0f - 1.0f);
-                    //*(buffer + offset + sample + 1) = 0.5 * (((float)rand() / RAND_MAX) * 2.0f - 1.0f);
-                }
-            }
+        sumToMaster(buffer, numFrames, outer);
+    }
+    //
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto timeLeftUs = std::chrono::duration_cast<std::chrono::microseconds>(nextFrameTime - endTime).count();
+    if (timeLeftUs > 1500) {
+        // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
+        auto optionalMessage = messageRouter->pop();
+        if (optionalMessage) {              // Check if a message was retrieved
+            newMessage = **optionalMessage; // WTF.. Directly assign the message
+            std::cout << "New message received and stored," << newMessage.paramName << std::endl;
         }
     }
 }
 
 void PlayerEngine::sumToMaster(float *buffer, unsigned long numFrames, int outer) {
-    // this isn't working strangely..
     int offset = outer * 2 * TPH_RACK_RENDER_SIZE; // Offset in the master buffer
+
     for (std::size_t i = 0; i < MAX_RACKS; ++i) {
         if (racks[i]) { // Check if the rack is initialized (i.e., not null)
             for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE * 2; sample += 2) {
-                buffer[offset + sample] += racks[i]->audioBuffer[sample];
-                buffer[offset + sample + 1] += racks[i]->audioBuffer[sample + 1];
+                *(buffer + offset + sample) = racks[i]->audioBuffer[sample];
+                *(buffer + offset + sample + 1) = racks[i]->audioBuffer[sample + 1];
             }
         }
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../drivers/MidiDriver.h"
+#include "MessageRouter.h"
 #include "Rack.h"
 #include "timing/Rotator.h"
 #include <array>
@@ -12,11 +13,16 @@
 // Forward declaration of Rack
 class Rack;
 
+class MessageRouter;
+struct Message;
+
 class PlayerEngine {
   public:
     static const std::size_t MAX_RACKS = TPH_RACK_COUNT;
 
-    PlayerEngine();
+    // PlayerEngine(MessageRouter &hMessageRouter); // Add reference to constructor
+    PlayerEngine(); // Add reference to constructor
+    void BindMessageRouter(MessageRouter &hMessageRouter);
 
     void reset();
     void doReset();
@@ -48,4 +54,6 @@ class PlayerEngine {
     int rackInFocus = 0;        // number of rack in focus. What if no rack in focus?
     std::vector<unsigned char> midiInMsg;
     double midiInTS; // probably not used, we use it when we get it.
+    MessageRouter *messageRouter = nullptr;
+    Message newMessage; // Declare a reusable Message object
 };

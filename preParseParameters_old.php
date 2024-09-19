@@ -86,14 +86,8 @@ function traverseDirectories($dir, $namespace = '') {
     $files = glob($dir . '/*', GLOB_MARK);
     foreach ($files as $file) {
         if (is_dir($file)) {
-            $dirName = basename($file);
-            // Skip the "src" directory in the namespace
-            if ($dirName === 'src') {
-                traverseDirectories($file, $namespace); // Traverse without adding to namespace
-            } else {
-                $currentNamespace = $namespace . (!empty($namespace) ? "::" : "") . $dirName;
-                traverseDirectories($file, $currentNamespace);
-            }
+            $currentNamespace = $namespace . (!empty($namespace) ? "::" : "") . basename($file);
+            traverseDirectories($file, $currentNamespace);
         } elseif (basename($file) === 'parameters.json') {
             generateHeaderFile($file, $namespace);
         }

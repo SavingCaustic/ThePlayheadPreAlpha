@@ -1,3 +1,13 @@
+TODO
+Ta bort anv. av messageRouter i playerEngine.
+Rensa bort passning av referenser
+Få koden att kompilera igen.
+Byt ut till statiska klasser av grundkomponenterna som är kända vid compile
+
+
+Read messagebuffer *if* there's time left when doing rendering.
+
+
 * we need to focus a rack somehow. Else we can't redirect the midi and possibly parameter settings to the right rack.
 * ok, so PlayerEngine possibly have the attribute rackFocus = N
 And that means that midi messages will be read when *that* rack is being rendered, right?
@@ -16,3 +26,4 @@ and midiMultiMode = true / false
 
 DONE:
 * Rotator
+* pushing param from http to buffer.

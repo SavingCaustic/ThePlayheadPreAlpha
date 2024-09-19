@@ -1,5 +1,6 @@
 #include "constants.h"
 #include "core/ErrorLogger.h"
+#include "core/MessageRouter.h"
 #include "core/PlayerEngine.h"
 #include "core/Rack.h"
 #include "core/audio/AudioMath.h"
@@ -25,6 +26,7 @@ std::atomic<bool> shutdown_flag(false);
 int AudioDriver::gNumNoInputs = 0;
 double AudioDriver::vol = 0.7;
 PlayerEngine *rtPlayerEngine; // Global pointer to PlayerEngine
+MessageRouter *hMessageRouter;
 
 // Global instances of drivers
 AudioDriver *hAudioDriver;
@@ -49,13 +51,25 @@ std::string load_file_content(const std::string &filepath) {
 
 // Entry point of the program
 int main() {
+    // Look, we want these to be static but there's an issue with Crow endpoints stop working..
+
     // Initialize the global PlayerEngine instance
     hMidiDriver = new MidiDriver();
-    rtPlayerEngine = new PlayerEngine();
-    // rtPlayerEngine->doReset(); // Initialize the player engine
 
-    // Initialize global drivers
+    // Initialitze the message-router
+    const size_t bufferSize = 8; // Choose a reasonable size for your use case
+    hMessageRouter = new MessageRouter(bufferSize);
+    // MessageRouter hMessageRouter(bufferSize);
+
+    // rtPlayerEngine = new PlayerEngine(*hMessageRouter);
+    rtPlayerEngine = new PlayerEngine();
+    rtPlayerEngine->BindMessageRouter(*hMessageRouter);
+    // PlayerEngine rtPlayerEngine(hMessageRouter);
+    //  rtPlayerEngine->doReset(); // Initialize the player engine
+
+    // Initialize global drivers. I'm not sure i wanna pass rtPlayerEngine..
     hAudioDriver = new AudioDriver(rtPlayerEngine);
+    // AudioDriver hAudioDriver(&rtPlayerEngine);
 
     // Create and start the Crow app
     crow::SimpleApp api;
@@ -143,33 +157,45 @@ int main() {
     CROW_ROUTE(api, "/test/pe/rackSetup")
     ([]() {
         rtPlayerEngine->testRackSetup();
-        //hMidiDriver->playerSynthSetup();
-        return crow::response(200, "Test synth setup"); });
+        // hMidiDriver->playerSynthSetup();
+        return crow::response(200, "Test synth setup");
+    });
 
-    /*
-        // Endpoint to setup rack with synth
-        CROW_ROUTE(api, "/racks/<int>/setup")
-            .methods(crow::HTTPMethod::GET)([](int rackId, const crow::request &req) {
-                auto synthType = req.url_params.get("synth");
-                if (synthType) {
-                    std::string synthName(synthType);
+    api.route_dynamic("/setRackUnitParam")([](const crow::request &req) {
+        auto rack_str = req.url_params.get("rack");
+        auto unit = req.url_params.get("unit");
+        auto name = req.url_params.get("name");
+        auto value_str = req.url_params.get("value");
 
-                    // Call PlayerEngine method to handle rack setup
-                    if (rtPlayerEngine) { // Check if rtPlayerEngine is valid
-                        bool result = rtPlayerEngine->setupRackWithSynth(rackId, synthName);
-                        if (result) {
-                            return crow::response(200, "Synth set up successfully.");
-                        } else {
-                            return crow::response(400, "Failed to set up synth.");
-                        }
-                    } else {
-                        return crow::response(500, "PlayerEngine instance is not initialized.");
-                    }
-                } else {
-                    return crow::response(400, "Missing 'synth' parameter.");
-                }
-            });
-    */
+        // Initialize default values
+        int rack = -1; // invalid as default
+        float value = 0.0f;
+
+        // Convert rack to integer with fallback
+        if (rack_str) {
+            try {
+                rack = std::stoi(rack_str);
+            } catch (...) { // Catch all exceptions
+                rack = -1;  // Fallback value
+            }
+        }
+
+        if (value_str) {
+            try {
+                value = std::stof(value_str);
+            } catch (...) {   // Catch all exceptions
+                value = 0.0f; // Fallback value
+            }
+        }
+
+        Message *msg = new Message{rack, "synth", name, value};
+        if (hMessageRouter->push(msg)) {
+            // Return success message
+            return crow::response(200, "Pushed message to the rack");
+        } else {
+            return crow::response(400, "You're too fast. All your fault.");
+        }
+    });
 
     // Run the server in a separate thread
     std::thread server_thread([&api]() { api.port(18080).run(); });
@@ -196,6 +222,7 @@ int main() {
     delete hAudioDriver;
     delete hMidiDriver;
     delete rtPlayerEngine;
+    delete hMessageRouter;
 
     std::cout << "Server stopped gracefully." << std::endl;
     return 0;

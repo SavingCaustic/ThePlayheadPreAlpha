@@ -1,11 +1,16 @@
+// Keep the name DummyModel (not only Model). Will be better when many tabs open..
 #include "DummyModel.h"
 #include "../../core/Rack.h"
 #include "../../core/audio/AudioMath.h"
+#include "../../utils/FNV.h"
 #include "parameters.h"
 #include <cmath>
 
 constexpr float SAMPLE_RATE = 48000.0f;
 constexpr float CUTOFF_FREQ = 2000.0f;
+
+namespace Synth {
+namespace Dummy {
 
 DummyModel::DummyModel(Rack &rack)
     : rack(rack), buffer(rack.getAudioBuffer()) {
@@ -17,13 +22,23 @@ void DummyModel::reset() {
     // Reset any parameters if needed
 }
 
+// Runtime function to convert string to enum and call the switch logic
+void DummyModel::pushParam(const std::string &name, float val) {
+    auto it = paramMap.find(name); // Since we are in the same namespace, no need for Synth::Dummy::
+    if (it != paramMap.end()) {
+        doPushParam(it->second, val); // Call the pushParam with the found enum
+    } else {
+        std::cerr << "Parameter not found: " << name << "\n";
+    }
+}
+
 // Push parameter
-void DummyModel::pushParam(src::Synth::Dummy::ParamID param, float val) {
+void DummyModel::doPushParam(ParamID param, float val) {
     switch (param) {
-    case src::Synth::Dummy::ParamID::Filter_freq:
+    case ParamID::Filter_freq:
         this->cutoffHz = AudioMath::logScale(val, 20.0f, 20000.0f);
         break;
-    case src::Synth::Dummy::ParamID::Pan:
+    case ParamID::Pan:
         this->pan = AudioMath::clamp(val, 0.0f, 1.0f);
         break;
     }
@@ -70,3 +85,6 @@ void DummyModel::initLPF() {
     float dt = 1.0f / SAMPLE_RATE;
     lpfAlpha = dt / (RC + dt);
 }
+
+} // namespace Dummy
+} // namespace Synth

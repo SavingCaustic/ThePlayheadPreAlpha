@@ -54,7 +54,7 @@ class Rack {
         SynthType type = getSynthType(synthName);
         switch (type) {
         case SynthType::Dummy:
-            synth = std::make_unique<DummyModel>(*this);
+            synth = std::make_unique<Synth::Dummy::DummyModel>(*this);
             return true;
         // Add cases for other synth types here
         default:
