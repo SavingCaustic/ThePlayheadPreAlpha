@@ -6,11 +6,9 @@
 #include "parameters.h"
 #include <cmath>
 
-constexpr float SAMPLE_RATE = 48000.0f;
 constexpr float CUTOFF_FREQ = 2000.0f;
 
-namespace Synth {
-namespace Dummy {
+namespace Synth::Dummy {
 
 DummyModel::DummyModel(Rack &rack)
     : rack(rack), buffer(rack.getAudioBuffer()) {
@@ -23,7 +21,7 @@ void DummyModel::reset() {
 }
 
 // Runtime function to convert string to enum and call the switch logic
-void DummyModel::pushParam(const std::string &name, float val) {
+void DummyModel::pushStrParam(const std::string &name, int val) {
     auto it = paramMap.find(name); // Since we are in the same namespace, no need for Synth::Dummy::
     if (it != paramMap.end()) {
         doPushParam(it->second, val); // Call the pushParam with the found enum
@@ -33,15 +31,30 @@ void DummyModel::pushParam(const std::string &name, float val) {
 }
 
 // Push parameter
-void DummyModel::doPushParam(ParamID param, float val) {
+void DummyModel::doPushParam(ParamID param, int val) {
+    float decVal = val / 127.0f;
     switch (param) {
     case ParamID::Filter_freq:
-        this->cutoffHz = AudioMath::logScale(val, 20.0f, 20000.0f);
+        std::cout << "filter_freq" << std::endl;
+        this->cutoffHz = AudioMath::logScale2(val, 2000, 16);
+        this->initLPF();
         break;
     case ParamID::Pan:
-        this->pan = AudioMath::clamp(val, 0.0f, 1.0f);
+        //  Use sin/cos panning law, adjusting the input to map to 0-1 range for csin/ccos
+        this->gainLeft = AudioMath::ccos(decVal * 0.25f);  // Left gain decreases as panVal goes to 1
+        this->gainRight = AudioMath::csin(decVal * 0.25f); // Right gain increases as panVal goes to 1
+        std::cout << "setting gain to (L,R)" << this->gainLeft << ", " << this->gainRight << std::endl;
+        break;
+    default:
+        std::cout << "failure" << std::endl;
         break;
     }
+}
+
+bool DummyModel::pushMyParam(const std::string &name, float val) {
+    std::cout << "i got here" << std::endl;
+    DummyModel::pushStrParam(name, val);
+    return 0;
 }
 
 void DummyModel::parseMidi(char cmd, char param1, char param2) {
@@ -59,8 +72,8 @@ void DummyModel::parseMidi(char cmd, char param1, char param2) {
 
 bool DummyModel::renderNextBlock() {
     for (std::size_t i = 0; i < buffer.size(); i += 2) {
-        buffer[i] = AudioMath::noise() * noiseVolume;
-        buffer[i + 1] = AudioMath::noise() * noiseVolume;
+        buffer[i] = AudioMath::noise() * noiseVolume * this->gainLeft;
+        buffer[i + 1] = AudioMath::noise() * noiseVolume * this->gainRight;
     }
 
     for (std::size_t i = 0; i < buffer.size(); i += 2) {
@@ -81,10 +94,9 @@ bool DummyModel::renderNextBlock() {
 }
 
 void DummyModel::initLPF() {
-    float RC = 1.0f / (2.0f * M_PI * CUTOFF_FREQ);
-    float dt = 1.0f / SAMPLE_RATE;
+    float RC = 1.0f / (2.0f * M_PI * this->cutoffHz);
+    float dt = 1.0f / TPH_DSP_SR;
     lpfAlpha = dt / (RC + dt);
 }
 
-} // namespace Dummy
-} // namespace Synth
+} // namespace Synth::Dummy

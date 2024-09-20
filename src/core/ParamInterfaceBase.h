@@ -15,7 +15,7 @@ template <typename ParamEnum>
 class ParamInterfaceBase {
   public:
     // virtual void pushParam(const std::string &paramName, float val) = 0; // Pure virtual method
-    // virtual void pushParam(ParamEnum param, float val) = 0; // Pure virtual method
+    //  virtual void pushParam(ParamEnum param, float val) = 0; // Pure virtual method
 
     // Set the parameter value by name
     void setParam(const std::string &name, float val) {

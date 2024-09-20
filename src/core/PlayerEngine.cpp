@@ -99,9 +99,13 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     if (timeLeftUs > 1500) {
         // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
         auto optionalMessage = messageRouter->pop();
-        if (optionalMessage) {              // Check if a message was retrieved
-            newMessage = **optionalMessage; // WTF.. Directly assign the message
-            std::cout << "New message received and stored," << newMessage.paramName << std::endl;
+        if (optionalMessage) { // Check if a message was retrieved
+            newMessage = *optionalMessage;
+            std::cout << "New message received and stored," << newMessage.paramName << "value:" << newMessage.paramValue << std::endl;
+            racks[newMessage.rackId]->passParamToUnit(
+                Rack::stringToUnitType(newMessage.target),
+                newMessage.paramName,
+                newMessage.paramValue);
         }
     }
 }

@@ -1,5 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 
+# Check for ccache
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    message(STATUS "Found ccache, enabling...")
+    set(CMAKE_C_COMPILER "ccache")
+    set(CMAKE_CXX_COMPILER "ccache")
+else()
+    message(STATUS "ccache not found, proceeding without it.")
+endif()
+
 # needed packages
 # sudo apt-get install libasound2-dev librtmidi-dev libportaudio2 libportaudiocpp0
 
@@ -62,7 +72,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/ext)    # inlcude libraries 
 link_directories(${PORTAUDIO_LIBRARY_DIRS})
 
 # Link libraries (proper linking order)
-target_link_libraries(MyDAW2 ${PORTAUDIO_LIBRARIES} ${RTMIDI_LIBRARIES} ${ALSA_LIBRARIES} portaudio pthread asound)
+target_link_libraries(MyDAW2 ${PORTAUDIO_LIBRARIES} ${RTMIDI_LIBRARIES} ${ALSA_LIBRARIES} portaudio pthread asound atomic)
 
 # Release vs Debug
 set(CMAKE_BUILD_TYPE Release)

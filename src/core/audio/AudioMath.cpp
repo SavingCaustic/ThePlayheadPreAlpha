@@ -1,12 +1,14 @@
 #include "AudioMath.h"
+#include <iostream>
 
 // Initialize static members
 std::array<float, AudioMath::lutSize> AudioMath::lut{};
+const float AudioMath::lutSizeFloat = 1024.0f;
 float AudioMath::masterTune = 440.0f;
 int AudioMath::noiseSeed = 235325325;
 int AudioMath::noiseA = 1664525;
 int AudioMath::noiseB = 1013904223;
-int AudioMath::noiseC = 1 << 24; // 2^24
+int AudioMath::noiseC = 1 << 24; // 2^24, replaced with constexpr.
 
 // Implement static methods
 float AudioMath::noteToHz(int note, int cent) {
@@ -22,8 +24,10 @@ float AudioMath::getMasterTune() {
 }
 
 float AudioMath::noise() {
-    noiseSeed = (noiseA * noiseSeed + noiseB) % noiseC;
-    return noiseSeed / static_cast<float>(noiseC) * 2.0f - 1.0f;
+    // noiseSeed = (noiseA * noiseSeed + noiseB) % noiseC;
+    noiseSeed = (noiseA * noiseSeed + noiseB) & (noiseC - 1);
+    constexpr float invNoiseC = (1.0f / (1 << 24));
+    return noiseSeed * invNoiseC * 2.0f - 1.0f;
 }
 
 float AudioMath::sin(float rad) {
@@ -34,7 +38,18 @@ float AudioMath::cos(float rad) {
     return lut[static_cast<size_t>(radToIndex(rad) + lutSize / 4) % lutSize];
 }
 
+float AudioMath::csin(float cf) {
+    int pos = static_cast<size_t>(cf * lutSizeFloat) & (lutSize - 1);
+    return lut[pos];
+}
+
+float AudioMath::ccos(float cf) {
+    int pos = static_cast<int>((cf + 0.25) * lutSizeFloat) & (lutSize - 1);
+    return lut[pos];
+}
+
 void AudioMath::generateLUT() {
+    // std::cout << "generating lut" << std::endl;
     for (size_t i = 0; i < lutSize; ++i) {
         float rad = (2.0f * M_PI * i) / lutSize;
         lut[i] = std::sin(rad);
@@ -65,4 +80,12 @@ float AudioMath::logScale(float value, float min, float max) {
     float logMin = std::log(min);
     float logMax = std::log(max);
     return std::exp(logMin + value * (logMax - logMin));
+}
+
+float AudioMath::logScale2(int value, int midValue, int stepsPerOct) {
+    // note that input is integer! 0-127.
+    float exponent = static_cast<float>(value - 64) / static_cast<float>(stepsPerOct);
+    float result = midValue * std::exp2(exponent);
+    std::cout << "log2 of " << value << " is " << result << std::endl;
+    return result;
 }

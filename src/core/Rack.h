@@ -1,8 +1,10 @@
 #pragma once
 
 #include "../Synth/Dummy/DummyModel.h"
+//
 #include "../Synth/SynthInterface.h"
 #include "../constants.h"
+// #include "ParamInterfaceBase.h"
 #include "PlayerEngine.h"
 #include <array>
 #include <iostream>
@@ -18,6 +20,17 @@ class Rack {
         : playerEngine(engine), audioBuffer{} {
         // No need to setup synth factories here
     }
+
+    // Define the enum for unit types
+    enum class UnitType {
+        Synth,
+        Emittor,
+        Eventor1,
+        Eventor2,
+        Effect1,
+        Effect2,
+        Unknown // Handle cases where the unit type is invalid
+    };
 
     std::array<float, TPH_RACK_BUFFER_SIZE> &getAudioBuffer() {
         return audioBuffer;
@@ -49,6 +62,48 @@ class Rack {
         }
     }
 
+    // Convert string to enum
+    static UnitType stringToUnitType(const char *unit) {
+        if (std::strcmp(unit, "synth") == 0) {
+            return UnitType::Synth;
+        } else if (std::strcmp(unit, "emittor") == 0) {
+            return UnitType::Emittor;
+        } else if (std::strcmp(unit, "eventor1") == 0) {
+            return UnitType::Eventor1;
+        } else if (std::strcmp(unit, "eventor2") == 0) {
+            return UnitType::Eventor2;
+        } else if (std::strcmp(unit, "effect1") == 0) {
+            return UnitType::Effect1;
+        } else if (std::strcmp(unit, "effect2") == 0) {
+            return UnitType::Effect2;
+        }
+        return UnitType::Unknown;
+    }
+
+    // passParamToUnit now takes the enum type instead of a string
+    void passParamToUnit(UnitType unit, const char *name, int val) {
+        switch (unit) {
+        case UnitType::Synth:
+            synth->pushStrParam(name, val);
+            break;
+        case UnitType::Emittor:
+            // Do something else
+            break;
+        case UnitType::Eventor1:
+        case UnitType::Eventor2:
+            // Handle eventors
+            break;
+        case UnitType::Effect1:
+        case UnitType::Effect2:
+            // Handle effects
+            break;
+        default:
+            // Handle unknown or unsupported units
+            std::cerr << "Unknown unit type!" << std::endl;
+            break;
+        }
+    }
+
     bool setSynth(const std::string &synthName) {
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
@@ -64,6 +119,8 @@ class Rack {
     }
 
     std::array<float, TPH_RACK_BUFFER_SIZE> audioBuffer;
+    // i dont wanna have this public but until passing on works better..
+    std::unique_ptr<SynthInterface> synth;
 
   private:
     enum class SynthType {
@@ -80,6 +137,6 @@ class Rack {
     }
 
     PlayerEngine &playerEngine; // Reference to PlayerEngine
-    std::unique_ptr<SynthInterface> synth;
+    // std::unique_ptr<SynthInterface> synth;
     std::unique_ptr<SynthInterface> hEventor1; // TOFIX update to EventorInterface
 };

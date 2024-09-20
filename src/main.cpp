@@ -71,6 +71,11 @@ int main() {
     hAudioDriver = new AudioDriver(rtPlayerEngine);
     // AudioDriver hAudioDriver(&rtPlayerEngine);
 
+    //
+    AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
+    std::cout << "sin 0.125 => " << AudioMath::csin(1 / 8) << std::endl;
+    std::cout << "cos 0.125 => " << AudioMath::ccos(1 / 8) << std::endl;
+
     // Create and start the Crow app
     crow::SimpleApp api;
 
@@ -165,11 +170,13 @@ int main() {
         auto rack_str = req.url_params.get("rack");
         auto unit = req.url_params.get("unit");
         auto name = req.url_params.get("name");
+        // to speed up parsing, lets accept 0-127 as the range.
         auto value_str = req.url_params.get("value");
 
+        std::cout << "value_str:" << value_str << std::endl;
         // Initialize default values
         int rack = -1; // invalid as default
-        float value = 0.0f;
+        int value = 64;
 
         // Convert rack to integer with fallback
         if (rack_str) {
@@ -182,13 +189,15 @@ int main() {
 
         if (value_str) {
             try {
-                value = std::stof(value_str);
-            } catch (...) {   // Catch all exceptions
-                value = 0.0f; // Fallback value
+                value = std::stoi(value_str);
+            } catch (...) { // Catch all exceptions
+                value = 0;  // Fallback value
             }
         }
+        std::cout << "value:" << value << std::endl;
 
-        Message *msg = new Message{rack, "synth", name, value};
+        std::string name_str(name ? name : "");
+        Message msg{rack, "synth", name_str.c_str(), value};
         if (hMessageRouter->push(msg)) {
             // Return success message
             return crow::response(200, "Pushed message to the rack");
