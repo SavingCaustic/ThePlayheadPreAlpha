@@ -1,6 +1,6 @@
 #include "constants.h"
 #include "core/ErrorLogger.h"
-#include "core/MessageRouter.h"
+#include "core/MessageReciever.h"
 #include "core/PlayerEngine.h"
 #include "core/Rack.h"
 #include "core/audio/AudioMath.h"
@@ -26,7 +26,7 @@ std::atomic<bool> shutdown_flag(false);
 int AudioDriver::gNumNoInputs = 0;
 double AudioDriver::vol = 0.7;
 PlayerEngine *rtPlayerEngine; // Global pointer to PlayerEngine
-MessageRouter *hMessageRouter;
+MessageReciever *hMessageReciever;
 
 // Global instances of drivers
 AudioDriver *hAudioDriver;
@@ -58,12 +58,12 @@ int main() {
 
     // Initialitze the message-router
     const size_t bufferSize = 8; // Choose a reasonable size for your use case
-    hMessageRouter = new MessageRouter(bufferSize);
+    hMessageReciever = new MessageReciever(bufferSize);
     // MessageRouter hMessageRouter(bufferSize);
 
     // rtPlayerEngine = new PlayerEngine(*hMessageRouter);
     rtPlayerEngine = new PlayerEngine();
-    rtPlayerEngine->BindMessageRouter(*hMessageRouter);
+    rtPlayerEngine->BindMessageReciever(*hMessageReciever);
     // PlayerEngine rtPlayerEngine(hMessageRouter);
     //  rtPlayerEngine->doReset(); // Initialize the player engine
 
@@ -198,7 +198,7 @@ int main() {
 
         std::string name_str(name ? name : "");
         Message msg{rack, "synth", name_str.c_str(), value};
-        if (hMessageRouter->push(msg)) {
+        if (hMessageReciever->push(msg)) {
             // Return success message
             return crow::response(200, "Pushed message to the rack");
         } else {
@@ -231,7 +231,7 @@ int main() {
     delete hAudioDriver;
     delete hMidiDriver;
     delete rtPlayerEngine;
-    delete hMessageRouter;
+    delete hMessageReciever;
 
     std::cout << "Server stopped gracefully." << std::endl;
     return 0;

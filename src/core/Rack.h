@@ -82,9 +82,10 @@ class Rack {
 
     // passParamToUnit now takes the enum type instead of a string
     void passParamToUnit(UnitType unit, const char *name, int val) {
+        float fVal = static_cast<float>(val) / 127.0f;
         switch (unit) {
         case UnitType::Synth:
-            synth->pushStrParam(name, val);
+            synth->pushStrParam(name, fVal);
             break;
         case UnitType::Emittor:
             // Do something else

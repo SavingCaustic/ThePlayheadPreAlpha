@@ -20,7 +20,8 @@ class AudioMath {
     static float clamp(float value, float min, float max);
     static float scale(float value, float min, float max);
     static float logScale(float value, float min, float max);
-    static float logScale2(int value, int midValue, int stepsPerOct = 12);
+    static float logScale2(float value, float minValue, float octaves);
+
     static void generateLUT();
 
   private:

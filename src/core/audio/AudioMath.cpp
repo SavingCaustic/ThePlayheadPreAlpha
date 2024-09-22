@@ -82,10 +82,9 @@ float AudioMath::logScale(float value, float min, float max) {
     return std::exp(logMin + value * (logMax - logMin));
 }
 
-float AudioMath::logScale2(int value, int midValue, int stepsPerOct) {
-    // note that input is integer! 0-127.
-    float exponent = static_cast<float>(value - 64) / static_cast<float>(stepsPerOct);
-    float result = midValue * std::exp2(exponent);
+float AudioMath::logScale2(float value, float minValue, float octaves) {
+    // note that input is integer! 0-127. This should be rewritten to 0-1
+    float result = minValue * std::exp2(value * octaves);
     std::cout << "log2 of " << value << " is " << result << std::endl;
     return result;
 }

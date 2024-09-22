@@ -12,7 +12,7 @@ class SynthInterface {
     virtual bool renderNextBlock() = 0;                             // Process the next audio block
     // experimenting with moving push to synth..
     virtual bool pushMyParam(const std::string &name, float val) = 0;
-    virtual void pushStrParam(const std::string &name, int val) = 0;
+    virtual void pushStrParam(const std::string &name, float val) = 0;
 
     // Optionally, you can add methods to interact with parameters if needed
 };

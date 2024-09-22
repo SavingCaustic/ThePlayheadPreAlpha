@@ -3,7 +3,6 @@
 #include "../../core/Rack.h"
 #include "../../core/audio/AudioMath.h"
 #include "../../utils/FNV.h"
-#include "parameters.h"
 #include <cmath>
 
 constexpr float CUTOFF_FREQ = 2000.0f;
@@ -12,7 +11,9 @@ namespace Synth::Dummy {
 
 DummyModel::DummyModel(Rack &rack)
     : rack(rack), buffer(rack.getAudioBuffer()) {
-    initLPF();
+    setupParams();
+    initializeParameters();
+    // initLPF();
     reset();
 }
 
@@ -20,34 +21,33 @@ void DummyModel::reset() {
     // Reset any parameters if needed
 }
 
-// Runtime function to convert string to enum and call the switch logic
-void DummyModel::pushStrParam(const std::string &name, int val) {
-    auto it = paramMap.find(name); // Since we are in the same namespace, no need for Synth::Dummy::
-    if (it != paramMap.end()) {
-        doPushParam(it->second, val); // Call the pushParam with the found enum
-    } else {
-        std::cerr << "Parameter not found: " << name << "\n";
+void DummyModel::initLPF() {
+    float RC = 1.0f / (2.0f * M_PI * this->cutoffHz);
+    float dt = 1.0f / TPH_DSP_SR;
+    lpfAlpha = dt / (RC + dt);
+}
+
+void DummyModel::initializeParameters() {
+    for (const auto &[key, definition] : parameterDefinitions) {
+        if (definition.transformFunc) {
+            definition.transformFunc(definition.defaultValue);
+        }
     }
 }
 
-// Push parameter
-void DummyModel::doPushParam(ParamID param, int val) {
-    float decVal = val / 127.0f;
-    switch (param) {
-    case ParamID::Filter_freq:
-        std::cout << "filter_freq" << std::endl;
-        this->cutoffHz = AudioMath::logScale2(val, 2000, 16);
-        this->initLPF();
-        break;
-    case ParamID::Pan:
-        //  Use sin/cos panning law, adjusting the input to map to 0-1 range for csin/ccos
-        this->gainLeft = AudioMath::ccos(decVal * 0.25f);  // Left gain decreases as panVal goes to 1
-        this->gainRight = AudioMath::csin(decVal * 0.25f); // Right gain increases as panVal goes to 1
-        std::cout << "setting gain to (L,R)" << this->gainLeft << ", " << this->gainRight << std::endl;
-        break;
-    default:
-        std::cout << "failure" << std::endl;
-        break;
+void DummyModel::pushStrParam(const std::string &name, float val) {
+    std::cout << "dealing with " << &name << " and its new value " << val << std::endl;
+    auto it = parameterDefinitions.find(name); // Look for the parameter in the definitions
+    if (it != parameterDefinitions.end()) {
+        const ParamDefinition &paramDef = it->second; // Get the parameter definition
+        // Check if a callback function exists and call it with the provided value
+        if (paramDef.transformFunc) {
+            paramDef.transformFunc(val); // Call the lambda
+        } else {
+            std::cerr << "No callback function for parameter: " << name << "\n";
+        }
+    } else {
+        std::cerr << "Parameter not found: " << name << "\n";
     }
 }
 
@@ -91,12 +91,6 @@ bool DummyModel::renderNextBlock() {
         noiseVolume -= 0.001;
     }
     return true;
-}
-
-void DummyModel::initLPF() {
-    float RC = 1.0f / (2.0f * M_PI * this->cutoffHz);
-    float dt = 1.0f / TPH_DSP_SR;
-    lpfAlpha = dt / (RC + dt);
 }
 
 } // namespace Synth::Dummy

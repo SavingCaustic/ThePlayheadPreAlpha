@@ -6,8 +6,8 @@ PlayerEngine::PlayerEngine()
       hRotator() {
 }
 
-void PlayerEngine::BindMessageRouter(MessageRouter &hMessageRouter) {
-    messageRouter = &hMessageRouter;
+void PlayerEngine::BindMessageReciever(MessageReciever &hMessageReciever) {
+    messageReciever = &hMessageReciever;
 }
 
 void PlayerEngine::reset() {
@@ -98,7 +98,7 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     auto timeLeftUs = std::chrono::duration_cast<std::chrono::microseconds>(nextFrameTime - endTime).count();
     if (timeLeftUs > 1500) {
         // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
-        auto optionalMessage = messageRouter->pop();
+        auto optionalMessage = messageReciever->pop();
         if (optionalMessage) { // Check if a message was retrieved
             newMessage = *optionalMessage;
             std::cout << "New message received and stored," << newMessage.paramName << "value:" << newMessage.paramValue << std::endl;

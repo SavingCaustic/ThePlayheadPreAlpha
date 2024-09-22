@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../drivers/MidiDriver.h"
-#include "MessageRouter.h"
+#include "MessageReciever.h"
 #include "Rack.h"
 #include "timing/Rotator.h"
 #include <array>
@@ -22,7 +22,7 @@ class PlayerEngine {
 
     // PlayerEngine(MessageRouter &hMessageRouter); // Add reference to constructor
     PlayerEngine(); // Add reference to constructor
-    void BindMessageRouter(MessageRouter &hMessageRouter);
+    void BindMessageReciever(MessageReciever &hMessageReciever);
 
     void reset();
     void doReset();
@@ -54,6 +54,6 @@ class PlayerEngine {
     int rackInFocus = 0;        // number of rack in focus. What if no rack in focus?
     std::vector<unsigned char> midiInMsg;
     double midiInTS; // probably not used, we use it when we get it.
-    MessageRouter *messageRouter = nullptr;
+    MessageReciever *messageReciever = nullptr;
     Message newMessage; // Declare a reusable Message object
 };

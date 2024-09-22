@@ -32,9 +32,9 @@ struct Message {
     }
 };
 
-class MessageRouter {
+class MessageReciever {
   public:
-    explicit MessageRouter(size_t bufferSize)
+    explicit MessageReciever(size_t bufferSize)
         : buffer(bufferSize), head(0), tail(0) {}
 
     // Push a message (Producer)
