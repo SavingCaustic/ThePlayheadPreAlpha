@@ -51,6 +51,8 @@ std::string load_file_content(const std::string &filepath) {
 
 // Entry point of the program
 int main() {
+    // std::cout << "Current path: " << std::filesystem::current_path() << std::endl;
+
     // Look, we want these to be static but there's an issue with Crow endpoints stop working..
 
     // Initialize the global PlayerEngine instance

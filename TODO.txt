@@ -1,29 +1,49 @@
 TODO
-Ta bort anv. av messageRouter i playerEngine.
-Rensa bort passning av referenser
-Få koden att kompilera igen.
-Byt ut till statiska klasser av grundkomponenterna som är kända vid compile
+====
+* nåt som behöver göras om med parametrar. värdet ska ju omskapas innan det kastas in i lambdan.
+Lambdan sja bara göra halva jobbet - skicka till moduler.
+Sen behöver värdet sparas och skickas tillbaka. Gör utanför (return)
+
+* snap på parametrar. Stöd för filter-typ i DummySynth.
+Då behöver vi väl jämföra nuv position med ny föreslagen, så vi inte kallar lambdan i onödan.
+Och då behöver vi veta om värdet vi är på väg att skriva är persistant eller temp (automation).
+Kan vänta med automation med förbreda för det. (på väg att skapa egen klass här..)
+
+* kunna spara parametrar som patch.
+klura på logik för att ha både synth- och rack-patches.
+
+* kunna ladda parametrar som patch.
+
+* nåt sätt att aktivera / avaktivera rack för uppspelning. (inte lita på is_null)
+* flytta rack så de är på stacken istället (snabbare buffer)
+
+* skicka svar från parametrar med både 0-1 och värdet, ex "40L"
+gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS istället för hela vägen tillbaka..
+
+* websocket-server som kan ta emot dessa svar och skicka vidare till klient
+
+* sine-synth. mono och bara AR, men för att testa LUT, frekvens o midi.
+
+* Flera egenskaper *rack* sätts från endpoint. Risk för race.
+
+* metonom - var ska den in?
+
+* modul-kul: delay.
+
+* modul-kul: ocatver.
+
+* byta huvudobject till stackspace
+
+* börja med timing..
 
 
-Read messagebuffer *if* there's time left when doing rendering.
+FIXAT:
 
+* rackInFocus i playerEngine(?) så den vet vart midi-meddelanden ska skickas.
+rackReceivingMidi = 0-n; (-1 no midi in)
 
-* we need to focus a rack somehow. Else we can't redirect the midi and possibly parameter settings to the right rack.
-* ok, so PlayerEngine possibly have the attribute rackFocus = N
-And that means that midi messages will be read when *that* rack is being rendered, right?
-Doesn't matter an awful lot, for multitibrality we *could* also read midi and call NoteOn etc before the rack is
-being called. Wouldn't matter. So then each rack has its channel. Is that what we're testing?
-But we probably still need rackInFocus = 0-9
-and midiMultiMode = true / false
+* midi-mapping av controller<>parameeter.. 
+hur skulle detta gå till? Börja först med att testa cc..
+asset-file per synth. funkar tills vidare. Sen vill man kanske kunna styra effekter också via CC..
 
-
-* having the render-function of playerEngine being similar to php mock
-* being able to load something into a rack, like a drum machine
-* being able to load an eventor into a rack, like a ocatver or anything
-* being able to load an effect into a rack, like delay
-* So, essentialy - we wait with timing.. 
-* Maybe have an static AudioMath class, with a LUT-table of a sine.
-
-DONE:
-* Rotator
-* pushing param from http to buffer.
+* skapa message buffer för dessa svar

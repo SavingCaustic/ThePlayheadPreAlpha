@@ -43,7 +43,7 @@ class PlayerEngine {
     bool pollMidiIn();
     void turnRackAndRender();
     void sumToMaster(float *buffer, unsigned long numFrames, int outer);
-
+    // hmm.. The racks should probably be on the stack instead, to speed up buffer management
     std::array<std::unique_ptr<Rack>, MAX_RACKS> racks; // Fixed-size array of unique pointers to racks
     float noiseVolume;
     Rotator hRotator;        // Rotator object
@@ -51,7 +51,8 @@ class PlayerEngine {
     bool isPlaying = false;  // Indicates if the player is currently playing
     MidiDriver *hMidiDriver = nullptr;
     bool midiMultiMode = false; // true if midiCh should be directed to respective rack
-    int rackInFocus = 0;        // number of rack in focus. What if no rack in focus?
+    int rackInFocus = 0;        // not sure about this.. number of rack in focus. What if no rack in focus?
+    int rackReceivingMidi = 0;
     std::vector<unsigned char> midiInMsg;
     double midiInTS; // probably not used, we use it when we get it.
     MessageReciever *messageReciever = nullptr;

@@ -1,5 +1,8 @@
 #pragma once
+#include "drivers/FileDriver.h"
+#include "ext/nlohmann/json.hpp"
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class SynthInterface {
@@ -14,5 +17,9 @@ class SynthInterface {
     virtual bool pushMyParam(const std::string &name, float val) = 0;
     virtual void pushStrParam(const std::string &name, float val) = 0;
 
+    void setupCCmapping(const std::string &synthName);
+    void handleMidiCC(int ccNumber, float value);
     // Optionally, you can add methods to interact with parameters if needed
+  protected:
+    std::unordered_map<int, std::string> ccMappings; // MIDI CC -> parameter name mappings
 };

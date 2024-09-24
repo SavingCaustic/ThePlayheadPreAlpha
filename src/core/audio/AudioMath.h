@@ -15,12 +15,12 @@ class AudioMath {
     static float noise();
     static float csin(float cf);
     static float ccos(float cf);
+    static float ctan(float cf);
     static float sin(float rad);
     static float cos(float rad);
     static float clamp(float value, float min, float max);
-    static float scale(float value, float min, float max);
-    static float logScale(float value, float min, float max);
-    static float logScale2(float value, float minValue, float octaves);
+    static float linScale(float value, float min, float max);
+    static float logScale(float value, float minValue, float octaves);
 
     static void generateLUT();
 

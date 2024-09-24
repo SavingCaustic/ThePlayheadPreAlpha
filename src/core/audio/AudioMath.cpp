@@ -48,6 +48,14 @@ float AudioMath::ccos(float cf) {
     return lut[pos];
 }
 
+float AudioMath::ctan(float cf) {
+    float sin = AudioMath::csin(cf);
+    float cos = AudioMath::csin(cf);
+    if (cos == 0)
+        cos = 0.001;
+    return (sin / cos);
+}
+
 void AudioMath::generateLUT() {
     // std::cout << "generating lut" << std::endl;
     for (size_t i = 0; i < lutSize; ++i) {
@@ -71,18 +79,11 @@ float AudioMath::clamp(float value, float min, float max) {
     return value;
 }
 
-float AudioMath::scale(float value, float min, float max) {
+float AudioMath::linScale(float value, float min, float max) {
     return min + (max - min) * value; // Linear scaling
 }
 
-float AudioMath::logScale(float value, float min, float max) {
-    // Example of logarithmic scaling
-    float logMin = std::log(min);
-    float logMax = std::log(max);
-    return std::exp(logMin + value * (logMax - logMin));
-}
-
-float AudioMath::logScale2(float value, float minValue, float octaves) {
+float AudioMath::logScale(float value, float minValue, float octaves) {
     // note that input is integer! 0-127. This should be rewritten to 0-1
     float result = minValue * std::exp2(value * octaves);
     std::cout << "log2 of " << value << " is " << result << std::endl;

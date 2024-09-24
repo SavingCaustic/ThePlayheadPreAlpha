@@ -139,9 +139,10 @@ bool PlayerEngine::pollMidiIn() {
     if (hMidiDriver) {
         MidiMessage newMessage;
         bool test = hMidiDriver->bufferRead(newMessage);
-        // If there's a message available
-        if (test) {
-            racks[0]->parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
+        // If there's a message available, and a rack receiving midi..
+        if (test && this->rackReceivingMidi >= 0) {
+            // affect eventors and effects with midiCC? currently no..
+            racks[this->rackReceivingMidi]->parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
         }
         return test; // Return the result of getMessage
     }
