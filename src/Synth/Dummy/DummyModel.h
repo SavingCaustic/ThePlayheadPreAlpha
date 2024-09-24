@@ -30,7 +30,6 @@ class DummyModel : public SynthInterface {
 
     // Method to parse MIDI commands
     void parseMidi(char cmd, char param1, char param2) override;
-    void pushStrParam(const std::string &name, float val) override;
     bool pushMyParam(const std::string &name, float val);
 
     // Method to render the next block of audio
@@ -67,8 +66,6 @@ class DummyModel : public SynthInterface {
     // Handle incoming MIDI CC messages
     void handleMidiCC(int ccNumber, float value);
     //
-    // Private method to set up parameter definitions and lambdas
-    std::unordered_map<std::string, ParamDefinition> parameterDefinitions;
     void setupParams() {
         // Use 'this' in lambdas to access private members directly
         parameterDefinitions = {

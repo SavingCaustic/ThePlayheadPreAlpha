@@ -5,72 +5,14 @@ namespace Synth::Dummy {
 
 DummyModel::DummyModel(Rack &rack)
     : rack(rack), buffer(rack.getAudioBuffer()) {
-    setupParams(); // creates the array with values and lambdas for parameters
-    initializeParameters();
+    setupParams(); // creates the array with values and lambdas for parameters - NOT INTERFACE
+    SynthInterface::initializeParameters();
     SynthInterface::setupCCmapping("Dummy"); // Adjust path as needed
     reset();
 }
 
 void DummyModel::reset() {
     // dunno..
-}
-
-void DummyModel::handleMidiCC(int ccNumber, float value) {
-    auto it = ccMappings.find(ccNumber);
-    if (it != ccMappings.end()) {
-        pushStrParam(it->second, value); // Call the method to set the parameter
-    } else {
-        std::cerr << "CC number " << ccNumber << " not mapped!" << std::endl;
-    }
-}
-
-void DummyModel::initializeParameters() {
-    float valToLambda;
-    for (const auto &[key, def] : parameterDefinitions) {
-        if (def.transformFunc) {
-            // not so fast, we need to use the right conversion
-            if (def.logCurve) {
-                // do log stuff
-                valToLambda = AudioMath::logScale(def.defaultValue, def.minValue, def.rangeFactor);
-            } else {
-                // do lin stuff
-                valToLambda = AudioMath::linScale(def.defaultValue, def.minValue, def.rangeFactor);
-            } // and what about snaps and enums?
-            def.transformFunc(valToLambda);
-        }
-    }
-}
-
-void DummyModel::pushStrParam(const std::string &name, float val) {
-    std::cout << "dealing with " << &name << " and its new value " << val << std::endl;
-    auto it = parameterDefinitions.find(name); // Look for the parameter in the definitions
-    float valToLambda;
-    if (it != parameterDefinitions.end()) {
-        const ParamDefinition &paramDef = it->second; // Get the parameter definition
-        // transform value here and let lambda focus on setting registers.
-        if (paramDef.logCurve) {
-            // do log stuff
-            valToLambda = AudioMath::logScale(val, paramDef.minValue, paramDef.rangeFactor);
-        } else {
-            // do lin stuff
-            valToLambda = AudioMath::linScale(val, paramDef.minValue, paramDef.rangeFactor);
-        } // and what about snaps and enums?
-
-        // Check if a callback function exists and call it with the provided value
-        if (paramDef.transformFunc) {
-            paramDef.transformFunc(valToLambda); // Call the lambda
-        } else {
-            std::cerr << "No callback function for parameter: " << name << "\n";
-        }
-    } else {
-        std::cerr << "Parameter not found: " << name << "\n";
-    }
-}
-
-bool DummyModel::pushMyParam(const std::string &name, float val) {
-    std::cout << "i got here" << std::endl;
-    DummyModel::pushStrParam(name, val);
-    return 0;
 }
 
 void DummyModel::parseMidi(char cmd, char param1, char param2) {
@@ -83,9 +25,9 @@ void DummyModel::parseMidi(char cmd, char param1, char param2) {
     case 0x90:             // Note on
         noiseVolume = 0.6; // Example behavior on note-on
         break;
-    case 0xb0: {                                 // Control change (CC)
-        int ccNumber = static_cast<int>(param1); // Get the CC number
-        handleMidiCC(ccNumber, fParam2);         // Use the handler for CC mapping
+    case 0xb0: {                                         // Control change (CC)
+        int ccNumber = static_cast<int>(param1);         // Get the CC number
+        SynthInterface::handleMidiCC(ccNumber, fParam2); // Use the handler for CC mapping
         break;
     }
     default:
