@@ -1,5 +1,7 @@
 #include "./SynthInterface.h"
 #include <core/audio/AudioMath.h>
+#include <drivers/FileDriver.h>
+#include <ext/nlohmann/json.hpp>
 #include <iostream>
 
 void SynthInterface::initializeParameters() {
@@ -20,6 +22,7 @@ void SynthInterface::initializeParameters() {
 }
 
 void SynthInterface::pushStrParam(const std::string &name, float val) {
+    // called from Rack, param not yet resolved.
     std::cout << "dealing with " << &name << " and its new value " << val << std::endl;
     auto it = parameterDefinitions.find(name); // Look for the parameter in the definitions
     float valToLambda;
@@ -46,27 +49,43 @@ void SynthInterface::pushStrParam(const std::string &name, float val) {
 }
 
 bool SynthInterface::pushMyParam(const std::string &name, float val) {
+    // when called?
     std::cout << "i got here" << std::endl;
     SynthInterface::pushStrParam(name, val);
     return 0;
 }
 
+// present parameters as json, since there is no file for this in assets..
+nlohmann::json SynthInterface::getParamDefsAsJson() {
+    nlohmann::json jsonOutput;
+    // Iterate over parameterDefinitions and create a JSON object
+    for (const auto &[paramName, paramDef] : parameterDefinitions) {
+        nlohmann::json paramJson;
+        paramJson["defaultValue"] = paramDef.defaultValue;
+        paramJson["logCurve"] = paramDef.logCurve;
+        paramJson["minValue"] = paramDef.minValue;
+        paramJson["rangeFactor"] = paramDef.rangeFactor;
+        paramJson["snapSteps"] = paramDef.snapSteps;
+        // Add the parameter entry to the main JSON object
+        jsonOutput[paramName] = paramJson;
+    }
+    return jsonOutput.dump(4);
+}
+
+// CC-mapping stuff
+
 void SynthInterface::setupCCmapping(const std::string &synthName) {
+    // setup for each rack right, event if same synth..
     // Construct path dynamically based on the synth name
     std::string path = "Synth/" + synthName + "/cc_mappings.json";
-
-    // Read JSON file using FileDriver
     std::string jsonData = FileDriver::readAssetFile(path);
-
     if (jsonData.empty()) {
         std::cerr << "Failed to read CC mapping file for " << synthName << std::endl;
         return;
     }
-
     // Parse the JSON data
     try {
         auto ccMappingsJson = nlohmann::json::parse(jsonData);
-
         // Populate the ccMappings map
         for (const auto &[cc, param] : ccMappingsJson.items()) {
             int ccNumber = std::stoi(cc);

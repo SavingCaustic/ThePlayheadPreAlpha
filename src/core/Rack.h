@@ -5,8 +5,8 @@
 #include "../Synth/SynthInterface.h"
 #include "../constants.h"
 // #include "ParamInterfaceBase.h"
-#include "PlayerEngine.h"
 #include <array>
+#include <cstddef> // for std::size_t
 #include <iostream>
 #include <memory>
 #include <string>
@@ -15,11 +15,12 @@ class PlayerEngine; // Forward declaration (??!!)
 
 class Rack {
   public:
-    // Constructor with reference to PlayerEngine
-    explicit Rack(PlayerEngine &engine)
-        : playerEngine(engine), audioBuffer{} {
-        // No need to setup synth factories here
+    // Method to set PlayerEngine after construction
+    void setPlayerEngine(PlayerEngine &engine) {
+        playerEngine = &engine;
     }
+
+    alignas(32) std::array<float, TPH_RACK_BUFFER_SIZE> audioBuffer;
 
     // Define the enum for unit types
     enum class UnitType {
@@ -32,6 +33,7 @@ class Rack {
         Unknown // Handle cases where the unit type is invalid
     };
 
+    // Getter method returns a reference to the array
     std::array<float, TPH_RACK_BUFFER_SIZE> &getAudioBuffer() {
         return audioBuffer;
     }
@@ -105,22 +107,29 @@ class Rack {
         }
     }
 
+    std::string getSynthParams() {
+        return synth->getParamDefsAsJson();
+    }
+
     bool setSynth(const std::string &synthName) {
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
+        bool loadOK = true;
         switch (type) {
         case SynthType::Dummy:
             synth = std::make_unique<Synth::Dummy::DummyModel>(*this);
-            return true;
+            break;
         // Add cases for other synth types here
         default:
             std::cerr << "Unknown synth type: " << synthName << std::endl;
-            return false;
+            loadOK = false;
         }
+        if (loadOK)
+            this->enabled = true;
+        return (loadOK);
     }
-
-    std::array<float, TPH_RACK_BUFFER_SIZE> audioBuffer;
-    // i dont wanna have this public but until passing on works better..
+    // props
+    bool enabled = false;
     std::unique_ptr<SynthInterface> synth;
 
   private:
@@ -131,13 +140,14 @@ class Rack {
     };
 
     SynthType getSynthType(const std::string &synthName) {
+        // i really don't know what i need this for..
         if (synthName == "Dummy")
             return SynthType::Dummy;
         // Add other synth type checks here
         return SynthType::Unknown;
     }
 
-    PlayerEngine &playerEngine; // Reference to PlayerEngine
+    PlayerEngine *playerEngine; // Reference to PlayerEngine
     // std::unique_ptr<SynthInterface> synth;
     std::unique_ptr<SynthInterface> hEventor1; // TOFIX update to EventorInterface
 };

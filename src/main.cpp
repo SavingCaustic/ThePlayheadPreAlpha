@@ -6,6 +6,7 @@
 #include "core/audio/AudioMath.h"
 #include "crow.h"
 #include "drivers/AudioDriver.h"
+#include "drivers/FileDriver.h"
 #include "drivers/MidiDriver.h"
 #include <atomic>
 #include <chrono>
@@ -22,85 +23,59 @@
 // Define the global shutdown flag. Set by endpoint shutdown (not signals)
 std::atomic<bool> shutdown_flag(false);
 
+// Custom signal handler
+void signal_handler(int signal) {
+    if (signal == SIGINT) {
+        std::cout << "Caught SIGINT (Ctrl+C), setting shutdown flag..." << std::endl;
+        shutdown_flag = true;
+    }
+}
+
 // Define and initialize the static variables outside the class
 int AudioDriver::gNumNoInputs = 0;
 double AudioDriver::vol = 0.7;
-PlayerEngine *rtPlayerEngine; // Global pointer to PlayerEngine
-MessageReciever *hMessageReciever;
 
-// Global instances of drivers
-AudioDriver *hAudioDriver;
-MidiDriver *hMidiDriver;
+// Global instances of drivers and main objects
 
-bool ends_with(const std::string &str, const std::string &suffix) {
-    return str.size() >= suffix.size() &&
-           str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
-}
-
-std::string load_file_content(const std::string &filepath) {
-    std::ifstream file(filepath);
-
-    if (!file) {
-        return ""; // Return empty string if file not found
-    }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf(); // Load the whole file into the stringstream
-    return buffer.str();
-}
+// Rack sRacks[TPH_RACK_COUNT];
+PlayerEngine sPlayerEngine; // Global pointer to PlayerEngine
+MessageReciever sMessageReciever(8);
+AudioDriver sAudioDriver(&sPlayerEngine);
+MidiDriver sMidiDriver;
 
 // Entry point of the program
 int main() {
-    // std::cout << "Current path: " << std::filesystem::current_path() << std::endl;
 
-    // Look, we want these to be static but there's an issue with Crow endpoints stop working..
-
-    // Initialize the global PlayerEngine instance
-    hMidiDriver = new MidiDriver();
-
-    // Initialitze the message-router
-    const size_t bufferSize = 8; // Choose a reasonable size for your use case
-    hMessageReciever = new MessageReciever(bufferSize);
-    // MessageRouter hMessageRouter(bufferSize);
-
-    // rtPlayerEngine = new PlayerEngine(*hMessageRouter);
-    rtPlayerEngine = new PlayerEngine();
-    rtPlayerEngine->BindMessageReciever(*hMessageReciever);
-    // PlayerEngine rtPlayerEngine(hMessageRouter);
-    //  rtPlayerEngine->doReset(); // Initialize the player engine
-
-    // Initialize global drivers. I'm not sure i wanna pass rtPlayerEngine..
-    hAudioDriver = new AudioDriver(rtPlayerEngine);
-    // AudioDriver hAudioDriver(&rtPlayerEngine);
-
-    //
+    sPlayerEngine.BindMessageReciever(sMessageReciever);
     AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
-    std::cout << "sin 0.125 => " << AudioMath::csin(1 / 8) << std::endl;
-    std::cout << "cos 0.125 => " << AudioMath::ccos(1 / 8) << std::endl;
 
-    // Create and start the Crow app
+    // Create the object
     crow::SimpleApp api;
+    // Remove default signal handler
+    api.signal_clear();
+    // Add our custom handler
+    signal(SIGINT, signal_handler);
 
     CROW_ROUTE(api, "/")
     ([]() { return crow::response(200, "PLAYHEAD AUDIO SERVER"); });
 
-    namespace fs = std::filesystem;
+    // namespace fs = std::filesystem;
 
     CROW_ROUTE(api, "/fe/<string>")
     ([](const std::string &filename) {
         std::string filepath = "assets/fe/" + filename;
 
         // Check if file exists
-        if (fs::exists(filepath)) {
-            std::string fileContent = load_file_content(filepath);
+        if (std::filesystem::exists(filepath)) {
+            std::string fileContent = FileDriver::load_file_content(filepath);
 
             // Determine file type based on extension
             std::string contentType = "text/plain";
-            if (ends_with(filename, ".html")) {
+            if (FileDriver::ends_with(filename, ".html")) {
                 contentType = "text/html";
-            } else if (ends_with(filename, ".css")) {
+            } else if (FileDriver::ends_with(filename, ".css")) {
                 contentType = "text/css";
-            } else if (ends_with(filename, ".js")) {
+            } else if (FileDriver::ends_with(filename, ".js")) {
                 contentType = "application/javascript";
             }
             crow::response res;
@@ -121,16 +96,16 @@ int main() {
 
     CROW_ROUTE(api, "/startup")
     ([]() {
-        hAudioDriver->start();
-        hMidiDriver->start();
-        rtPlayerEngine->midiEnable(hMidiDriver);
+        sAudioDriver.start();
+        sMidiDriver.start();
+        sPlayerEngine.midiEnable(&sMidiDriver);
         return crow::response(200, "Services started");
     });
 
     // Endpoint to start audio generation
     CROW_ROUTE(api, "/device/audio/doStart")
     ([]() {
-        if (hAudioDriver->start()) {
+        if (sAudioDriver.start()) {
             return crow::response(200, "Audio started successfully");
         } else {
             return crow::response(500, "Failed to start audio");
@@ -139,33 +114,42 @@ int main() {
     // Endpoint to stop audio generation
     CROW_ROUTE(api, "/device/audio/doStop")
     ([]() {
-        hAudioDriver->stop();
+        sAudioDriver.stop();
         return crow::response(200, "Audio stopped successfully"); });
 
     CROW_ROUTE(api, "/device/midi/doStart")
     ([]() {
-        hMidiDriver->start();
+        sMidiDriver.start();
         //also connect it to player engine..
-        rtPlayerEngine->midiEnable(hMidiDriver);
+        sPlayerEngine.midiEnable(&sMidiDriver);
         return crow::response(200, "Midi started successfully"); });
 
     CROW_ROUTE(api, "/device/midi/doStop")
     ([]() {
-        rtPlayerEngine->midiDisable();
-        hMidiDriver->stop();
+        sPlayerEngine.midiDisable();
+        sMidiDriver.stop();
         return crow::response(200, "Midi stopped successfully"); });
 
     CROW_ROUTE(api, "/test/pe/ping")
     ([]() {
-        rtPlayerEngine->ping();
-        //hMidiDriver->playerPing();
+        sPlayerEngine.ping();
         return crow::response(200, "Ping sent from PlayerEngine"); });
 
     CROW_ROUTE(api, "/test/pe/rackSetup")
     ([]() {
-        rtPlayerEngine->testRackSetup();
-        // hMidiDriver->playerSynthSetup();
+        sPlayerEngine.testRackSetup();
         return crow::response(200, "Test synth setup");
+    });
+
+    CROW_ROUTE(api, "/rack/getFakeSynthParams")
+    ([]() {
+        std::string json = sPlayerEngine.getSynthParams(0);
+        if (json.empty()) {
+            return crow::response(500, "Failed to retrieve synth parameters");
+        }
+
+        // Return the JSON response with a 200 OK status
+        return crow::response(200, json);
     });
 
     api.route_dynamic("/setRackUnitParam")([](const crow::request &req) {
@@ -200,7 +184,7 @@ int main() {
 
         std::string name_str(name ? name : "");
         Message msg{rack, "synth", name_str.c_str(), value};
-        if (hMessageReciever->push(msg)) {
+        if (sMessageReciever.push(msg)) {
             // Return success message
             return crow::response(200, "Pushed message to the rack");
         } else {
@@ -208,33 +192,25 @@ int main() {
         }
     });
 
-    // Run the server in a separate thread
-    std::thread server_thread([&api]() { api.port(18080).run(); });
+    // api.port(18080).run();
+    //  when here all closed the right way..
+    // std::cout << "Graceful quit right?" << std::endl;
+    // return 0;
+    /* Threaded CROW - probably not needed */
 
-    // Monitor the shutdown flag
+    std::thread server_thread([&api]() { api.port(18080).run(); });
     while (!shutdown_flag.load()) {
-        std::this_thread::sleep_for(std::chrono::seconds(3));
         if (DEBUG_MODE) {
             std::cout << "housekeeping.. " << std::endl;
         }
+        std::this_thread::sleep_for(std::chrono::seconds(3));
     }
-
-    // Stop the server gracefully
     std::cout << "Stopping the server..." << std::endl;
     api.stop();
     std::this_thread::sleep_for(std::chrono::seconds(1));
-
-    // Wait for the server thread to finish
     if (server_thread.joinable()) {
         server_thread.join();
     }
-
-    // Cleanup
-    delete hAudioDriver;
-    delete hMidiDriver;
-    delete rtPlayerEngine;
-    delete hMessageReciever;
-
     std::cout << "Server stopped gracefully." << std::endl;
     return 0;
 }

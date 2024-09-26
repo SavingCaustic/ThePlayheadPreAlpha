@@ -28,9 +28,9 @@ pkg_check_modules(RTMIDI REQUIRED rtmidi)
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
 
 # SIMD optimization flags
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")
-endif()
+# if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")
+# endif()
 
 # Include directories for target
 target_include_directories(MyDAW2 PRIVATE

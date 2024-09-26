@@ -43,3 +43,21 @@ bool FileDriver::writeUserFile(const std::string &filename, const std::string &c
 
     return true;
 }
+
+// these was in main..
+bool FileDriver::ends_with(const std::string &str, const std::string &suffix) {
+    return str.size() >= suffix.size() &&
+           str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+std::string FileDriver::load_file_content(const std::string &filepath) {
+    std::ifstream file(filepath);
+
+    if (!file) {
+        return ""; // Return empty string if file not found
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf(); // Load the whole file into the stringstream
+    return buffer.str();
+}

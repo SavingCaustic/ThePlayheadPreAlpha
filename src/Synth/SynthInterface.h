@@ -1,7 +1,6 @@
 #pragma once
-#include "drivers/FileDriver.h"
-#include "ext/nlohmann/json.hpp"
 #include <core/params.h>
+#include <ext/nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -17,6 +16,9 @@ class SynthInterface {
     // experimenting with moving push to synth..
     // virtual bool pushMyParam(const std::string &name, float val) = 0;
     // virtual void pushStrParam(const std::string &name, float val) = 0;
+
+    // this could be private.. ehh? called from rack
+    nlohmann::json getParamDefsAsJson();
 
     // abstract methods
     void pushStrParam(const std::string &name, float val);

@@ -10,41 +10,41 @@
 #include <memory>
 #include <thread>
 
-// Forward declaration of Rack
-class Rack;
-
 class MessageRouter;
 struct Message;
 
 class PlayerEngine {
   public:
-    static const std::size_t MAX_RACKS = TPH_RACK_COUNT;
-
-    // PlayerEngine(MessageRouter &hMessageRouter); // Add reference to constructor
     PlayerEngine(); // Add reference to constructor
+
     void BindMessageReciever(MessageReciever &hMessageReciever);
 
     void reset();
     void doReset();
+    void initializeRacks();
+
     void ping();
     void testRackSetup();
+
+    std::string getSynthParams(int rackId);
 
     void midiEnable(MidiDriver *midiDriver);
     void midiDisable();
     bool setupRackWithSynth(int rackId, const std::string &synthName);
-    bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
-    Rack *getRack(std::size_t position) const;
-    void render(float *buffer, unsigned long numFrames);
-    void noteOnDemo();
+    // R    bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
+    // R    Rack *getRack(std::size_t position) const;
     void renderNextBlock(float *buffer, unsigned long numFrames);
+    // may be private
 
   private:
+    Rack racks[TPH_RACK_COUNT]; // Array of Rack objects
+    //  Other members...
+
     void clockResetMethod();
     bool pollMidiIn();
     void turnRackAndRender();
     void sumToMaster(float *buffer, unsigned long numFrames, int outer);
     // hmm.. The racks should probably be on the stack instead, to speed up buffer management
-    std::array<std::unique_ptr<Rack>, MAX_RACKS> racks; // Fixed-size array of unique pointers to racks
     float noiseVolume;
     Rotator hRotator;        // Rotator object
     bool clockReset = false; // Clock reset flag

@@ -81,6 +81,11 @@ class DummyModel : public SynthInterface {
                             this->cutoffHz = v;
                             this->initLPF();
                         }}}, // More params can be added
+            {"detune", {0.5f, 0, false, -100, 200, [this](float v) {
+                            std::cout << "setting detune to " << v << std::endl;
+                            this->cutoffHz = v;
+                            this->initLPF();
+                        }}}, // More params can be added
             {"filter_mode", {0.0f, 3, false, 0, 2, [this](float v) {
                                  // snap somehowm using attributes..
                                  this->filterType = FilterType::LPF;
