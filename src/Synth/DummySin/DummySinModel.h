@@ -121,7 +121,7 @@ class Model : public SynthInterface {
     void setupParams();
     float lut1[LUT_SIZE]{};
     float lutIdx = 0;
-    float angle = 440 * LUT_SIZE * (1.0f / TPH_DSP_SR);
+    float angle = AudioMath::getMasterTune() * LUT_SIZE * (1.0f / TPH_DSP_SR);
     float bendCents = 0;
 };
 

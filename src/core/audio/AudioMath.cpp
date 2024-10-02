@@ -4,7 +4,7 @@
 // Initialize static members
 std::array<float, AudioMath::lutSize> AudioMath::lut{};
 const float AudioMath::lutSizeFloat = 4096.0f;
-float AudioMath::masterTune = 440.0f;
+float AudioMath::masterTune = 432.0f;
 int AudioMath::noiseSeed = 235325325;
 int AudioMath::noiseA = 1664525;
 int AudioMath::noiseB = 1013904223;
