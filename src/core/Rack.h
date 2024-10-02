@@ -1,8 +1,10 @@
 #pragma once
 
+#include "../Effect/Delay/DelayModel.h"
 #include "../Synth/Dummy/DummyModel.h"
+#include "../Synth/DummySin/DummySinModel.h"
 //
-#include "../Synth/SynthInterface.h"
+// #include "../Synth/SynthInterface.h"
 #include "../constants.h"
 // #include "ParamInterfaceBase.h"
 #include <array>
@@ -53,6 +55,10 @@ class Rack {
             for (int i = 0; i < TPH_RACK_BUFFER_SIZE; ++i) {
                 *ptr++ = 0.05 * (((float)rand() / RAND_MAX) * 2.0f - 1.0f); // Noise
             }
+        }
+        if (effect1) {
+            // hey we should have a return argument here - telling if its stereo..
+            effect1->renderNextBlock();
         }
     }
 
@@ -117,7 +123,10 @@ class Rack {
         bool loadOK = true;
         switch (type) {
         case SynthType::Dummy:
-            synth = std::make_unique<Synth::Dummy::DummyModel>(*this);
+            synth = std::make_unique<Synth::Dummy::Model>(audioBuffer.data(), audioBuffer.size());
+            break;
+        case SynthType::DummySin:
+            synth = std::make_unique<Synth::DummySin::Model>(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
         default:
@@ -128,13 +137,34 @@ class Rack {
             this->enabled = true;
         return (loadOK);
     }
+
+    bool setEffect(const std::string &effectName, int effectSlot = 1) {
+        std::cout << "we're setting up effect: " << effectName << std::endl;
+        EffectType type = getEffectType(effectName);
+        bool loadOK = true;
+        switch (type) {
+        case EffectType::Delay:
+            effect1 = std::make_unique<Effect::Delay::Model>(audioBuffer.data(), audioBuffer.size());
+            break;
+        // Add cases for other synth types here
+        default:
+            std::cerr << "Unknown effect type: " << effectName << std::endl;
+            loadOK = false;
+        }
+        if (loadOK)
+            this->enabled = true;
+        return (loadOK);
+    }
+
     // props
     bool enabled = false;
     std::unique_ptr<SynthInterface> synth;
+    std::unique_ptr<EffectInterface> effect1;
 
   private:
     enum class SynthType {
         Dummy,
+        DummySin,
         // Add other synth types here
         Unknown
     };
@@ -143,8 +173,24 @@ class Rack {
         // i really don't know what i need this for..
         if (synthName == "Dummy")
             return SynthType::Dummy;
+        if (synthName == "DummySin")
+            return SynthType::DummySin;
         // Add other synth type checks here
         return SynthType::Unknown;
+    }
+
+    enum class EffectType {
+        Delay,
+        // Add other synth types here
+        Unknown
+    };
+
+    EffectType getEffectType(const std::string &effectName) {
+        // i really don't know what i need this for..
+        if (effectName == "Delay")
+            return EffectType::Delay;
+        // Add other synth type checks here
+        return EffectType::Unknown;
     }
 
     PlayerEngine *playerEngine; // Reference to PlayerEngine

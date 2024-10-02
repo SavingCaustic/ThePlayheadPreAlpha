@@ -37,6 +37,7 @@ class MidiDriver {
             }
 
             std::string deviceName = "Impact LX25+";
+            //std::string deviceName = "Virtual Keyboard";
             unsigned int selectedPort = -1;
             for (unsigned int i = 0; i < nPorts; i++) {
                 std::string portName = midiIn->getPortName(i);

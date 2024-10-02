@@ -130,6 +130,12 @@ int main() {
         sMidiDriver.stop();
         return crow::response(200, "Midi stopped successfully"); });
 
+    CROW_ROUTE(api, "/stat/pe/loadAvg")
+    ([]() {
+        float loadAvg = sPlayerEngine.getLoadAvg();
+        std::cout << "LoadAvg: " << (loadAvg*100) << std::endl;
+        return crow::response(200, "Loadavg:"); });
+
     CROW_ROUTE(api, "/test/pe/ping")
     ([]() {
         sPlayerEngine.ping();

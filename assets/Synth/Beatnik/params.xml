@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<params>
+    <value name="sample_01" default="lm-2/kick.wav"/>
+    <centerknob name="tune_01" label="Tune" default="0" xy="5,5"/>
+    <knob name="punch_01" label="Attack" default="0" xy="5,12"/>
+    <centerknob name="pan_01" label="Pan" default="0" xy="5,19"/>
+    <knob name="vol_01" label="Vol" default="0.5" xy="5,26"/>
+    <switch name="mute_01" label="Mute" />
+    <switch name="solo_01" label="Solo" />
+</params>

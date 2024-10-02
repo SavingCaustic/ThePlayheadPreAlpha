@@ -1,7 +1,7 @@
 #pragma once
 
 // Forward declare Rack to avoid circular dependency
-class Rack;
+// class Rack;
 
 #include "Synth/SynthInterface.h"
 #include "constants.h"
@@ -21,10 +21,10 @@ enum class FilterType {
     HPF  // High Pass Filter
 };
 
-class DummyModel : public SynthInterface {
+class Model : public SynthInterface {
   public:
     // Constructor
-    explicit DummyModel(Rack &rack);
+    Model(float *audioBuffer, std::size_t bufferSize);
     // Public methods. These should match interface right (contract)
     void reset() override;
 
@@ -35,9 +35,10 @@ class DummyModel : public SynthInterface {
     // Method to render the next block of audio
     bool renderNextBlock() override;
 
-  private:
-    Rack &rack;
-    std::array<float, TPH_RACK_BUFFER_SIZE> &buffer; // Use std::array to match Rack's audioBuffer type
+  protected:
+    float *buffer;          // Pointer to audio buffer
+    std::size_t bufferSize; // Size of the audio buffer
+
     float noiseVolume = 0.4;
     FilterType filterType; // New member variable for filter type
 
@@ -66,33 +67,7 @@ class DummyModel : public SynthInterface {
     // Handle incoming MIDI CC messages
     void handleMidiCC(int ccNumber, float value);
     //
-    void setupParams() {
-        // Use 'this' in lambdas to access private members directly
-        parameterDefinitions = {
-            {"pan", {0.1f, 0, false, 0, 1, [this](float v) {
-                         // Directly accessing private members
-                         this->gainLeft = AudioMath::ccos(v * 0.25f);  // Left gain decreases as panVal goes to 1
-                         this->gainRight = AudioMath::csin(v * 0.25f); // Right gain increases as panVal goes to 1
-                         // create message to messageTransmitter..
-                         std::cout << "setting gain to (L,R)" << this->gainLeft << ", " << this->gainRight << std::endl;
-                     }}},
-            {"cutoff", {0.5f, 0, true, 20, 8, [this](float v) {
-                            std::cout << "setting cutoff to " << v << std::endl;
-                            this->cutoffHz = v;
-                            this->initLPF();
-                        }}}, // More params can be added
-            {"detune", {0.5f, 0, false, -100, 200, [this](float v) {
-                            std::cout << "setting detune to " << v << std::endl;
-                            this->cutoffHz = v;
-                            this->initLPF();
-                        }}}, // More params can be added
-            {"filter_mode", {0.0f, 3, false, 0, 2, [this](float v) {
-                                 // snap somehowm using attributes..
-                                 this->filterType = FilterType::LPF;
-                                 this->initLPF();
-                             }}}, // More params can be added
-        };
-    }
+    void setupParams();
 };
 
 } // namespace Synth::Dummy

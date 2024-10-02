@@ -14,5 +14,5 @@ struct ParamDefinition {
     std::function<void(float)> transformFunc; // Lambda for handling parameter changes
 };
 
-// Define a map that holds all parameter definitions
-extern std::unordered_map<std::string, ParamDefinition> parameterDefinitions;
+// Probably move to SynthInterface..
+// extern std::unordered_map<std::string, ParamDefinition> parameterDefinitions;

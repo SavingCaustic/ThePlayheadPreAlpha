@@ -37,20 +37,26 @@ void PlayerEngine::BindMessageReciever(MessageReciever &hMessageReciever) {
 }
 
 void PlayerEngine::testRackSetup() {
-    this->setupRackWithSynth(0, "Dummy");
+    this->setupRackWithSynth(0, "DummySin");
 }
 
 bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) {
     // Check if the rack already exists
     racks[rackId].setSynth(synthName);
     //   Now, setup the synth for the rack
+    racks[rackId].setEffect("Delay");
     return false;
+}
+
+float PlayerEngine::getLoadAvg() {
+    // this should really be atomic..
+    return this->loadAvg;
 }
 
 void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     // Get the current time in microseconds
     // Calculate time for next frame based on sample rate and numFrames
-    double frameDurationMicroSec = (numFrames * 1'000'000.0) / TPH_DSP_SR;
+    double frameDurationMicroSec = (numFrames * 1'000'000.0) * (1 / TPH_DSP_SR);
     auto nextFrameTime = std::chrono::high_resolution_clock::now() + std::chrono::microseconds(static_cast<long long>(frameDurationMicroSec));
     //
     if (clockReset) {
@@ -65,6 +71,16 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     //
     auto endTime = std::chrono::high_resolution_clock::now();
     auto timeLeftUs = std::chrono::duration_cast<std::chrono::microseconds>(nextFrameTime - endTime).count();
+    // Time used for rendering in microseconds
+    auto timeUsedUs = frameDurationMicroSec - static_cast<double>(timeLeftUs);
+    // Clamp the timeUsedUs to avoid negative values (if timeLeftUs is greater than frameDurationMicroSec)
+    timeUsedUs = std::max(0.0, timeUsedUs);
+    // Calculate raw load average as the ratio of time used to frame duration
+    double rawLoad = timeUsedUs / frameDurationMicroSec;
+    // Smoothing with a factor (alpha), for example, alpha = 0.1 for smooth update
+    constexpr double alpha = 0.1;
+    this->loadAvg = (alpha * rawLoad) + ((1 - alpha) * this->loadAvg);
+    //
     if (timeLeftUs > 1500) {
         // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
         auto optionalMessage = messageReciever->pop();

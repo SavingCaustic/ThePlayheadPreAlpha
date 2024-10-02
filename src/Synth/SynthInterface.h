@@ -30,7 +30,8 @@ class SynthInterface {
 
     // Optionally, you can add methods to interact with parameters if needed
   protected:
+    // belonging to class, not instance
+    static std::unordered_map<std::string, ParamDefinition> parameterDefinitions;
+    // belonging to instance, because they may be overridden by patch settings.
     std::unordered_map<int, std::string> ccMappings; // MIDI CC -> parameter name mappings
-    // Private method to set up parameter definitions and lambdas
-    std::unordered_map<std::string, ParamDefinition> parameterDefinitions;
 };

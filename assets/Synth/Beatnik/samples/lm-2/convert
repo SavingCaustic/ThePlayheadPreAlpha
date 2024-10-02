@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "this generates broken headers in wav file"
+#for file in *.wav; do
+#    ffmpeg -i "$file" -ar 48000 "48/${file}"
+#done

@@ -3,7 +3,7 @@
 
 // Initialize static members
 std::array<float, AudioMath::lutSize> AudioMath::lut{};
-const float AudioMath::lutSizeFloat = 1024.0f;
+const float AudioMath::lutSizeFloat = 4096.0f;
 float AudioMath::masterTune = 440.0f;
 int AudioMath::noiseSeed = 235325325;
 int AudioMath::noiseA = 1664525;
@@ -12,7 +12,7 @@ int AudioMath::noiseC = 1 << 24; // 2^24, replaced with constexpr.
 
 // Implement static methods
 float AudioMath::noteToHz(int note, int cent) {
-    return masterTune * std::exp2((note - 69 + (cent * 0.01f)) / 12.0f);
+    return masterTune * std::exp2((note - 69 + (cent * 0.01f)) * (1 / 12.0f));
 }
 
 void AudioMath::setMasterTune(float newMasterTune) {

@@ -3,6 +3,11 @@
 #include <drivers/FileDriver.h>
 #include <ext/nlohmann/json.hpp>
 #include <iostream>
+// none of code below is specific to synth.
+// they should be removed.
+
+// Initialize the static unordered_map
+std::unordered_map<std::string, ParamDefinition> SynthInterface::parameterDefinitions;
 
 void SynthInterface::initializeParameters() {
     float valToLambda;

@@ -25,7 +25,7 @@ class AudioMath {
     static void generateLUT();
 
   private:
-    static constexpr size_t lutSize = 1024; // Can stay here
+    static constexpr size_t lutSize = 4096; // Can stay here
     static const float lutSizeFloat;        // Declaration only, definition in .cpp
     static std::array<float, lutSize> lut;
     static float masterTune;

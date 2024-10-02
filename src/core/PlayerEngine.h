@@ -24,6 +24,7 @@ class PlayerEngine {
     void initializeRacks();
 
     void ping();
+    float getLoadAvg();
     void testRackSetup();
 
     std::string getSynthParams(int rackId);
@@ -57,4 +58,6 @@ class PlayerEngine {
     double midiInTS; // probably not used, we use it when we get it.
     MessageReciever *messageReciever = nullptr;
     Message newMessage; // Declare a reusable Message object
+
+    float loadAvg = 0;
 };

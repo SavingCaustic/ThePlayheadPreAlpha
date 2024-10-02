@@ -39,6 +39,7 @@ class AudioDriver {
             return true;
 
         vol = 0;
+	//DONT think this  should be here.
         rtPlayerEngine->doReset(); // Use instance method
 
         PaError err = Pa_OpenDefaultStream(&stream, 0, 2, paFloat32, sample_rate, TPH_AUDIO_BUFFER_SIZE, audioCallback, this);
@@ -47,6 +48,7 @@ class AudioDriver {
             return false;
         }
 
+	Pa_Sleep(100);	//edded to avoid start underruns.
         err = Pa_StartStream(stream);
         if (err != paNoError) {
             std::cerr << "PortAudio error: " << Pa_GetErrorText(err) << std::endl;

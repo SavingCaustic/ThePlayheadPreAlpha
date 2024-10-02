@@ -1,10 +1,8 @@
 TODO
 ====
-* nåt som behöver göras om med parametrar. värdet ska ju omskapas innan det kastas in i lambdan.
-Lambdan sja bara göra halva jobbet - skicka till moduler.
-Sen behöver värdet sparas och skickas tillbaka. Gör utanför (return)
-på sikt *kanske* vi kan skicka hela lambdan till ngn 'smoother' som körs 24ppqn typ.
-eller tja, det kanske är så att automatiseringen får sköta det. en smoother per automatisering..
+* döp om klassnamn för syntar men kanske behåll filnamn så man ser i vsCode.
+
+* mjuka övergångar - nån slags filter..
 
 * snap på parametrar. Stöd för filter-typ i DummySynth.
 Då behöver vi väl jämföra nuv position med ny föreslagen, så vi inte kallar lambdan i onödan.
@@ -15,9 +13,6 @@ Kan vänta med automation med förbreda för det. (på väg att skapa egen klass
 klura på logik för att ha både synth- och rack-patches.
 
 * kunna ladda parametrar som patch.
-
-* nåt sätt att aktivera / avaktivera rack för uppspelning. (inte lita på is_null)
-* flytta rack så de är på stacken istället (snabbare buffer)
 
 * skicka svar från parametrar med både 0-1 och värdet, ex "40L"
 gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS istället för hela vägen tillbaka..
@@ -36,12 +31,28 @@ gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS ist�
 
 * modul-kul: ocatver.
 
-* byta huvudobject till stackspace
+* kodstäd
 
 * börja med timing..
 
 
+
 FIXAT:
+
+* Ta bort depenencien till Rack på Unit. Pekar direkt på buffern bara.
+
+* nåt som behöver göras om med parametrar. värdet ska ju omskapas innan det kastas in i lambdan.
+Lambdan sja bara göra halva jobbet - skicka till moduler.
+Sen behöver värdet sparas och skickas tillbaka. Gör utanför (return)
+på sikt *kanske* vi kan skicka hela lambdan till ngn 'smoother' som körs 24ppqn typ.
+eller tja, det kanske är så att automatiseringen får sköta det. en smoother per automatisering..
+
+* Rensa dummyModel från grejer som borde vara i interface
+
+* nåt sätt att aktivera / avaktivera rack för uppspelning. (inte lita på is_null)
+* flytta rack så de är på stacken istället (snabbare buffer)
+
+* byta huvudobject till stackspace
 
 * rackInFocus i playerEngine(?) så den vet vart midi-meddelanden ska skickas.
 rackReceivingMidi = 0-n; (-1 no midi in)
