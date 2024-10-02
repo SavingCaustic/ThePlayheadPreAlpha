@@ -1,0 +1,30 @@
+{
+    "synth": {
+        "type": "DummySine",
+        "parameters": {
+            "cutoff": "0.4",
+            "osc1_wf": "3",
+            "osc2_wfdata": "0,0.8,0.2,0.6,0,0,0,0,0.5"
+        }
+    },
+    "effect1": {
+        "type": "Delay",
+        "parameters": {
+            "time": "0.6",
+            "mix": "0.4",
+            "feedback": "0.2"
+        }
+    },
+    "emittor": {
+        "comment": "saving this since its needed for song..",
+        "eq_high": "0.6",
+        "eq_mid": "0.4",
+        "eq_low": "0.2",
+        "pan": "0.3",
+        "fader": "0.7"
+    },
+    "midi-cc": {
+        "74": "effect1.mix",
+        "72": "synth.cutoff"
+    }
+}
