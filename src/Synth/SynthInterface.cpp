@@ -101,7 +101,7 @@ void SynthInterface::setupCCmapping(const std::string &synthName) {
     }
 }
 
-void SynthInterface::handleMidiCC(int ccNumber, float value) {
+void SynthInterface::handleMidiCC(u_int8_t ccNumber, float value) {
     auto it = ccMappings.find(ccNumber);
     if (it != ccMappings.end()) {
         const std::string &paramName = it->second;

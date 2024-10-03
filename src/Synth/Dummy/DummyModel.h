@@ -29,7 +29,7 @@ class Model : public SynthInterface {
     void reset() override;
 
     // Method to parse MIDI commands
-    void parseMidi(char cmd, char param1, char param2) override;
+    void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) override;
     bool pushMyParam(const std::string &name, float val);
 
     // Method to render the next block of audio

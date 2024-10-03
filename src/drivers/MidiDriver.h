@@ -37,7 +37,7 @@ class MidiDriver {
             }
 
             std::string deviceName = "Impact LX25+";
-            //std::string deviceName = "Virtual Keyboard";
+            // std::string deviceName = "Virtual Keyboard";
             unsigned int selectedPort = -1;
             for (unsigned int i = 0; i < nPorts; i++) {
                 std::string portName = midiIn->getPortName(i);
@@ -100,17 +100,17 @@ class MidiDriver {
     }
 
   private:
-    static void midiCallback(double deltatime, std::vector<unsigned char> *message, void *userData) {
+    static void midiCallback(double deltatime, std::vector<uint8_t> *message, void *userData) {
         MidiDriver *driver = static_cast<MidiDriver *>(userData);
         driver->handleMidiMessage(message);
     }
 
-    void handleMidiMessage(std::vector<unsigned char> *message) {
-        for (unsigned char byte : *message) {
+    void handleMidiMessage(std::vector<uint8_t> *message) {
+        for (uint8_t byte : *message) {
             uint8_t test = 0;
             switch (midiInState) {
             case 0:
-                test = static_cast<uint8_t>(byte & 0xf0);
+                test = byte & 0xf0;
                 // Expecting a command byte
                 midiInCmd = byte;
                 switch (test) {

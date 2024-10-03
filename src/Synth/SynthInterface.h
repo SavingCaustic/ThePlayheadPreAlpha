@@ -10,9 +10,9 @@ class SynthInterface {
     virtual ~SynthInterface() = default;
 
     // Pure virtual methods that need to be implemented by derived classes
-    virtual void reset() = 0;                                       // Reset the synth to its default state
-    virtual void parseMidi(char cmd, char param1, char param2) = 0; // Handle MIDI input
-    virtual bool renderNextBlock() = 0;                             // Process the next audio block
+    virtual void reset() = 0;                                                // Reset the synth to its default state
+    virtual void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) = 0; // Handle MIDI input
+    virtual bool renderNextBlock() = 0;                                      // Process the next audio block
     // experimenting with moving push to synth..
     // virtual bool pushMyParam(const std::string &name, float val) = 0;
     // virtual void pushStrParam(const std::string &name, float val) = 0;
@@ -23,15 +23,16 @@ class SynthInterface {
     // abstract methods
     void pushStrParam(const std::string &name, float val);
     void initializeParameters();
-    void handleMidiCC(int ccNumber, float value);
+    void handleMidiCC(u_int8_t ccNumber, float value);
     bool pushMyParam(const std::string &name, float val);
 
     void setupCCmapping(const std::string &synthName);
 
     // Optionally, you can add methods to interact with parameters if needed
+    static std::unordered_map<std::string, ParamDefinition> parameterDefinitions;
+
   protected:
     // belonging to class, not instance
-    static std::unordered_map<std::string, ParamDefinition> parameterDefinitions;
     // belonging to instance, because they may be overridden by patch settings.
     std::unordered_map<int, std::string> ccMappings; // MIDI CC -> parameter name mappings
 };

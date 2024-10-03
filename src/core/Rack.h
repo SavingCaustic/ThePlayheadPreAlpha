@@ -62,7 +62,7 @@ class Rack {
         }
     }
 
-    void parseMidi(char cmd, char param1 = 0x00, char param2 = 0x00) {
+    void parseMidi(uint8_t cmd, uint8_t param1 = 0x00, uint8_t param2 = 0x00) {
         if (!(this->hEventor1)) {
             this->synth->parseMidi(cmd, param1, param2);
         } else {

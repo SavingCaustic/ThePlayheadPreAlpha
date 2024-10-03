@@ -46,7 +46,7 @@ void Model::reset() {
     // dunno..
 }
 
-void Model::parseMidi(char cmd, char param1, char param2) {
+void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
     u_int8_t messageType = static_cast<uint8_t>(cmd & 0xf0);
     float fParam2 = static_cast<float>(param2) * (1.0f / 127.0f);
 

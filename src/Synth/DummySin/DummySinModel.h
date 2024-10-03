@@ -66,6 +66,7 @@ enum class FilterType {
 constexpr int LUT_SIZE = 4096;
 
 class Model : public SynthInterface {
+
   public:
     // Constructor
     Model(float *audioBuffer, std::size_t bufferSize);
@@ -73,12 +74,11 @@ class Model : public SynthInterface {
     void reset() override;
 
     // Method to parse MIDI commands
-    void parseMidi(char cmd, char param1, char param2) override;
+    void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) override;
     bool pushMyParam(const std::string &name, float val);
 
     // Method to render the next block of audio
     bool renderNextBlock() override;
-    bool renderNextBlock_kasta();
 
   protected:
     float *buffer;          // Pointer to audio buffer
@@ -115,7 +115,7 @@ class Model : public SynthInterface {
 
     void initializeParameters();
     // Handle incoming MIDI CC messages
-    void handleMidiCC(int ccNumber, float value);
+    void handleMidiCC(uint8_t ccNumber, float value);
     //
     int notePlaying = 0; // 0 = no note
     void setupParams();

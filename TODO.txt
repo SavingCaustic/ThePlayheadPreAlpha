@@ -1,5 +1,6 @@
 TODO
 ====
+
 * kunna spara parametrar som patch.
 klura på logik för att ha både synth- och rack-patches.
 
@@ -10,8 +11,6 @@ Då behöver vi väl jämföra nuv position med ny föreslagen, så vi inte kall
 Och då behöver vi veta om värdet vi är på väg att skriva är persistant eller temp (automation).
 Kan vänta med automation med förbreda för det. (på väg att skapa egen klass här..)
 
-* döp om klassnamn för syntar men kanske behåll filnamn så man ser i vsCode.
-
 * mjuka övergångar - nån slags filter..
 
 * skicka svar från parametrar med både 0-1 och värdet, ex "40L"
@@ -20,8 +19,6 @@ gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS ist�
 * Kunna skicka disableRack så att vi kan göra operationer som ladda synth m.m.
 
 * websocket-server som kan ta emot dessa svar och skicka vidare till klient
-
-* sine-synth. mono och bara AR, men för att testa LUT, frekvens o midi.
 
 * Flera egenskaper *rack* sätts från endpoint. Risk för race.
 
@@ -38,6 +35,13 @@ gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS ist�
 
 
 FIXAT:
+* Rensa så midi inte använder char
+
+* Flytta endpoints till egen fil
+
+* sine-synth. mono och bara AR, men för att testa LUT, frekvens o midi.
+
+* döp om klassnamn för syntar men kanske behåll filnamn så man ser i vsCode.
 
 * Ta bort depenencien till Rack på Unit. Pekar direkt på buffern bara.
 

@@ -25,7 +25,7 @@ void Model::setupParams() {
             {"cutoff", {0.5f, 0, true, 50, 8, [this](float v) {
                             std::cout << "Setting cutoff to " << v << std::endl;
                             cutoffHz = v;
-                            initLPF();
+                            initBPF();
                         }}},
             {"detune", {0.5f, 0, false, -100, 100, [this](float v) {
                             // note that attributes are from-to.
@@ -59,8 +59,8 @@ void Model::reset() {
     */
 }
 
-void Model::parseMidi(char cmd, char param1, char param2) {
-    u_int8_t messageType = static_cast<uint8_t>(cmd & 0xf0);
+void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
+    u_int8_t messageType = cmd & 0xf0;
     float fParam2 = static_cast<float>(param2) * (1.0f / 127.0f);
     switch (messageType) {
     case 0x80:
@@ -77,7 +77,7 @@ void Model::parseMidi(char cmd, char param1, char param2) {
         break;
     case 0xb0:
         // Control change (CC)
-        SynthInterface::handleMidiCC(static_cast<int>(param1), fParam2);
+        SynthInterface::handleMidiCC(param1, fParam2);
         break;
     case 0xe0: {
         // Pitch bend extra varialbes - use curly braces..
