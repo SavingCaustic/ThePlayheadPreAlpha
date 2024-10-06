@@ -1,0 +1,2 @@
+This fuzz creates random segfaults at start of PA, 
+and if these can be fixed that fix should be brought to playhead.

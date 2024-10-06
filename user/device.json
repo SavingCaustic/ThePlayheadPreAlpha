@@ -1,0 +1,6 @@
+{
+    "audio_device":"ALC285 Analog",
+    "44k1": false,
+    "buffer_size":512,
+    "midi_device":1
+}

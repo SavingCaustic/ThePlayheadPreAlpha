@@ -28,7 +28,7 @@ void EffectInterface::initializeParameters() {
 
 void EffectInterface::pushStrParam(const std::string &name, float val) {
     // called from Rack, param not yet resolved.
-    std::cout << "dealing with " << &name << " and its new value " << val << std::endl;
+    // std::cout << "dealing with " << &name << " and its new value " << val << std::endl;
     auto it = parameterDefinitions.find(name); // Look for the parameter in the definitions
     float valToLambda;
     if (it != parameterDefinitions.end()) {

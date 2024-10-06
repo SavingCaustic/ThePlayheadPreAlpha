@@ -1,5 +1,19 @@
 TODO
 ====
+* rensa i skapande av globala objekt.
+
+* bättre initiering av callback
+
+* device.json ska läsas direkt och styra uppkoppling (kan även innehålla debug.)
+Så rent generellt, en json fil innehåller "settings" som blir en unsorted_map i ett objekt.
+Vart går settings i device? Globalt objekt.
+
+
+* websocket-server som kan ta emot dessa svar och skicka vidare till klient
+  * Få igång websocket mellan FE och BE.
+  * Kunna skicka nån parameter. Vad? NoteOn typ.. format?
+  {cmd:noteOn,key:69}, {cmd:noteOff:key:69}
+  {cmd:setParam,unit:synth,name:cutoff,value:100}
 
 * kunna spara parametrar som patch.
 klura på logik för att ha både synth- och rack-patches.
@@ -17,8 +31,6 @@ Kan vänta med automation med förbreda för det. (på väg att skapa egen klass
 gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS istället för hela vägen tillbaka..
 
 * Kunna skicka disableRack så att vi kan göra operationer som ladda synth m.m.
-
-* websocket-server som kan ta emot dessa svar och skicka vidare till klient
 
 * Flera egenskaper *rack* sätts från endpoint. Risk för race.
 

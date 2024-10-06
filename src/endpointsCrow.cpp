@@ -1,17 +1,31 @@
 #include "endpointsCrow.h"
 #include "constants.h"
-#include "core/MessageReciever.h"
 #include "core/PlayerEngine.h" // Include your relevant headers
+#include "core/messages/MessageReciever.h"
+#include "core/messages/WebSocketPusher.h"
 #include "drivers/AudioDriver.h"
 #include "drivers/FileDriver.h"
 #include "drivers/MidiDriver.h"
 
-void crowSetupEndpoints(crow::SimpleApp &api, PlayerEngine &playerEngine, AudioDriver &audioDriver, MidiDriver &midiDriver, MessageReciever &messageReciever) {
+// Mutex to protect access to WebSocket connections
+std::mutex conn_mutex;
+
+// Store active WebSocket connections
+std::vector<crow::websocket::connection *> connections;
+
+void crowSetupEndpoints(
+    crow::SimpleApp &api,
+    PlayerEngine &playerEngine,
+    AudioDriver &audioDriver,
+    MidiDriver &midiDriver,
+    MessageReciever &messageReciever,
+    MessageSender &messageSender,
+    WebSocketPusher &wsPusher) {
+    // root endpoint. just info.
     CROW_ROUTE(api, "/")
     ([]() { return crow::response(200, "PLAYHEAD AUDIO SERVER"); });
 
-    // namespace fs = std::filesystem;
-
+    // front-end resources
     CROW_ROUTE(api, "/fe/<string>")
     ([](const std::string &filename) {
         std::string filepath = "assets/fe/" + filename;
@@ -38,6 +52,27 @@ void crowSetupEndpoints(crow::SimpleApp &api, PlayerEngine &playerEngine, AudioD
             return crow::response(404, "File not found");
         }
     });
+
+    // web-sockets
+    CROW_WEBSOCKET_ROUTE(api, "/ws")
+        .onopen([&](crow::websocket::connection &conn) {
+            std::lock_guard<std::mutex> lock(conn_mutex);
+            connections.push_back(&conn);
+            std::cout << "WebSocket connection opened!" << std::endl;
+            wsPusher.setConnection(&conn); // Bind the WebSocket connection
+            wsPusher.start();              // Start the consumer thread
+        })
+        .onclose([&](crow::websocket::connection &conn, const std::string &reason, uint16_t code) {
+            std::lock_guard<std::mutex> lock(conn_mutex);
+            connections.erase(std::remove(connections.begin(), connections.end(), &conn), connections.end());
+            std::cout << "WebSocket connection closed: " << reason << std::endl;
+            wsPusher.setConnection(nullptr);
+        })
+        .onmessage([&](crow::websocket::connection &conn, const std::string &data, bool is_binary) {
+            if (!is_binary) {
+                std::cout << "Received message: " << data << std::endl;
+            }
+        });
 
     CROW_ROUTE(api, "/shutdown")
     ([]() {
@@ -116,8 +151,8 @@ void crowSetupEndpoints(crow::SimpleApp &api, PlayerEngine &playerEngine, AudioD
         // to speed up parsing, lets accept 0-127 as the range.
         auto value_str = req.url_params.get("value");
 
-        std::cout << "value_str:" << value_str << std::endl;
-        // Initialize default values
+        // std::cout << "value_str:" << value_str << std::endl;
+        //  Initialize default values
         int rack = -1; // invalid as default
         int value = 64;
 
@@ -137,13 +172,13 @@ void crowSetupEndpoints(crow::SimpleApp &api, PlayerEngine &playerEngine, AudioD
                 value = 0;  // Fallback value
             }
         }
-        std::cout << "value:" << value << std::endl;
+        // std::cout << "value:" << value << std::endl;
 
         std::string name_str(name ? name : "");
         Message msg{rack, "synth", name_str.c_str(), value};
         if (messageReciever.push(msg)) {
             // Return success message
-            return crow::response(200, "Pushed message to the rack");
+            return crow::response(200, "Pushed message to the queue");
         } else {
             return crow::response(400, "You're too fast. All your fault.");
         }

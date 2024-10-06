@@ -9,7 +9,8 @@
                 "--build",
                 "${workspaceFolder}/build",
                 "--config",
-                "Debug"
+                "Debug",
+                "--parallel" // Automatically uses all available cores
             ],
             "group": "build",
             "problemMatcher": [
@@ -24,7 +25,8 @@
                 "--build",
                 "${workspaceFolder}/build",
                 "--config",
-                "Release"
+                "Release",
+                "--parallel" // Automatically uses all available cores
             ],
             "group": "build",
             "problemMatcher": [
@@ -37,12 +39,12 @@
             "command": "/usr/bin/g++",
             "args": [
                 "-fdiagnostics-color=always",
-                "-O2",                         // Optimization level 2 for better performance
-                "-j4",
-                "-g",                          // Debugging information
-                "-march=native",               // Optimize for the host machine's architecture
-                "-mtune=native",               // Tune performance for the host machine
-                "-std=c++17",                  // Use C++17 standard (adjust as needed)
+                "-O2",
+                "-j", // Automatically uses all available cores
+                "-g",
+                "-march=native",
+                "-mtune=native",
+                "-std=c++17",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"

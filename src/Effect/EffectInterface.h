@@ -1,5 +1,5 @@
 #pragma once
-#include <core/params.h>
+#include <core/parameters/params.h>
 #include <ext/nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>

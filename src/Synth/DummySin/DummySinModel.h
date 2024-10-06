@@ -6,7 +6,7 @@
 #include "Synth/SynthInterface.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
-#include "core/params.h"
+#include "core/parameters/params.h"
 #include <array>
 #include <cstdlib> // for rand()
 #include <iostream>

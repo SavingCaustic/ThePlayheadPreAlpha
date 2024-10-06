@@ -67,28 +67,3 @@ class MessageReciever {
     size_t head;
     size_t tail;
 };
-
-// Example usage
-/*
-int main() {
-    MessageRouter router(10); // Buffer size of 10
-
-    // Producer: push a message
-    Message msg(1, "synth", "volume", 75);
-    if (router.push(msg)) {
-        std::cout << "Message pushed successfully" << std::endl;
-    } else {
-        std::cout << "Message buffer is full" << std::endl;
-    }
-
-    // Consumer: pop a message
-    auto poppedMsg = router.pop();
-    if (poppedMsg) {
-        std::cout << "Popped message: " << poppedMsg->paramName << " = " << poppedMsg->paramValue << std::endl;
-    } else {
-        std::cout << "No messages in the buffer" << std::endl;
-    }
-
-    return 0;
-}
-*/

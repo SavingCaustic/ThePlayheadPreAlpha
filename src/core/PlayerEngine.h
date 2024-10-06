@@ -1,23 +1,29 @@
 #pragma once
 
 #include "../drivers/MidiDriver.h"
-#include "MessageReciever.h"
+#include "./messages/MessageReciever.h"
+#include "./messages/MessageSender.h"
 #include "Rack.h"
 #include "timing/Rotator.h"
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <iostream>
 #include <memory>
 #include <thread>
 
-class MessageRouter;
+class MessageReciever;
+class MessageSender;
 struct Message;
+struct MessageOut;
 
 class PlayerEngine {
   public:
     PlayerEngine(); // Add reference to constructor
 
     void BindMessageReciever(MessageReciever &hMessageReciever);
+    void BindMessageSender(MessageSender &hMessageSender);
+    bool sendMessage(int rackId, const char *target, float paramValue, const char *paramName, const char *paramLabel);
 
     void reset();
     void doReset();
@@ -57,7 +63,9 @@ class PlayerEngine {
     std::vector<unsigned char> midiInMsg;
     double midiInTS; // probably not used, we use it when we get it.
     MessageReciever *messageReciever = nullptr;
-    Message newMessage; // Declare a reusable Message object
+    MessageSender *messageSender = nullptr;
+    Message newMessage;                 // Declare a reusable Message object
+    std::atomic<bool> isWritingMessage; // Atomic flag to track write access
 
     float loadAvg = 0;
 };

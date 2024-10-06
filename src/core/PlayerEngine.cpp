@@ -2,7 +2,8 @@
 
 PlayerEngine::PlayerEngine()
     : noiseVolume(0.2f), // Other initializations
-      hRotator() {       // Initialize hRotator
+      isWritingMessage(false),
+      hRotator() { // Initialize hRotator
 }
 
 void PlayerEngine::reset() {
@@ -34,6 +35,39 @@ void PlayerEngine::initializeRacks() {
 
 void PlayerEngine::BindMessageReciever(MessageReciever &hMessageReciever) {
     messageReciever = &hMessageReciever;
+}
+
+void PlayerEngine::BindMessageSender(MessageSender &hMessageSender) {
+    messageSender = &hMessageSender;
+}
+
+bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue, const char *paramName, const char *paramLabel) {
+    if (isWritingMessage.exchange(true, std::memory_order_acquire)) {
+        // Return false to indicate the message couldn't be sent
+        return false;
+    }
+
+    MessageOut message;
+
+    message.rackId = rackId;
+    message.paramValue = paramValue;
+
+    // Safely copy the strings
+    strncpy(message.target, target, msgOutTargetSize - 1);
+    message.target[msgOutTargetSize - 1] = '\0';
+
+    strncpy(message.paramName, paramName, msgOutParamNameSize - 1);
+    message.paramName[msgOutParamNameSize - 1] = '\0';
+
+    strncpy(message.paramLabel, paramLabel, msgOutParamLabelSize - 1);
+    message.paramLabel[msgOutParamLabelSize - 1] = '\0';
+
+    // Push the message to the queue
+    messageSender->push(message);
+
+    // Release the write lock
+    isWritingMessage.store(false, std::memory_order_release);
+    return true;
 }
 
 void PlayerEngine::testRackSetup() {
@@ -80,17 +114,18 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     // Smoothing with a factor (alpha), for example, alpha = 0.1 for smooth update
     constexpr double alpha = 0.1;
     this->loadAvg = (alpha * rawLoad) + ((1 - alpha) * this->loadAvg);
-    //
-    if (timeLeftUs > 1500) {
+    // this code not working so fake it..
+    if (true | timeLeftUs > 1500) {
         // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
         auto optionalMessage = messageReciever->pop();
         if (optionalMessage) { // Check if a message was retrieved
             newMessage = *optionalMessage;
-            std::cout << "New message received and stored," << newMessage.paramName << "value:" << newMessage.paramValue << std::endl;
+            std::cout << "New message received," << newMessage.paramName << "value:" << newMessage.paramValue << std::endl;
             racks[newMessage.rackId].passParamToUnit(
                 Rack::stringToUnitType(newMessage.target),
                 newMessage.paramName,
                 newMessage.paramValue);
+            sendMessage(1, "synth", newMessage.paramValue, newMessage.paramName, "yaba daba");
         }
     }
 }
@@ -133,6 +168,8 @@ bool PlayerEngine::pollMidiIn() {
         if (test && this->rackReceivingMidi >= 0) {
             // affect eventors and effects with midiCC? currently no..
             racks[this->rackReceivingMidi].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
+            if (newMessage.cmd == 0x90)
+                sendMessage(1, "synth", newMessage.param1, "note on", "see this? :)");
         }
         return test; // Return the result of getMessage
     }

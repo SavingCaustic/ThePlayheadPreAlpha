@@ -6,6 +6,15 @@ class PlayerEngine;
 class AudioDriver;
 class MidiDriver;
 class MessageReciever;
+class MessageSender;
+class WebSocketPusher;
 
 // Function to set up Crow routes
-void crowSetupEndpoints(crow::SimpleApp &api, PlayerEngine &playerEngine, AudioDriver &audioDriver, MidiDriver &midiDriver, MessageReciever &messageReciever);
+void crowSetupEndpoints(
+    crow::SimpleApp &api,
+    PlayerEngine &playerEngine,
+    AudioDriver &audioDriver,
+    MidiDriver &midiDriver,
+    MessageReciever &messageReciever,
+    MessageSender &MessageSender,
+    WebSocketPusher &WebSocketPusher);
