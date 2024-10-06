@@ -9,8 +9,17 @@
     </style>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+		// Get the hostname and port from the current page
+		const hostname = window.location.hostname;
+		const port = window.location.port ? window.location.port : (window.location.protocol === 'https:' ? '443' : '80');
+
+		// Construct the WebSocket URL (ws or wss depending on whether the site is served over HTTP or HTTPS)
+		const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+		const wsUrl = `${wsProtocol}${hostname}:${port}/ws`;
+
+
             // WebSocket initialization
-            const ws = new WebSocket("ws://localhost:18080/ws");
+            const ws = new WebSocket(wsUrl);
 
             // WebSocket event handlers
             ws.onopen = function() {
