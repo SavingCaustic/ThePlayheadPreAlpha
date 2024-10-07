@@ -1,8 +1,8 @@
 #include "endpointsCrow.h"
 #include "constants.h"
 #include "core/PlayerEngine.h" // Include your relevant headers
-#include "core/messages/MessageReciever.h"
-#include "core/messages/WebSocketPusher.h"
+#include "core/messages/MessageInBuffer.h"
+#include "core/messages/MessageOutReader.h"
 #include "drivers/AudioDriver.h"
 #include "drivers/FileDriver.h"
 #include "drivers/MidiDriver.h"
@@ -18,9 +18,9 @@ void crowSetupEndpoints(
     PlayerEngine &playerEngine,
     AudioDriver &audioDriver,
     MidiDriver &midiDriver,
-    MessageReciever &messageReciever,
-    MessageSender &messageSender,
-    WebSocketPusher &wsPusher) {
+    MessageInBuffer &messageInBuffer,
+    MessageOutBuffer &messageOutBuffer,
+    MessageOutReader &messageOutReader) {
     // root endpoint. just info.
     CROW_ROUTE(api, "/")
     ([]() { return crow::response(200, "PLAYHEAD AUDIO SERVER"); });
@@ -59,14 +59,14 @@ void crowSetupEndpoints(
             std::lock_guard<std::mutex> lock(conn_mutex);
             connections.push_back(&conn);
             std::cout << "WebSocket connection opened!" << std::endl;
-            wsPusher.setConnection(&conn); // Bind the WebSocket connection
-            wsPusher.start();              // Start the consumer thread
+            messageOutReader.setConnection(&conn); // Bind the WebSocket connection
+            messageOutReader.start();              // Start the consumer thread
         })
         .onclose([&](crow::websocket::connection &conn, const std::string &reason, uint16_t code) {
             std::lock_guard<std::mutex> lock(conn_mutex);
             connections.erase(std::remove(connections.begin(), connections.end(), &conn), connections.end());
             std::cout << "WebSocket connection closed: " << reason << std::endl;
-            wsPusher.setConnection(nullptr);
+            messageOutReader.setConnection(nullptr);
         })
         .onmessage([&](crow::websocket::connection &conn, const std::string &data, bool is_binary) {
             if (!is_binary) {
@@ -144,7 +144,7 @@ void crowSetupEndpoints(
         return crow::response(200, json);
     });
 
-    api.route_dynamic("/setRackUnitParam")([&messageReciever](const crow::request &req) {
+    api.route_dynamic("/setRackUnitParam")([&messageInBuffer](const crow::request &req) {
         auto rack_str = req.url_params.get("rack");
         auto unit = req.url_params.get("unit");
         auto name = req.url_params.get("name");
@@ -175,8 +175,8 @@ void crowSetupEndpoints(
         // std::cout << "value:" << value << std::endl;
 
         std::string name_str(name ? name : "");
-        Message msg{rack, "synth", name_str.c_str(), value};
-        if (messageReciever.push(msg)) {
+        MessageIn msg{rack, "synth", name_str.c_str(), value};
+        if (messageInBuffer.push(msg)) {
             // Return success message
             return crow::response(200, "Pushed message to the queue");
         } else {

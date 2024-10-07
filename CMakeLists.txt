@@ -28,9 +28,17 @@ pkg_check_modules(RTMIDI REQUIRED rtmidi)
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
 
 # SIMD optimization flags
-# if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")
-# endif()
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # Check for AVX2 and FMA for x86/x86_64
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|x86")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")
+    endif()
+
+    # Check for ARM architecture and add NEON flags
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm|aarch64")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon")
+    endif()
+endif()
 
 # Include directories for target
 target_include_directories(MyDAW2 PRIVATE

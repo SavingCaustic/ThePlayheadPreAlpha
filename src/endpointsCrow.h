@@ -5,9 +5,9 @@
 class PlayerEngine;
 class AudioDriver;
 class MidiDriver;
-class MessageReciever;
-class MessageSender;
-class WebSocketPusher;
+class MessageInBuffer;
+class MessageOutBuffer;
+class MessageOutReader;
 
 // Function to set up Crow routes
 void crowSetupEndpoints(
@@ -15,6 +15,6 @@ void crowSetupEndpoints(
     PlayerEngine &playerEngine,
     AudioDriver &audioDriver,
     MidiDriver &midiDriver,
-    MessageReciever &messageReciever,
-    MessageSender &MessageSender,
-    WebSocketPusher &WebSocketPusher);
+    MessageInBuffer &messageInBuffer,
+    MessageOutBuffer &MessageOutBuffer,
+    MessageOutReader &MessageOutReader);

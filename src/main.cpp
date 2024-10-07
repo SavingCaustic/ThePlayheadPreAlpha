@@ -3,9 +3,9 @@
 #include "core/PlayerEngine.h"
 #include "core/Rack.h"
 #include "core/audio/AudioMath.h"
-#include "core/messages/MessageReciever.h"
-#include "core/messages/MessageSender.h"
-#include "core/messages/WebSocketPusher.h"
+#include "core/messages/MessageInBuffer.h"
+#include "core/messages/MessageOutBuffer.h"
+#include "core/messages/MessageOutReader.h"
 #include "core/parameters/SettingsManager.h"
 #include "crow.h"
 #include "drivers/AudioDriver.h"
@@ -45,9 +45,10 @@ void signal_handler(int signal) {
 
 // Global objects. Could possibly be hierarchial but could lead to poor testing environments.
 PlayerEngine sPlayerEngine;
-MessageReciever sMessageReciever(8);
-MessageSender sMessageSender(8);
-WebSocketPusher wsPusher(sMessageSender, nullptr); // Initialize without connection
+MessageInBuffer sMessageInBuffer(8);
+std::condition_variable cv;
+MessageOutBuffer sMessageOutBuffer(cv);
+MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr, cv); // Initialize without connection
 
 AudioDriver sAudioDriver;
 MidiDriver sMidiDriver;
@@ -82,11 +83,11 @@ int main() {
     // Start the audio driver
     // sAudioDriver.start();
     //
-    sPlayerEngine.BindMessageReciever(sMessageReciever);
-    sPlayerEngine.BindMessageSender(sMessageSender);
+    sPlayerEngine.bindMessageInBuffer(sMessageInBuffer);
+    sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
     AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
     //
-    crowSetupEndpoints(api, sPlayerEngine, sAudioDriver, sMidiDriver, sMessageReciever, sMessageSender, wsPusher);
+    crowSetupEndpoints(api, sPlayerEngine, sAudioDriver, sMidiDriver, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader);
     int httpPort = std::get<int>(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {

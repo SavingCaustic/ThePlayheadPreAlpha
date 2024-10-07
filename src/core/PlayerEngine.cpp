@@ -33,12 +33,12 @@ void PlayerEngine::initializeRacks() {
     }
 }
 
-void PlayerEngine::BindMessageReciever(MessageReciever &hMessageReciever) {
-    messageReciever = &hMessageReciever;
+void PlayerEngine::bindMessageInBuffer(MessageInBuffer &hMessageInBuffer) {
+    messageInBuffer = &hMessageInBuffer;
 }
 
-void PlayerEngine::BindMessageSender(MessageSender &hMessageSender) {
-    messageSender = &hMessageSender;
+void PlayerEngine::bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer) {
+    messageOutBuffer = &hMessageOutBuffer;
 }
 
 bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue, const char *paramName, const char *paramLabel) {
@@ -63,7 +63,7 @@ bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue,
     message.paramLabel[msgOutParamLabelSize - 1] = '\0';
 
     // Push the message to the queue
-    messageSender->push(message);
+    messageOutBuffer->push(message);
 
     // Release the write lock
     isWritingMessage.store(false, std::memory_order_release);
@@ -117,7 +117,7 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     // this code not working so fake it..
     if (true | timeLeftUs > 1500) {
         // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
-        auto optionalMessage = messageReciever->pop();
+        auto optionalMessage = messageInBuffer->pop();
         if (optionalMessage) { // Check if a message was retrieved
             newMessage = *optionalMessage;
             std::cout << "New message received," << newMessage.paramName << "value:" << newMessage.paramValue << std::endl;
