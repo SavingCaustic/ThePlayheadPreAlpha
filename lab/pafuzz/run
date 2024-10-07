@@ -1,3 +1,4 @@
 #!/bin/bash
 gcc pa_fuzz.c -o fuzz -lportaudio -lm
 ./fuzz
+rm fuzz

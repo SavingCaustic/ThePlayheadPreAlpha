@@ -1,3 +1,5 @@
 #!/bin/bash
 g++ main.cpp -o devices -lportaudio
 ./devices
+# always delete binary since we don't want these in git
+rm devices
