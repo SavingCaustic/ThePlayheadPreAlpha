@@ -1,0 +1,4 @@
+#!/bin/bash
+g++ main.cpp -o timing -lportaudio
+./timing
+rm timing

@@ -1,0 +1,4 @@
+#!/bin/bash
+g++ main.cpp -o noise -lportaudio
+./noise
+rm noise
