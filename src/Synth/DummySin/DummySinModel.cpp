@@ -43,20 +43,20 @@ void Model::setupParams() {
 }
 
 void Model::reset() {
-    // dunno..
-    // make sawtooth..
-    for (int i = 1; i < 14; i++) {
-        this->applySine(i, 0.5 / i);
+    if (false) {
+        // make sawtooth..
+        for (int i = 1; i < 14; i++) {
+            this->applySine(i, 0.5 / i);
+        }
+    } else {
+        this->applySine(1, 0.5);
+        this->applySine(2, 0.4);
+        this->applySine(3, 0.3);
+        this->applySine(4, 0.2);
+        this->applySine(5, 0.1);
+        this->applySine(6, 0.1);
+        this->applySine(7, 0.3);
     }
-    /*
-    this->applySine(1, 0.5);
-    this->applySine(2, 0.4);
-    this->applySine(3, 0.3);
-    this->applySine(4, 0.2);
-    this->applySine(5, 0.1);
-    this->applySine(6, 0.1);
-    this->applySine(7, 0.1);
-    */
 }
 
 void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {

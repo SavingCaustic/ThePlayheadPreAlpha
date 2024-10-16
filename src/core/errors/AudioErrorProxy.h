@@ -29,18 +29,10 @@ class AudioErrorProxy {
         }
     }
 
-    // Function to signal the main buffer that a new error is available
-    /* removed. The buffers should have this responsibility internally
-    void notify() {
-        errorBuffer->cv.notify_one(); // Wake up the reader of the main thread
-        std::cout << "notify one.. " << std::endl;
-    }
-    */
-
     // Stop the proxy thread (for a graceful shutdown)
     void stop() {
         stopFlag = true;
-        // cv.notify_all(); // Ensure the thread wakes up and can exit
+        audioErrorBuffer->cv.notify_all(); // Ensure the thread wakes up and can exit
     }
 
     void forward() {

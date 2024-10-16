@@ -32,22 +32,22 @@ class Model : public EffectInterface {
     float *buffer; // Pointer to audio buffer
     // LowPassFilter LPF;      // Declare the filter object here
     std::size_t bufferSize; // Size of the audio buffer
-    std::vector<float> delayBuffer;
+    std::vector<double> delayBuffer;
     int delayBufferSize = 32768;
     int delayBufferMask = delayBufferSize - 1;
     int wrIndex = 0;
     int rdIndex = 0; // Changed to rdIndex
-    float mix = 0.3;
-    float feedback = 0.05;
-    float time = 0.1;
+    float mix = 0.3f;
+    float feedback = 0.3;
+    float time = 0.02; // 20 mS, chorus effect..
     int delaySamples = 100;
     float lfoPhase = 0.0f;
     float lfoFrequency = 2.5f;
-    float lfoDepth = 0.8;
+    float lfoDepth = 0.1; // really has no precice unit. 0.8 round P-P 100 cent.
     //
-    float cutoff = 400;
+    float cutoff = 1200;
     float alpha = exp(-2.0 * M_PI * cutoff / TPH_DSP_SR);
-    float prevLPF = 0;
+    double prevLPF = 0;
     //
     void initializeParameters();
     // Handle incoming MIDI CC messages

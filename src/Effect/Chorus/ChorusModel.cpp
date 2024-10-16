@@ -43,7 +43,7 @@ void Model::parseMidi(char cmd, char param1, char param2) {
 }
 
 bool Model::renderNextBlock() {
-    float delayOutL, delayOutR;
+    double delayOutL, delayOutR;
     float audioInL, audioInR;
     for (std::size_t i = 0; i < bufferSize; i += 2) {
         // Read the input samples
@@ -66,15 +66,15 @@ bool Model::renderNextBlock() {
         delayOutR = delayOutL; // cubicInterpolate(delayTimeSamples);
 
         // Mix the delayed signal with the original input (wet/dry mix)
-        float outputSampleL = audioInL + delayOutL * 0.5f; // Mixing delayed sample into the input
-        float outputSampleR = audioInR + delayOutR * 0.5f;
+        float outputSampleL = (1 - this->mix) * audioInL + this->mix * delayOutL; // Mixing delayed sample into the input
+        float outputSampleR = (1 - this->mix) * audioInR + this->mix * delayOutR;
 
         // Write the output back to the buffer
         buffer[i] = outputSampleL;
         buffer[i + 1] = outputSampleR;
 
         // Write the current input samples to the delay buffer (for feedback)
-        delayBuffer[wrIndex] = processLPF(audioInL);
+        delayBuffer[wrIndex] = processLPF(audioInL) * (1 - this->feedback) + delayOutL * this->feedback;
 
         // Increment the write index and wrap it around the buffer size
         wrIndex = (wrIndex + 1) & delayBufferMask;

@@ -11,6 +11,7 @@ class ErrorBuffer {
   public:
     static constexpr size_t BufferSize = 64; // Fixed size of the buffer
     int bufferSizeMask = BufferSize - 1;
+    std::condition_variable cv; // Condition variable for consumers to wait
 
     ErrorBuffer() : wrIndex(0), rdIndex(0), full(false) {}
 
@@ -69,5 +70,4 @@ class ErrorBuffer {
     size_t rdIndex;              // Read index
     bool full;                   // Indicates if the buffer is full
     std::mutex mtx;              // Mutex for thread-safe writing
-    std::condition_variable cv;  // Condition variable for consumers to wait
 };

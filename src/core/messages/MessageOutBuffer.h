@@ -4,7 +4,7 @@
 #include <cstring> // For strncpy
 #include <iostream>
 #include <mutex>
-#include <optional>b
+#include <optional>
 
 constexpr size_t msgOutTargetSize = 10;
 constexpr size_t msgOutParamNameSize = 16;

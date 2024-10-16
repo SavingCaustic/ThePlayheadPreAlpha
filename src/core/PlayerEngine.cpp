@@ -134,7 +134,7 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
         if (optionalMessage) { // Check if a message was retrieved
             newMessage = *optionalMessage;
             std::cout << "New message received," << newMessage.paramName << "value:" << newMessage.paramValue << std::endl;
-            this->sendError(404, "duh message recieved");
+            // this->sendError(404, "duh message recieved");
             racks[newMessage.rackId].passParamToUnit(
                 Rack::stringToUnitType(newMessage.target),
                 newMessage.paramName,
