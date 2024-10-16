@@ -13,6 +13,7 @@ class AudioMath {
     static void setMasterTune(float newMasterTune);
     static float getMasterTune();
     static float noise();
+    static float catmull(float *lut, int lutSize, float angle);
     static float csin(float cf);
     static float ccos(float cf);
     static float ctan(float cf);
@@ -25,9 +26,8 @@ class AudioMath {
     static void generateLUT();
 
   private:
-    static constexpr size_t lutSize = 4096; // Can stay here
-    static const float lutSizeFloat;        // Declaration only, definition in .cpp
-    static std::array<float, lutSize> lut;
+    static constexpr size_t sineLutSize = 256; // Can stay here
+    static std::array<float, sineLutSize> sineLut;
     static float masterTune;
     static int noiseSeed;
     static int noiseA;

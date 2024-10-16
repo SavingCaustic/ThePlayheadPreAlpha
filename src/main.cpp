@@ -3,6 +3,9 @@
 #include "core/PlayerEngine.h"
 #include "core/Rack.h"
 #include "core/audio/AudioMath.h"
+#include "core/errors/AudioErrorBuffer.h"
+#include "core/errors/ErrorBuffer.h"
+#include "core/errors/ErrorHandler.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutBuffer.h"
 #include "core/messages/MessageOutReader.h"
@@ -53,6 +56,11 @@ MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr, cv); // Initializ
 AudioDriver sAudioDriver;
 MidiDriver sMidiDriver;
 
+// Add global ErrorHandler
+AudioErrorBuffer sAudioErrorBuffer;                            // Error buffer used by the audio engine
+ErrorBuffer sErrorBuffer;                                      // Main error buffer for logging
+ErrorHandler sErrorHandler(&sAudioErrorBuffer, &sErrorBuffer); // Error handler with threads
+
 // Entry point of the program
 int main() {
     // Create the object
@@ -85,6 +93,9 @@ int main() {
     //
     sPlayerEngine.bindMessageInBuffer(sMessageInBuffer);
     sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
+    sPlayerEngine.bindErrorBuffer(sAudioErrorBuffer);
+    sErrorHandler.start();
+
     AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
     //
     crowSetupEndpoints(api, sPlayerEngine, sAudioDriver, sMidiDriver, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader);
@@ -93,6 +104,7 @@ int main() {
     while (!shutdown_flag.load()) {
         if (false & DEBUG_MODE) {
             std::cout << "housekeeping.. " << std::endl;
+            // should be errorBuffer sErrorHandler.addError(200, "testing error");
         }
         std::this_thread::sleep_for(std::chrono::seconds(3));
     }
@@ -102,6 +114,8 @@ int main() {
     if (server_thread.joinable()) {
         server_thread.join();
     }
+    sErrorHandler.stopThreads();
+
     std::cout << "Server stopped gracefully." << std::endl;
     return 0;
 }

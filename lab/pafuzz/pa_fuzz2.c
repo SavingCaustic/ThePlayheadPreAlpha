@@ -30,13 +30,18 @@ static int fuzzCallback(const void *inputBuffer, void *outputBuffer,
 /* Non-linear amplifier with soft distortion curve. */
 float CubicAmplifier(float input) {
     float output, temp;
-    if (input < 0.0) {
-        temp = input + 1.0f;
-        output = (temp * temp * temp) - 1.0f;
+    float dist;
+    float absInput;
+    float attenuateDist;
+    //max dist around +/- 0.5. Zero at 0/1.
+    absInput = abs(input);
+    attenuateDist = abs(0.5 - absInput);
+    if (input < 0) {
+      dist = 24 * input * attenuateDist * attenuateDist;
     } else {
-        temp = input - 1.0f;
-        output = (temp * temp * temp) + 1.0f;
+      dist = 12 * input * attenuateDist * attenuateDist;
     }
+    output = (input + dist);
     return output;
 }
 

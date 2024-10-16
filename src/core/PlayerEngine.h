@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../drivers/MidiDriver.h"
+#include "./errors/AudioErrorBuffer.h"
 #include "./messages/MessageInBuffer.h"
 #include "./messages/MessageOutBuffer.h"
 #include "Rack.h"
@@ -23,6 +24,7 @@ class PlayerEngine {
 
     void bindMessageInBuffer(MessageInBuffer &hMessageInBuffer);
     void bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer);
+    void bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer);
     bool sendMessage(int rackId, const char *target, float paramValue, const char *paramName, const char *paramLabel);
 
     void reset();
@@ -42,6 +44,7 @@ class PlayerEngine {
     // R    Rack *getRack(std::size_t position) const;
     void renderNextBlock(float *buffer, unsigned long numFrames);
     // may be private
+    void sendError(int code, const std::string &message);
 
   private:
     Rack racks[TPH_RACK_COUNT]; // Array of Rack objects
@@ -66,6 +69,7 @@ class PlayerEngine {
     MessageOutBuffer *messageOutBuffer = nullptr;
     MessageIn newMessage;               // Declare a reusable Message object
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
+    AudioErrorBuffer *audioErrorBuffer = nullptr;
 
     float loadAvg = 0;
 };

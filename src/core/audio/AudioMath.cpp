@@ -2,8 +2,7 @@
 #include <iostream>
 
 // Initialize static members
-std::array<float, AudioMath::lutSize> AudioMath::lut{};
-const float AudioMath::lutSizeFloat = 4096.0f;
+std::array<float, AudioMath::sineLutSize> AudioMath::sineLut{};
 float AudioMath::masterTune = 432.0f;
 int AudioMath::noiseSeed = 235325325;
 int AudioMath::noiseA = 1664525;
@@ -30,45 +29,48 @@ float AudioMath::noise() {
     return noiseSeed * invNoiseC * 2.0f - 1.0f;
 }
 
+float AudioMath::catmull(float *lut, int lutSize, float angle) {
+    while (angle >= 1)
+        angle--;
+    float index = angle * lutSize;
+    int i = static_cast<int>(index);
+    float frac = index - i; // Fractional part for interpolation
+    int mask = lutSize - 1;
+    float P0 = lut[(i - 1) & mask];
+    float P1 = lut[i & mask];
+    float P2 = lut[(i + 1) & mask];
+    float P3 = lut[(i + 2) & mask];
+    return P1 + 0.5f * frac * (P2 - P0 + frac * (2.0f * P0 - 5.0f * P1 + 4.0f * P2 - P3 + frac * (3.0f * (P1 - P2) + P3 - P0)));
+}
+
 float AudioMath::sin(float rad) {
-    return lut[static_cast<size_t>(radToIndex(rad)) % lutSize];
+    return catmull(sineLut.data(), sineLutSize, rad * (1 / M_PI / 2));
 }
 
 float AudioMath::cos(float rad) {
-    return lut[static_cast<size_t>(radToIndex(rad) + lutSize / 4) % lutSize];
+    return catmull(sineLut.data(), sineLutSize, 0.25f + rad * (1 / M_PI / 2));
 }
 
 float AudioMath::csin(float cf) {
-    int pos = static_cast<size_t>(cf * lutSizeFloat) & (lutSize - 1);
-    return lut[pos];
+    return catmull(sineLut.data(), sineLutSize, cf);
 }
 
 float AudioMath::ccos(float cf) {
-    int pos = static_cast<int>((cf + 0.25) * lutSizeFloat) & (lutSize - 1);
-    return lut[pos];
+    return catmull(sineLut.data(), sineLutSize, cf + 0.25f);
 }
 
 float AudioMath::ctan(float cf) {
     float sin = AudioMath::csin(cf);
-    float cos = AudioMath::csin(cf);
-    if (cos == 0)
-        cos = 0.001;
+    float cos = fmax(0.001, AudioMath::csin(cf));
     return (sin / cos);
 }
 
 void AudioMath::generateLUT() {
     // std::cout << "generating lut" << std::endl;
-    for (size_t i = 0; i < lutSize; ++i) {
-        float rad = (2.0f * M_PI * i) / lutSize;
-        lut[i] = std::sin(rad);
+    for (size_t i = 0; i < sineLutSize; ++i) {
+        float rad = (2.0f * M_PI * i) / sineLutSize;
+        sineLut[i] = std::sin(rad);
     }
-}
-
-float AudioMath::radToIndex(float rad) {
-    rad = std::fmod(rad, 2.0f * M_PI);
-    if (rad < 0.0f)
-        rad += 2.0f * M_PI;
-    return (rad / (2.0f * M_PI)) * lutSize;
 }
 
 float AudioMath::clamp(float value, float min, float max) {

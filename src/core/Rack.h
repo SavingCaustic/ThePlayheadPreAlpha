@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Effect/Chorus/ChorusModel.h"
 #include "../Effect/Delay/DelayModel.h"
 #include "../Synth/Dummy/DummyModel.h"
 #include "../Synth/DummySin/DummySinModel.h"
@@ -147,6 +148,10 @@ class Rack {
             effect1 = std::make_unique<Effect::Delay::Model>(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
+        case EffectType::Chorus:
+            effect1 = std::make_unique<Effect::Chorus::Model>(audioBuffer.data(), audioBuffer.size());
+            break;
+        // Add cases for other synth types here
         default:
             std::cerr << "Unknown effect type: " << effectName << std::endl;
             loadOK = false;
@@ -181,6 +186,7 @@ class Rack {
 
     enum class EffectType {
         Delay,
+        Chorus,
         // Add other synth types here
         Unknown
     };
@@ -189,6 +195,8 @@ class Rack {
         // i really don't know what i need this for..
         if (effectName == "Delay")
             return EffectType::Delay;
+        if (effectName == "Chorus")
+            return EffectType::Chorus;
         // Add other synth type checks here
         return EffectType::Unknown;
     }

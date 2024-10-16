@@ -27,19 +27,6 @@ static int fuzzCallback(const void *inputBuffer, void *outputBuffer,
                         PaStreamCallbackFlags statusFlags,
                         void *userData);
 
-/* Non-linear amplifier with soft distortion curve. */
-float CubicAmplifier(float input) {
-    float output, temp;
-    if (input < 0.0) {
-        temp = input + 1.0f;
-        output = (temp * temp * temp) - 1.0f;
-    } else {
-        temp = input - 1.0f;
-        output = (temp * temp * temp) + 1.0f;
-    }
-    return output;
-}
-
 static int gNumNoInputs = 0;
 /* This routine will be called by the PortAudio engine when audio is needed.
 ** It may be called at interrupt level on some machines so don't do anything
@@ -68,9 +55,8 @@ static int fuzzCallback(const void *inputBuffer, void *outputBuffer,
     } else {
         for (i = 0; i < framesPerBuffer; i++) {
             SAMPLE sample = *in++; /* MONO input */
-            SAMPLE mid = CubicAmplifier(sample);     // * gain;
-            *out++ = (mix * mid + (1 - mix) * sample); /* left - distorted */
-            *out++ = (mix * mid + (1 - mix) * sample); /* right - distorted */
+            *out++ = (sample); /* left - distorted */
+            *out++ = (sample); /* right - distorted */
         }
     }
 

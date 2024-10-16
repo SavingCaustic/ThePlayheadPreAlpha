@@ -1,5 +1,8 @@
 TODO
 ====
+* testa audioError när parameter sätts..
+* fixa lateny i audioError..
+
 * rensa i skapande av globala objekt.
 
 * bättre initiering av callback

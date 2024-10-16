@@ -1,0 +1,8 @@
+#include "ThePlayhead.h"
+
+int main() {
+    ThePlayhead thePlayhead;
+    thePlayhead.initialize();
+    thePlayhead.run();
+    return 0;
+}

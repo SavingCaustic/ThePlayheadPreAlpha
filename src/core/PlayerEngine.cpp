@@ -41,6 +41,10 @@ void PlayerEngine::bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer) {
     messageOutBuffer = &hMessageOutBuffer;
 }
 
+void PlayerEngine::bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer) {
+    audioErrorBuffer = &hAudioErrorBuffer;
+}
+
 bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue, const char *paramName, const char *paramLabel) {
     if (isWritingMessage.exchange(true, std::memory_order_acquire)) {
         // Return false to indicate the message couldn't be sent
@@ -70,6 +74,15 @@ bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue,
     return true;
 }
 
+void PlayerEngine::sendError(int code, const std::string &message) {
+    // dunno if this should be kept. But still, units have to be context-aware..
+    if (audioErrorBuffer->addAudioError(code, message)) {
+        std::cout << "wrote error to audioErrorLog" << std::endl;
+    } else {
+        std::cout << "error log was full" << std::endl;
+    }
+}
+
 void PlayerEngine::testRackSetup() {
     this->setupRackWithSynth(0, "DummySin");
 }
@@ -78,7 +91,7 @@ bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) 
     // Check if the rack already exists
     racks[rackId].setSynth(synthName);
     //   Now, setup the synth for the rack
-    racks[rackId].setEffect("Delay");
+    racks[rackId].setEffect("Chorus");
     return false;
 }
 
@@ -121,6 +134,7 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
         if (optionalMessage) { // Check if a message was retrieved
             newMessage = *optionalMessage;
             std::cout << "New message received," << newMessage.paramName << "value:" << newMessage.paramValue << std::endl;
+            this->sendError(404, "duh message recieved");
             racks[newMessage.rackId].passParamToUnit(
                 Rack::stringToUnitType(newMessage.target),
                 newMessage.paramName,
@@ -168,6 +182,8 @@ bool PlayerEngine::pollMidiIn() {
         if (test && this->rackReceivingMidi >= 0) {
             // affect eventors and effects with midiCC? currently no..
             racks[this->rackReceivingMidi].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
+            // meh - this error sending *kind of* works, but something is off.
+            this->sendError(200, "midi recieved");
             if (newMessage.cmd == 0x90)
                 sendMessage(1, "synth", newMessage.param1, "note on", "see this? :)");
         }
