@@ -7,15 +7,13 @@
 
 class MessageOutReader {
   public:
-    explicit MessageOutReader(MessageOutBuffer &sender, crow::websocket::connection *wsConn, std::condition_variable &cv)
-        : messageOutBuffer(sender), wsConnection(wsConn), stopFlag(false), isRunning(false), sharedCV(cv) {}
+    explicit MessageOutReader(MessageOutBuffer &sender, crow::websocket::connection *wsConn)
+        : messageOutBuffer(sender), wsConnection(wsConn), stopFlag(false), isRunning(false) {}
 
-    // Set the WebSocket connection (for use in onopen and onclose)
     void setConnection(crow::websocket::connection *wsConn) {
         wsConnection = wsConn;
     }
 
-    // Start the consumer thread if not already running
     void start() {
         if (!isRunning.load(std::memory_order_acquire)) {
             stopFlag.store(false, std::memory_order_release);
@@ -26,11 +24,9 @@ class MessageOutReader {
         }
     }
 
-    // Stop the consumer thread and join it
     void stop() {
         stopFlag.store(true, std::memory_order_release);
         if (consumerThread.joinable()) {
-            sharedCV.notify_one(); // Wake up the thread if it's sleeping
             consumerThread.join();
         }
         isRunning.store(false, std::memory_order_release);
@@ -45,19 +41,21 @@ class MessageOutReader {
         std::cout << "Thread consuming messages started." << std::endl;
 
         while (!stopFlag.load(std::memory_order_acquire)) {
-            std::unique_lock<std::mutex> lock(sharedMutex);
-            // Wait until notified by the MessageOutBuffer
-            sharedCV.wait(lock, [this] { return messageOutBuffer.checkMoreMessages() || stopFlag.load(std::memory_order_acquire); });
+            std::unique_lock<std::mutex> lock(messageOutBuffer.mtx); // Lock buffer's mutex
 
-            // If the stop flag is set, break out of the loop
+            // Wait until either a message is available or stopFlag is set
+            messageOutBuffer.cv.wait(lock, [this] {
+                return messageOutBuffer.checkMoreMessages() || stopFlag.load(std::memory_order_acquire);
+            });
+
             if (stopFlag.load(std::memory_order_acquire)) {
                 break;
             }
 
             while (messageOutBuffer.checkMoreMessages()) {
-                auto message = messageOutBuffer.pop(); // Non-blocking pop
+                auto message = messageOutBuffer.pop();
                 if (message && wsConnection) {
-                    // If we have a message, send it over the WebSocket
+                    // Send message if WebSocket is still open
                     std::string msg = "rackId: " + std::to_string(message->rackId) +
                                       ", paramName: " + std::string(message->paramName) +
                                       ", paramValue: " + std::to_string(message->paramValue);
@@ -74,6 +72,4 @@ class MessageOutReader {
     std::thread consumerThread;
     std::atomic<bool> stopFlag;
     std::atomic<bool> isRunning;
-    std::mutex sharedMutex;            // Protects access to wsConnection
-    std::condition_variable &sharedCV; // Reference to shared condition variable
 };

@@ -8,6 +8,7 @@ class MidiDriver;
 class MessageInBuffer;
 class MessageOutBuffer;
 class MessageOutReader;
+class ErrorBuffer;
 
 // Function to set up Crow routes
 void crowSetupEndpoints(
@@ -17,4 +18,5 @@ void crowSetupEndpoints(
     MidiDriver &midiDriver,
     MessageInBuffer &messageInBuffer,
     MessageOutBuffer &MessageOutBuffer,
-    MessageOutReader &MessageOutReader);
+    MessageOutReader &MessageOutReader,
+    ErrorBuffer &ErrorBuffer);

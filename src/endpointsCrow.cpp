@@ -3,6 +3,7 @@
 #include "core/PlayerEngine.h" // Include your relevant headers
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutReader.h"
+#include "core/errors/ErrorBuffer.h"
 #include "drivers/AudioDriver.h"
 #include "drivers/FileDriver.h"
 #include "drivers/MidiDriver.h"
@@ -20,7 +21,8 @@ void crowSetupEndpoints(
     MidiDriver &midiDriver,
     MessageInBuffer &messageInBuffer,
     MessageOutBuffer &messageOutBuffer,
-    MessageOutReader &messageOutReader) {
+    MessageOutReader &messageOutReader,
+    ErrorBuffer &errorBuffer) {
     // root endpoint. just info.
     CROW_ROUTE(api, "/")
     ([]() { return crow::response(200, "PLAYHEAD AUDIO SERVER"); });

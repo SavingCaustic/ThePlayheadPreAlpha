@@ -3,7 +3,8 @@
 #include <condition_variable>
 #include <cstring> // For strncpy
 #include <iostream>
-#include <optional>
+#include <mutex>
+#include <optional>b
 
 constexpr size_t msgOutTargetSize = 10;
 constexpr size_t msgOutParamNameSize = 16;
@@ -37,9 +38,11 @@ struct MessageOut {
 class MessageOutBuffer {
   public:
     static constexpr size_t kBufferSize = 32; // Set your desired buffer size
+    std::condition_variable cv;               // Reference to shared condition variable
+    std::mutex mtx;
 
-    MessageOutBuffer(std::condition_variable &cv)
-        : head(0), tail(0), messageAvailable(false), sharedCV(cv) {}
+    MessageOutBuffer()
+        : head(0), tail(0), messageAvailable(false) {}
 
     // Push a message (Producer)
     bool push(const MessageOut &message) {
@@ -54,7 +57,7 @@ class MessageOutBuffer {
 
         // Notify the consumer thread that a message is available
         messageAvailable.store(true, std::memory_order_release);
-        sharedCV.notify_one(); // Notify the reader to wake up
+        cv.notify_one(); // Notify the reader to wake up
         return true;
     }
 
@@ -95,5 +98,4 @@ class MessageOutBuffer {
     std::atomic<size_t> tail;       // Atomic tail index
 
     std::atomic<bool> messageAvailable; // Atomic flag to indicate if a message is available
-    std::condition_variable &sharedCV;  // Reference to shared condition variable
 };

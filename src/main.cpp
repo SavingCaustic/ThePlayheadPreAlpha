@@ -49,9 +49,8 @@ void signal_handler(int signal) {
 // Global objects. Could possibly be hierarchial but could lead to poor testing environments.
 PlayerEngine sPlayerEngine;
 MessageInBuffer sMessageInBuffer(8);
-std::condition_variable cv;
-MessageOutBuffer sMessageOutBuffer(cv);
-MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr, cv); // Initialize without connection
+MessageOutBuffer sMessageOutBuffer;
+MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr); // Initialize without connection
 
 AudioDriver sAudioDriver;
 MidiDriver sMidiDriver;
@@ -98,7 +97,7 @@ int main() {
 
     AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
     //
-    crowSetupEndpoints(api, sPlayerEngine, sAudioDriver, sMidiDriver, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader);
+    crowSetupEndpoints(api, sPlayerEngine, sAudioDriver, sMidiDriver, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
     int httpPort = std::get<int>(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {
