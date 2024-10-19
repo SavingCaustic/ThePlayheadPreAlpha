@@ -1,9 +1,9 @@
 #include "endpointsCrow.h"
 #include "constants.h"
 #include "core/PlayerEngine.h" // Include your relevant headers
+#include "core/errors/ErrorBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutReader.h"
-#include "core/errors/ErrorBuffer.h"
 #include "drivers/AudioDriver.h"
 #include "drivers/FileDriver.h"
 #include "drivers/MidiDriver.h"
@@ -61,6 +61,7 @@ void crowSetupEndpoints(
             std::lock_guard<std::mutex> lock(conn_mutex);
             connections.push_back(&conn);
             std::cout << "WebSocket connection opened!" << std::endl;
+            // maybe it's akward starting the reader here?!
             messageOutReader.setConnection(&conn); // Bind the WebSocket connection
             messageOutReader.start();              // Start the consumer thread
         })
@@ -85,7 +86,7 @@ void crowSetupEndpoints(
     CROW_ROUTE(api, "/startup")
     ([&audioDriver, &midiDriver, &playerEngine]() {
         audioDriver.start();
-        midiDriver.start();
+        midiDriver.start(); // Virtual keyboard as default..
         playerEngine.midiEnable(&midiDriver);
         return crow::response(200, "Services started");
     });
@@ -105,8 +106,28 @@ void crowSetupEndpoints(
         audioDriver.stop();
         return crow::response(200, "Audio stopped successfully"); });
 
+    CROW_ROUTE(api, "/device/midi/list")
+    ([&midiDriver]() {
+        std::vector<std::string> devices; // Vector to hold device names
+        // midiInManager.. midiDriver.getAvailableDevices(devices);
+
+        // Create a JSON object for the response
+        crow::json::wvalue jsonResponse;
+
+        // std::vector<crow::json::wvalue> deviceArray;
+        for (const auto &deviceName : devices) {
+            // deviceArray.emplace_back(deviceName); // Add each device name to the Crow vector
+        }
+
+        // Assign the Crow vector to the jsonResponse
+        // jsonResponse["devices"] = deviceArray;
+
+        // Return the JSON response with a 200 status
+        return crow::response{jsonResponse};
+    });
+
     CROW_ROUTE(api, "/device/midi/doStart")
-    ([&audioDriver, &playerEngine, &midiDriver]() {
+    ([&playerEngine, &midiDriver]() {
         midiDriver.start();
         //also connect it to player engine..
         playerEngine.midiEnable(&midiDriver);

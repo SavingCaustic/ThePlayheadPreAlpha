@@ -1,22 +1,20 @@
 TODO
 ====
-* testa audioError när parameter sätts..
-* fixa lateny i audioError..
+* bättre initiering av callback - varför krash? Är det midi eller audio?
+
+* Kötta i midi-implementeringen. Separat lab.
+
+* ugh.. Hur göra med allt detta med Rack, units. Untis som kanske används någon annanstans.
+Och hur göra med MidiCC som kan användas av både synth och effekt.
+
+
+
 
 * rensa i skapande av globala objekt.
-
-* bättre initiering av callback
 
 * device.json ska läsas direkt och styra uppkoppling (kan även innehålla debug.)
 Så rent generellt, en json fil innehåller "settings" som blir en unsorted_map i ett objekt.
 Vart går settings i device? Globalt objekt.
-
-
-* websocket-server som kan ta emot dessa svar och skicka vidare till klient
-  * Få igång websocket mellan FE och BE.
-  * Kunna skicka nån parameter. Vad? NoteOn typ.. format?
-  {cmd:noteOn,key:69}, {cmd:noteOff:key:69}
-  {cmd:setParam,unit:synth,name:cutoff,value:100}
 
 * kunna spara parametrar som patch.
 klura på logik för att ha både synth- och rack-patches.
@@ -81,3 +79,12 @@ hur skulle detta gå till? Börja först med att testa cc..
 asset-file per synth. funkar tills vidare. Sen vill man kanske kunna styra effekter också via CC..
 
 * skapa message buffer för dessa svar
+
+* websocket-server som kan ta emot dessa svar och skicka vidare till klient
+  * Få igång websocket mellan FE och BE.
+  * Kunna skicka nån parameter. Vad? NoteOn typ.. format?
+  {cmd:noteOn,key:69}, {cmd:noteOff:key:69}
+  {cmd:setParam,unit:synth,name:cutoff,value:100}
+
+* testa audioError när parameter sätts..
+* fixa lateny i audioError..

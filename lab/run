@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Check if an argument is provided
+if [ -z "$1" ]; then
+  echo "Usage: $0 <program_name>"
+  exit 1
+fi
+
+# Compile the provided program
+g++ "$1" -o "temp" -lportaudio -lrtmidi
+
+# Run the compiled program
+./temp
+
+# Clean up
+rm temp

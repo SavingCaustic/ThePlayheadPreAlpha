@@ -1,8 +1,8 @@
-#include "./ChorusModel.h"
+#include "./Chorus2Model.h"
 #include <cmath>
 #include <vector>
 
-namespace Effect::Chorus {
+namespace Effect::Chorus2 {
 // maybe we should pass reference to playerEngine since we may want to send an error?
 
 // Constructor to accept buffer and size
@@ -112,4 +112,4 @@ double Model::cubicInterpolate(float delayTimeSamples) {
     return P1 + 0.5f * frac * (P2 - P0 + frac * (2.0f * P0 - 5.0f * P1 + 4.0f * P2 - P3 + frac * (3.0f * (P1 - P2) + P3 - P0)));
 }
 
-} // namespace Effect::Chorus
+} // namespace Effect::Chorus2

@@ -26,6 +26,8 @@ class MessageOutReader {
 
     void stop() {
         stopFlag.store(true, std::memory_order_release);
+        // Notify the condition variable to wake the consumer thread
+        messageOutBuffer.cv.notify_all();
         if (consumerThread.joinable()) {
             consumerThread.join();
         }

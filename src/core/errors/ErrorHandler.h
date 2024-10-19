@@ -34,12 +34,16 @@ class ErrorHandler {
         stop = true;
 
         // Join threads
+        std::cout << "trying to stop error-proxy-thread..";
         if (proxyThread.joinable()) {
             proxyThread.join();
         }
+        std::cout << "..success!" << std::endl;
+        std::cout << "trying to stop error-reader-thread..";
         if (readerThread.joinable()) {
             readerThread.join();
         }
+        std::cout << "..success!" << std::endl;
     }
 
   private:

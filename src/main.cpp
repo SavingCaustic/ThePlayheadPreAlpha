@@ -107,6 +107,10 @@ int main() {
         }
         std::this_thread::sleep_for(std::chrono::seconds(3));
     }
+    std::cout << "beginning shutdown.." << std::endl;
+    sMessageOutReader.stop();
+    std::cout << "stopped web-socket feeder" << std::endl;
+    //
     std::cout << "Stopping the server..." << std::endl;
     api.stop();
     std::this_thread::sleep_for(std::chrono::seconds(1));

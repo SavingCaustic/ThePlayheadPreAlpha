@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Effect/Chorus/ChorusModel.h"
+#include "../Effect/Chorus2/Chorus2Model.h"
 #include "../Effect/Delay/DelayModel.h"
 #include "../Synth/Dummy/DummyModel.h"
 #include "../Synth/DummySin/DummySinModel.h"
@@ -118,6 +119,29 @@ class Rack {
         return synth->getParamDefsAsJson();
     }
 
+    // props
+    bool enabled = false;
+    std::unique_ptr<SynthInterface> synth;
+    std::unique_ptr<EffectInterface> effect1;
+
+    // I really don't think these methods should be here in Rack, since an effect
+    // could be loaded somewhere else. Possibly also a synth..
+
+    enum class SynthType {
+        Dummy,
+        DummySin,
+        // Add other synth types here
+        Unknown
+    };
+
+    enum class EffectType {
+        Delay,
+        Chorus,
+        Chorus2,
+        // Add other synth types here
+        Unknown
+    };
+
     bool setSynth(const std::string &synthName) {
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
@@ -151,6 +175,9 @@ class Rack {
         case EffectType::Chorus:
             effect1 = std::make_unique<Effect::Chorus::Model>(audioBuffer.data(), audioBuffer.size());
             break;
+        case EffectType::Chorus2:
+            effect1 = std::make_unique<Effect::Chorus2::Model>(audioBuffer.data(), audioBuffer.size());
+            break;
         // Add cases for other synth types here
         default:
             std::cerr << "Unknown effect type: " << effectName << std::endl;
@@ -160,19 +187,6 @@ class Rack {
             this->enabled = true;
         return (loadOK);
     }
-
-    // props
-    bool enabled = false;
-    std::unique_ptr<SynthInterface> synth;
-    std::unique_ptr<EffectInterface> effect1;
-
-  private:
-    enum class SynthType {
-        Dummy,
-        DummySin,
-        // Add other synth types here
-        Unknown
-    };
 
     SynthType getSynthType(const std::string &synthName) {
         // i really don't know what i need this for..
@@ -184,23 +198,19 @@ class Rack {
         return SynthType::Unknown;
     }
 
-    enum class EffectType {
-        Delay,
-        Chorus,
-        // Add other synth types here
-        Unknown
-    };
-
     EffectType getEffectType(const std::string &effectName) {
         // i really don't know what i need this for..
         if (effectName == "Delay")
             return EffectType::Delay;
         if (effectName == "Chorus")
             return EffectType::Chorus;
+        if (effectName == "Chorus2")
+            return EffectType::Chorus2;
         // Add other synth type checks here
         return EffectType::Unknown;
     }
 
+  private:
     PlayerEngine *playerEngine; // Reference to PlayerEngine
     // std::unique_ptr<SynthInterface> synth;
     std::unique_ptr<SynthInterface> hEventor1; // TOFIX update to EventorInterface

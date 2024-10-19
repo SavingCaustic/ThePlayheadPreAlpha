@@ -1,12 +1,12 @@
+#include <portaudio.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <portaudio.h>
 
 #define FRAMES_PER_BUFFER 64
 #define SAMPLE_RATE 48000
-#define DEVICE_ID 10
+#define DEVICE_ID 5
 
-//use /lab/portlist to find devices for machine
+// use /lab/portlist to find devices for machine
 
 float volume = 1.0;
 
@@ -22,15 +22,14 @@ float noise() {
     return noiseSeed * invNoiseC * 2.0f - 1.0f;
 }
 
-
 // Callback function to generate white noise
-static int noiseCallback(const void* inputBuffer,
-                         void* outputBuffer,
+static int noiseCallback(const void *inputBuffer,
+                         void *outputBuffer,
                          unsigned long framesPerBuffer,
-                         const PaStreamCallbackTimeInfo* timeInfo,
+                         const PaStreamCallbackTimeInfo *timeInfo,
                          PaStreamCallbackFlags statusFlags,
-                         void* userData) {
-    float* out = (float*)outputBuffer;
+                         void *userData) {
+    float *out = (float *)outputBuffer;
     (void)inputBuffer; // Unused
 
     for (unsigned long i = 0; i < framesPerBuffer; i++) {
@@ -54,20 +53,20 @@ int main() {
 
     PaStreamParameters outputParameters;
     outputParameters.device = deviceIndex;
-    outputParameters.channelCount = 2; // Stereo
+    outputParameters.channelCount = 2;         // Stereo
     outputParameters.sampleFormat = paFloat32; // Use float for output
     outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
     outputParameters.hostApiSpecificStreamInfo = NULL;
 
-    PaStream* stream;
+    PaStream *stream;
     err = Pa_OpenStream(&stream,
-                        NULL,               // Input parameters (NULL for no input)
-                        &outputParameters,  // Output parameters
+                        NULL,              // Input parameters (NULL for no input)
+                        &outputParameters, // Output parameters
                         SAMPLE_RATE,       // Sample rate
-                        FRAMES_PER_BUFFER,  // Frames per buffer
+                        FRAMES_PER_BUFFER, // Frames per buffer
                         paClipOff,         // Stream flags (use paClipOff to avoid clipping)
-                        noiseCallback,      // Callback function
-                        &volume);              // User data
+                        noiseCallback,     // Callback function
+                        &volume);          // User data
     if (err != paNoError) {
         printf("PortAudio error: %s\n", Pa_GetErrorText(err));
         Pa_Terminate();
@@ -100,5 +99,3 @@ int main() {
     Pa_Terminate();
     return 0;
 }
-    
-

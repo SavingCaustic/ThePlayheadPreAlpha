@@ -1,4 +1,0 @@
-#!/bin/bash
-g++ pa_fuzz2.c -o fuzz2 -lportaudio
-./fuzz2
-rm fuzz2

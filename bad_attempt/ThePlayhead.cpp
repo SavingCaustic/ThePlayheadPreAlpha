@@ -11,8 +11,8 @@
 // Define the static members
 PlayerEngine ThePlayhead::sPlayerEngine;
 MessageInBuffer ThePlayhead::sMessageInBuffer(8); // Initialize buffer size
-MessageOutBuffer ThePlayhead::sMessageOutBuffer(cv);
-MessageOutReader sMessageOutReader(ThePlayhead::sMessageOutBuffer, nullptr, cv); // Initialize without connection
+MessageOutBuffer ThePlayhead::sMessageOutBuffer;
+MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr); // Initialize without connection
 AudioDriver ThePlayhead::sAudioDriver;
 MidiDriver ThePlayhead::sMidiDriver;
 AudioErrorBuffer ThePlayhead::sAudioErrorBuffer;

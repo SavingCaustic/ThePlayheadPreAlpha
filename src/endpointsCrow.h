@@ -1,5 +1,6 @@
 #pragma once
 #include "crow.h" // Crow server library
+#include <crow/json.h> // Ensure to include this
 
 // Forward declarations of your global/static classes
 class PlayerEngine;

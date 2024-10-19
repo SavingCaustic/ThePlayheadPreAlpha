@@ -1,0 +1,19 @@
+#include "./LowPassFilter.h"
+#include <cmath>
+
+namespace Effect::Chorus {
+
+LowPassFilter::LowPassFilter(float cutoff, float sampleRate)
+    : cutoff(cutoff), alpha(exp(-2.0 * M_PI * cutoff / sampleRate)), previousOutput(0.0f), sampleRate(sampleRate) {}
+
+void LowPassFilter::setCutoff(float newCutoff) {
+    cutoff = newCutoff;
+    alpha = exp(-2.0 * M_PI * cutoff / sampleRate);
+}
+
+float LowPassFilter::process(float input) {
+    previousOutput = (1.0f - alpha) * input + alpha * previousOutput;
+    return previousOutput;
+}
+
+} // namespace Effect::Chorus
