@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../drivers/MidiDriver.h"
+#include "../drivers/MidiManager.h"
 #include "./errors/AudioErrorBuffer.h"
 #include "./messages/MessageInBuffer.h"
 #include "./messages/MessageOutBuffer.h"
@@ -25,6 +25,8 @@ class PlayerEngine {
     void bindMessageInBuffer(MessageInBuffer &hMessageInBuffer);
     void bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer);
     void bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer);
+    void bindMidiManager(MidiManager &hMidiManager);
+
     bool sendMessage(int rackId, const char *target, float paramValue, const char *paramName, const char *paramLabel);
 
     void reset();
@@ -37,8 +39,6 @@ class PlayerEngine {
 
     std::string getSynthParams(int rackId);
 
-    void midiEnable(MidiDriver *midiDriver);
-    void midiDisable();
     bool setupRackWithSynth(int rackId, const std::string &synthName);
     // R    bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
     // R    Rack *getRack(std::size_t position) const;
@@ -70,6 +70,7 @@ class PlayerEngine {
     MessageIn newMessage;               // Declare a reusable Message object
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
     AudioErrorBuffer *audioErrorBuffer = nullptr;
+    MidiManager *midiManager = nullptr;
 
     float loadAvg = 0;
 };

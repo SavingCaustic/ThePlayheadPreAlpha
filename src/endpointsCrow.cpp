@@ -4,9 +4,10 @@
 #include "core/errors/ErrorBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutReader.h"
+#include "crow/json.h"
 #include "drivers/AudioDriver.h"
 #include "drivers/FileDriver.h"
-#include "drivers/MidiDriver.h"
+#include "drivers/MidiManager.h"
 
 // Mutex to protect access to WebSocket connections
 std::mutex conn_mutex;
@@ -18,7 +19,7 @@ void crowSetupEndpoints(
     crow::SimpleApp &api,
     PlayerEngine &playerEngine,
     AudioDriver &audioDriver,
-    MidiDriver &midiDriver,
+    MidiManager &midiManager,
     MessageInBuffer &messageInBuffer,
     MessageOutBuffer &messageOutBuffer,
     MessageOutReader &messageOutReader,
@@ -84,10 +85,9 @@ void crowSetupEndpoints(
         return response; });
 
     CROW_ROUTE(api, "/startup")
-    ([&audioDriver, &midiDriver, &playerEngine]() {
+    ([&audioDriver, &midiManager, &playerEngine]() {
         audioDriver.start();
-        midiDriver.start(); // Virtual keyboard as default..
-        playerEngine.midiEnable(&midiDriver);
+        midiManager.mountAllDevices(); // Virtual keyboard as default..
         return crow::response(200, "Services started");
     });
 
@@ -107,36 +107,29 @@ void crowSetupEndpoints(
         return crow::response(200, "Audio stopped successfully"); });
 
     CROW_ROUTE(api, "/device/midi/list")
-    ([&midiDriver]() {
-        std::vector<std::string> devices; // Vector to hold device names
-        // midiInManager.. midiDriver.getAvailableDevices(devices);
-
+    ([&midiManager]() {
+        // Get the list of available MIDI devices
+        std::vector<std::string> devices = midiManager.getAvailableDevices();
+        crow::json::wvalue::list deviceArray;
+        for (const auto &deviceName : devices) {
+            deviceArray.emplace_back(deviceName); // Add each device to the li>
+        }
         // Create a JSON object for the response
         crow::json::wvalue jsonResponse;
-
-        // std::vector<crow::json::wvalue> deviceArray;
-        for (const auto &deviceName : devices) {
-            // deviceArray.emplace_back(deviceName); // Add each device name to the Crow vector
-        }
-
-        // Assign the Crow vector to the jsonResponse
-        // jsonResponse["devices"] = deviceArray;
-
-        // Return the JSON response with a 200 status
-        return crow::response{jsonResponse};
+        // Populate the JSON array directly into the jsonResponse
+        jsonResponse["devices"] = std::move(deviceArray); // Add each device to the "devices" field
+        // Return the JSON response with HTTP status 200
+        return crow::response(200, jsonResponse);
     });
 
     CROW_ROUTE(api, "/device/midi/doStart")
-    ([&playerEngine, &midiDriver]() {
-        midiDriver.start();
-        //also connect it to player engine..
-        playerEngine.midiEnable(&midiDriver);
+    ([&playerEngine, &midiManager]() {
+        midiManager.mountAllDevices();  //playerEngine not involved anymore. Logic in manager.
         return crow::response(200, "Midi started successfully"); });
 
     CROW_ROUTE(api, "/device/midi/doStop")
-    ([&playerEngine, &midiDriver]() {
-        playerEngine.midiDisable();
-        midiDriver.stop();
+    ([&playerEngine, &midiManager]() {
+        midiManager.stopAll();
         return crow::response(200, "Midi stopped successfully"); });
 
     CROW_ROUTE(api, "/stat/pe/loadAvg")

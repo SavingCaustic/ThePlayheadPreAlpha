@@ -13,7 +13,7 @@
 #include "crow.h"
 #include "drivers/AudioDriver.h"
 #include "drivers/FileDriver.h"
-#include "drivers/MidiDriver.h"
+#include "drivers/MidiManager.h"
 #include "endpointsCrow.h"
 #include <atomic>
 #include <chrono>
@@ -53,7 +53,7 @@ MessageOutBuffer sMessageOutBuffer;
 MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr); // Initialize without connection
 
 AudioDriver sAudioDriver;
-MidiDriver sMidiDriver;
+MidiManager sMidiManager;
 
 // Add global ErrorHandler
 AudioErrorBuffer sAudioErrorBuffer;                            // Error buffer used by the audio engine
@@ -93,11 +93,13 @@ int main() {
     sPlayerEngine.bindMessageInBuffer(sMessageInBuffer);
     sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
     sPlayerEngine.bindErrorBuffer(sAudioErrorBuffer);
+    sPlayerEngine.bindMidiManager(sMidiManager);
+
     sErrorHandler.start();
 
     AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
     //
-    crowSetupEndpoints(api, sPlayerEngine, sAudioDriver, sMidiDriver, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
+    crowSetupEndpoints(api, sPlayerEngine, sAudioDriver, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
     int httpPort = std::get<int>(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {

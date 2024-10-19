@@ -10,14 +10,6 @@ void PlayerEngine::reset() {
     noiseVolume = 0.2f;
 }
 
-void PlayerEngine::midiEnable(MidiDriver *midiDriver) {
-    this->hMidiDriver = midiDriver;
-}
-
-void PlayerEngine::midiDisable() {
-    this->hMidiDriver = nullptr;
-}
-
 void PlayerEngine::ping() {
     std::cout << "ping from player engine" << std::endl;
 }
@@ -43,6 +35,10 @@ void PlayerEngine::bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer) {
 
 void PlayerEngine::bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer) {
     audioErrorBuffer = &hAudioErrorBuffer;
+}
+
+void PlayerEngine::bindMidiManager(MidiManager &hMidiManager) {
+    midiManager = &hMidiManager;
 }
 
 bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue, const char *paramName, const char *paramLabel) {
@@ -175,21 +171,16 @@ void PlayerEngine::clockResetMethod() {
 }
 
 bool PlayerEngine::pollMidiIn() {
-    if (hMidiDriver) {
-        MidiMessage newMessage;
-        bool test = hMidiDriver->bufferRead(newMessage);
-        // If there's a message available, and a rack receiving midi..
-        if (test && this->rackReceivingMidi >= 0) {
-            // affect eventors and effects with midiCC? currently no..
+    MidiMessage newMessage;
+    if (this->rackReceivingMidi >= 0) {
+        while (midiManager->getNextMessage(newMessage)) {
             racks[this->rackReceivingMidi].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
-            // meh - this error sending *kind of* works, but something is off.
             this->sendError(200, "midi recieved");
             if (newMessage.cmd == 0x90)
                 sendMessage(1, "synth", newMessage.param1, "note on", "see this? :)");
         }
-        return test; // Return the result of getMessage
     }
-    return false; // Return false if hMidiDriver is nullptr
+    return true; // means nothing.. Return the result of getMessage
 }
 
 void PlayerEngine::turnRackAndRender() {

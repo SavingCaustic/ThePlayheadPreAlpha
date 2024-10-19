@@ -1,11 +1,11 @@
 #pragma once
-#include "crow.h" // Crow server library
+#include "crow.h"      // Crow server library
 #include <crow/json.h> // Ensure to include this
 
 // Forward declarations of your global/static classes
 class PlayerEngine;
 class AudioDriver;
-class MidiDriver;
+class MidiManager;
 class MessageInBuffer;
 class MessageOutBuffer;
 class MessageOutReader;
@@ -16,7 +16,7 @@ void crowSetupEndpoints(
     crow::SimpleApp &api,
     PlayerEngine &playerEngine,
     AudioDriver &audioDriver,
-    MidiDriver &midiDriver,
+    MidiManager &midiManager,
     MessageInBuffer &messageInBuffer,
     MessageOutBuffer &MessageOutBuffer,
     MessageOutReader &MessageOutReader,

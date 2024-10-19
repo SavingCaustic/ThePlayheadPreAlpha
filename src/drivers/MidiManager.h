@@ -2,39 +2,51 @@
 #include "MidiDriver.h"
 #include <iostream>
 #include <memory>
-#include <rtmidi/RtMidi.h>
 #include <string>
-#include <vector>
+
+// possibly, this is only the midi-in-manager.. dunno.. hotplugging has to be maintained somewhere..
 
 class MidiManager {
   public:
-    std::vector<MidiDriver> midiDrivers; // Hold multiple MIDI drivers
-    std::unique_ptr<RtMidiIn> midiIn;    // Pointer to RtMidiIn for device management
+    static constexpr size_t MaxDevices = 5;
+    MidiDriver midiDrivers[MaxDevices]; // Fixed array of MIDI drivers
 
-    MidiManager() : midiIn(std::make_unique<RtMidiIn>()) {}
+    MidiManager() {
+        // Initialize all drivers in a stopped state
+        for (auto &driver : midiDrivers) {
+            driver.stop(); // Ensure all drivers are in a valid state
+        }
+    }
 
     // Lists all available MIDI devices
-    void listDevices() {
-        unsigned int nPorts = midiIn->getPortCount();
-        if (nPorts == 0) {
-            std::cout << "No MIDI ports available!" << std::endl;
-            return;
-        }
-
-        std::cout << "Available MIDI ports:" << std::endl;
+    std::vector<std::string> getAvailableDevices() {
+        RtMidiIn midiIn;
+        std::vector<std::string> deviceNames;
+        unsigned int nPorts = midiIn.getPortCount();
         for (unsigned int i = 0; i < nPorts; i++) {
-            std::string portName = midiIn->getPortName(i);
-            std::cout << "  Port " << i << ": " << portName << std::endl;
+            deviceNames.push_back(midiIn.getPortName(i));
+        }
+        return deviceNames;
+    }
+
+    void mountAllDevices() {
+        std::vector<std::string> devices;
+        devices = getAvailableDevices();
+        for (auto &dev : devices) {
+            mountDevice(dev);
         }
     }
 
     // Add a new device and mount it
     bool mountDevice(const std::string &deviceName) {
-        MidiDriver driver;
-        if (driver.start(deviceName)) {
-            midiDrivers.push_back(std::move(driver)); // Move the driver into the vector
-            return true;
+        for (auto &driver : midiDrivers) {
+            // Only try to start an unmounted device
+            if (!driver.hasMessages() && driver.start(deviceName)) {
+                std::cout << "Mounted device: " << deviceName << std::endl;
+                return true;
+            }
         }
+        std::cerr << "No available slots for new MIDI devices." << std::endl;
         return false;
     }
 
@@ -43,11 +55,18 @@ class MidiManager {
         for (auto &driver : midiDrivers) {
             driver.stop();
         }
-        midiDrivers.clear(); // Clear the vector after stopping all drivers
     }
 
-    MidiMessage getNextMessage() {
-        // scan all midi devices for any new messages in their buffers.
-        // this function is called by the audio thread
+    bool getNextMessage(MidiMessage &newMessage) {
+        // maybe optimize this with a flag on incoming midi..
+        //  Scan all midi devices for any new messages in their buffers.
+        for (auto &driver : midiDrivers) {
+            if (driver.isRunning()) {
+                if (driver.bufferRead(newMessage)) {
+                    return true; // Return if a message is successfully read
+                }
+            }
+        }
+        return false; // No messages found
     }
 };

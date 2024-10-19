@@ -15,10 +15,12 @@ struct MidiMessage {
 
 class MidiDriver {
   public:
+    MidiDriver(const MidiDriver &) = delete;
+    MidiDriver &operator=(const MidiDriver &) = delete;
+
     static constexpr size_t BufferSize = 64; // Fixed buffer size
 
-    MidiDriver() : midiIn(nullptr), is_running(false), bufferWriteIndex(0), bufferReadIndex(0),
-                   midiInState(0), midiInCmd(0), midiInP1(0), midiInLength(0) {}
+    MidiDriver() : midiIn(nullptr), is_running(false), bufferWriteIndex(0), bufferReadIndex(0), midiInState(0), midiInCmd(0), midiInP1(0), midiInLength(0) {}
 
     ~MidiDriver() {
         stop();
@@ -27,7 +29,6 @@ class MidiDriver {
     bool start(std::string deviceName = "Virtual Keyboard") {
         try {
             midiIn = new RtMidiIn(RtMidi::Api::LINUX_ALSA);
-
             unsigned int nPorts = midiIn->getPortCount();
             if (nPorts == 0) {
                 std::cerr << "No MIDI ports available!" << std::endl;
@@ -36,7 +37,6 @@ class MidiDriver {
                 return false;
             }
 
-            // std::string deviceName = "Impact LX25+";
             unsigned int selectedPort = -1;
             for (unsigned int i = 0; i < nPorts; i++) {
                 std::string portName = midiIn->getPortName(i);
@@ -74,9 +74,13 @@ class MidiDriver {
         }
     }
 
+    bool isRunning() {
+        return is_running;
+    }
+
     bool bufferWrite(const MidiMessage &message) {
         auto current_write = bufferWriteIndex.load(std::memory_order_relaxed);
-        auto next_write = (current_write + 1) & (BufferSize - 1);
+        auto next_write = (current_write + 1) % BufferSize;
 
         if (next_write == bufferReadIndex.load(std::memory_order_acquire)) {
             return false; // Buffer is full
@@ -94,8 +98,12 @@ class MidiDriver {
         }
 
         message = buffer[current_read];
-        bufferReadIndex.store((current_read + 1) & (BufferSize - 1), std::memory_order_release);
+        bufferReadIndex.store((current_read + 1) % BufferSize, std::memory_order_release);
         return true;
+    }
+
+    bool hasMessages() const {
+        return bufferReadIndex.load(std::memory_order_acquire) != bufferWriteIndex.load(std::memory_order_acquire);
     }
 
   private:
@@ -106,59 +114,25 @@ class MidiDriver {
 
     void handleMidiMessage(std::vector<uint8_t> *message) {
         for (uint8_t byte : *message) {
-            uint8_t test = 0;
             switch (midiInState) {
             case 0:
-                test = byte & 0xf0;
-                // Expecting a command byte
                 midiInCmd = byte;
-                switch (test) {
-                case 0x80: // Note Off
-                case 0x90: // Note On
-                case 0xa0: // Aftertouch
-                case 0xb0: // Control Change
-                case 0xe0: // Pitch Bend
-                    midiInLength = 2;
-                    break;
-                case 0xc0: // Program Change
-                case 0xd0: // Channel Pressure
-                    midiInLength = 1;
-                    break;
-                case 0xf0: // System Exclusive
-                    midiInLength = 0;
-                    return; // Ignore for now
-                default:
-                    std::cerr << "Unknown MIDI command" << std::endl;
-                    return;
-                }
-                midiInState = 1; // Expecting first parameter
+                midiInLength = (byte & 0xf0) == 0xC0 || (byte & 0xf0) == 0xD0 ? 1 : ((byte & 0xf0) == 0xF0 ? 0 : 2);
+                midiInState = midiInLength > 0 ? 1 : 0; // Move to next state
                 break;
-                //
             case 1:
-                // First parameter
                 midiInP1 = byte;
                 if (midiInLength == 1) {
-                    // Single parameter message
-                    if (!bufferWrite(MidiMessage(midiInCmd, midiInP1, 0))) {
-                        std::cerr << "Buffer full, unable to write message" << std::endl;
-                    }
-                    midiInState = 0; // Reset state
-                } else {
-                    midiInState = 2; // Expecting second parameter
+                    bufferWrite(MidiMessage(midiInCmd, midiInP1, 0));
                 }
+                midiInState = 2; // Expecting second parameter
                 break;
-
             case 2:
-                // Second parameter
-                if (!bufferWrite(MidiMessage(midiInCmd, midiInP1, byte))) {
-                    std::cerr << "Buffer full, unable to write message" << std::endl;
-                }
+                bufferWrite(MidiMessage(midiInCmd, midiInP1, byte));
                 midiInState = 0; // Reset state
                 break;
-
             default:
-                std::cerr << "Invalid MIDI state" << std::endl;
-                midiInState = 0; // Reset state
+                midiInState = 0; // Reset state on error
                 break;
             }
         }
