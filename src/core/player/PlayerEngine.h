@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../drivers/MidiManager.h"
-#include "./errors/AudioErrorBuffer.h"
-#include "./messages/MessageInBuffer.h"
-#include "./messages/MessageOutBuffer.h"
-#include "Rack.h"
-#include "timing/Rotator.h"
+#include "core/errors/AudioErrorBuffer.h"
+#include "core/messages/MessageInBuffer.h"
+#include "core/messages/MessageOutBuffer.h"
+#include "core/player/Rack.h"
+#include "core/timing/Rotator.h"
+#include "drivers/MidiManager.h"
 #include <array>
 #include <atomic>
 #include <chrono>
@@ -62,7 +62,7 @@ class PlayerEngine {
     MidiDriver *hMidiDriver = nullptr;
     bool midiMultiMode = false; // true if midiCh should be directed to respective rack
     int rackInFocus = 0;        // not sure about this.. number of rack in focus. What if no rack in focus?
-    int rackReceivingMidi = 0;
+    int rackReceivingMidi = -1;
     std::vector<unsigned char> midiInMsg;
     double midiInTS; // probably not used, we use it when we get it.
     MessageInBuffer *messageInBuffer = nullptr;

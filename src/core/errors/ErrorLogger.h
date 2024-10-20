@@ -4,6 +4,8 @@
 #include <fstream>
 #include <iostream>
 
+// i don't think this is used anymore..
+
 namespace Logging {
 class ErrorLogger {
   public:
@@ -72,4 +74,4 @@ class ErrorLogger {
     static std::atomic<size_t> writeIndex;
     static std::atomic<size_t> readIndex;
 };
-}
+} // namespace Logging

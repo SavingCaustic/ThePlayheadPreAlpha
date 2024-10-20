@@ -1,13 +1,11 @@
 TODO
 ====
-* bättre initiering av callback - varför krash? Är det midi eller audio?
-
-* Kötta i midi-implementeringen. Separat lab.
+* Audio in.. Kanske ska vi ha en AudioManager. Denna kan ha in-buffers (alltid 2st), så kopplar DSP upp sig till deessa.
+  Och det är audioManager som slår av/på själva drivern..
 
 * ugh.. Hur göra med allt detta med Rack, units. Untis som kanske används någon annanstans.
-Och hur göra med MidiCC som kan användas av både synth och effekt.
-
-
+Och hur göra med MidiCC som kan användas av både synth och effekt. Viktigt att mapping finns på rack.
+cc_mapping, tja har man params har man cc_mapping. Vet iofs inte om rack i sig har params, bara settings..
 
 
 * rensa i skapande av globala objekt.
@@ -48,6 +46,11 @@ gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS ist�
 
 
 FIXAT:
+
+* bättre initiering av callback - varför krash? Är det midi eller audio?
+
+* Kötta i midi-implementeringen. Separat lab.
+
 * Rensa så midi inte använder char
 
 * Flytta endpoints till egen fil

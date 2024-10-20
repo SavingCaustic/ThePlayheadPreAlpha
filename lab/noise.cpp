@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// simple noise generator to test audio-device and also its low-level latency (when hitting key)
+
 #define FRAMES_PER_BUFFER 64
 #define SAMPLE_RATE 48000
 #define DEVICE_ID 5

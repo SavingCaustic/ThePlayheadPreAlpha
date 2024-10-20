@@ -1,7 +1,10 @@
 #include "crow.h"
 
+// this is an attempts trying to crow to return a JSON-collection from a vector.
+// examples are hard to find..
+
 int main() {
-    crow::SimpleApp app;  // Create the Crow app
+    crow::SimpleApp app; // Create the Crow app
 
     // Define the endpoint
     CROW_ROUTE(app, "/devices")
@@ -14,8 +17,8 @@ int main() {
 
         // Populate the JSON array correctly with `crow::json::wvalue`
         crow::json::wvalue::list deviceArray;
-        for (const auto& deviceName : devices) {
-            deviceArray.emplace_back(deviceName);  // Add each device to the list
+        for (const auto &deviceName : devices) {
+            deviceArray.emplace_back(deviceName); // Add each device to the list
         }
 
         // Assign the device array to the JSON response

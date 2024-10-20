@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../Effect/Chorus/ChorusModel.h"
-#include "../Effect/Chorus2/Chorus2Model.h"
-#include "../Effect/Delay/DelayModel.h"
-#include "../Synth/Dummy/DummyModel.h"
-#include "../Synth/DummySin/DummySinModel.h"
+#include "Effect/Chorus/ChorusModel.h"
+#include "Effect/Chorus2/Chorus2Model.h"
+#include "Effect/Delay/DelayModel.h"
+#include "Synth/Dummy/DummyModel.h"
+#include "Synth/DummySin/DummySinModel.h"
 //
 // #include "../Synth/SynthInterface.h"
-#include "../constants.h"
+#include "constants.h"
 // #include "ParamInterfaceBase.h"
 #include <array>
 #include <cstddef> // for std::size_t
@@ -61,6 +61,10 @@ class Rack {
         if (effect1) {
             // hey we should have a return argument here - telling if its stereo..
             effect1->renderNextBlock();
+        }
+        if (effect2) {
+            // hey we should have a return argument here - telling if its stereo..
+            effect2->renderNextBlock();
         }
     }
 
@@ -123,6 +127,7 @@ class Rack {
     bool enabled = false;
     std::unique_ptr<SynthInterface> synth;
     std::unique_ptr<EffectInterface> effect1;
+    std::unique_ptr<EffectInterface> effect2;
 
     // I really don't think these methods should be here in Rack, since an effect
     // could be loaded somewhere else. Possibly also a synth..
@@ -166,17 +171,24 @@ class Rack {
     bool setEffect(const std::string &effectName, int effectSlot = 1) {
         std::cout << "we're setting up effect: " << effectName << std::endl;
         EffectType type = getEffectType(effectName);
+        std::unique_ptr<EffectInterface> *effectTarget = nullptr;
+        if (effectSlot == 1) {
+            effectTarget = &effect1;
+        } else {
+            // a bit sloppy handling..
+            effectTarget = &effect2;
+        }
         bool loadOK = true;
         switch (type) {
         case EffectType::Delay:
-            effect1 = std::make_unique<Effect::Delay::Model>(audioBuffer.data(), audioBuffer.size());
+            *effectTarget = std::make_unique<Effect::Delay::Model>(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
         case EffectType::Chorus:
-            effect1 = std::make_unique<Effect::Chorus::Model>(audioBuffer.data(), audioBuffer.size());
+            *effectTarget = std::make_unique<Effect::Chorus::Model>(audioBuffer.data(), audioBuffer.size());
             break;
         case EffectType::Chorus2:
-            effect1 = std::make_unique<Effect::Chorus2::Model>(audioBuffer.data(), audioBuffer.size());
+            *effectTarget = std::make_unique<Effect::Chorus2::Model>(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
         default:

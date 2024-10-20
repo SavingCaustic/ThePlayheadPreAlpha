@@ -4,6 +4,9 @@
 
 #define SLEEP_TIME 500
 
+// evalate calculations and thread-wakeup time.
+// crucial for determining time left in render-thread.
+
 int main() {
     // Capture the start time
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -20,7 +23,6 @@ int main() {
     // Print elapsed time in microseconds
     std::cout << "Elapsed time: " << elapsed_time << " microseconds" << std::endl;
     std::cout << "Requested sleep time: " << SLEEP_TIME << " microseconds" << std::endl;
-
 
     // Estimate time left in render window (1333 microseconds)
     int64_t render_window_us = 1333;
