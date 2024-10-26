@@ -4,7 +4,7 @@
 
 // Forward declarations of your global/static classes
 class PlayerEngine;
-class AudioDriver;
+class AudioManager;
 class MidiManager;
 class MessageInBuffer;
 class MessageOutBuffer;
@@ -15,7 +15,7 @@ class ErrorBuffer;
 void crowSetupEndpoints(
     crow::SimpleApp &api,
     PlayerEngine &playerEngine,
-    AudioDriver &audioDriver,
+    AudioManager &audioManager,
     MidiManager &midiManager,
     MessageInBuffer &messageInBuffer,
     MessageOutBuffer &MessageOutBuffer,

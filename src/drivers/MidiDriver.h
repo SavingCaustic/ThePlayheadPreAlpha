@@ -52,6 +52,7 @@ class MidiDriver {
                 return false;
             }
 
+            this->deviceName = deviceName;
             midiIn->openPort(selectedPort);
             midiIn->setCallback(&MidiDriver::midiCallback, this);
 
@@ -70,12 +71,17 @@ class MidiDriver {
             delete midiIn;
             midiIn = nullptr;
             is_running = false;
+            deviceName.clear();
             std::cout << "MIDI service stopped." << std::endl;
         }
     }
 
     bool isRunning() {
         return is_running;
+    }
+
+    std::string getDeviceName() {
+        return this->deviceName;
     }
 
     bool bufferWrite(const MidiMessage &message) {
@@ -140,6 +146,7 @@ class MidiDriver {
 
     RtMidiIn *midiIn;
     bool is_running;
+    std::string deviceName;
     MidiMessage buffer[BufferSize];       // Buffer array holding MidiMessage structs
     std::atomic<size_t> bufferWriteIndex; // Write index (producer side)
     std::atomic<size_t> bufferReadIndex;  // Read index (consumer side)

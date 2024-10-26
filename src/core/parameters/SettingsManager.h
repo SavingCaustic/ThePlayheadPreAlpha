@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <variant>
 
+// skip this variant stuff, just use strings for values. use stoi etc as needed.
 using VariantType = std::variant<int, float, std::string>;
 
 class SettingsManager {

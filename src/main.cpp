@@ -10,8 +10,10 @@
 #include "core/parameters/SettingsManager.h"
 #include "core/player/PlayerEngine.h"
 #include "core/player/Rack.h"
+#include "core/runner/StudioRunner.h"
 #include "crow.h"
 #include "drivers/AudioDriver.h"
+#include "drivers/AudioManager.h"
 #include "drivers/FileDriver.h"
 #include "drivers/MidiManager.h"
 #include "endpointsCrow.h"
@@ -53,12 +55,16 @@ MessageOutBuffer sMessageOutBuffer;
 MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr); // Initialize without connection
 
 AudioDriver sAudioDriver;
+AudioManager sAudioManager(sAudioDriver, sPlayerEngine);
 MidiManager sMidiManager;
 
 // Add global ErrorHandler
 AudioErrorBuffer sAudioErrorBuffer;                            // Error buffer used by the audio engine
 ErrorBuffer sErrorBuffer;                                      // Main error buffer for logging
 ErrorHandler sErrorHandler(&sAudioErrorBuffer, &sErrorBuffer); // Error handler with threads
+
+// StudioRunner - performing various low-prio task (micro-scheduler)
+StudioRunner sStudioRunner(sMidiManager, sAudioManager);
 
 // Entry point of the program
 int main() {
@@ -76,17 +82,19 @@ int main() {
     deviceSettings["audio_device"] = 1;
     deviceSettings["midi_device"] = 1;
     deviceSettings["http_port"] = 18080;
-
     // Load settings from JSON and override default settings
+
+    // Kickstart the StudioRunner (low-priority job scheduler)
+    sStudioRunner.start();
 
     SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
     // this could be and endpoint..
     //  now what playerEngine is initiated, setup the callback.
     unsigned long framesPerBuffer = std::get<int>(deviceSettings["buffer_size"]);
-    sAudioDriver.registerCallback([framesPerBuffer](float *buffer, unsigned long) {
+    /*sAudioManager.registerCallback([framesPerBuffer](float *buffer, unsigned long) {
         // Call the static renderNextBlock method from sPlayerEngine
         sPlayerEngine.renderNextBlock(buffer, framesPerBuffer);
-    });
+    });*/
     // Start the audio driver
     // sAudioDriver.start();
     //
@@ -99,7 +107,7 @@ int main() {
 
     AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
     //
-    crowSetupEndpoints(api, sPlayerEngine, sAudioDriver, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
+    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
     int httpPort = std::get<int>(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {
@@ -121,6 +129,7 @@ int main() {
     }
     sErrorHandler.stopThreads();
 
+    sStudioRunner.stop();
     std::cout << "Server stopped gracefully." << std::endl;
     return 0;
 }

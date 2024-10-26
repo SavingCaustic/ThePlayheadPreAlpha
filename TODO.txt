@@ -1,12 +1,16 @@
 TODO
 ====
+
 * Audio in.. Kanske ska vi ha en AudioManager. Denna kan ha in-buffers (alltid 2st), så kopplar DSP upp sig till deessa.
   Och det är audioManager som slår av/på själva drivern..
+
+* WavReader kan ha Intro + SideA + SideB. När läsning av sideB börjar ska sideA uppdateras, om inte då hela alltet ryms i
+intro + A + B. 32+32+32 = 96 kB. => mono 2 sek. Sedan behöver läsning ske varje sek.
+Denna är ju synkron. Bara en tråd.
 
 * ugh.. Hur göra med allt detta med Rack, units. Untis som kanske används någon annanstans.
 Och hur göra med MidiCC som kan användas av både synth och effekt. Viktigt att mapping finns på rack.
 cc_mapping, tja har man params har man cc_mapping. Vet iofs inte om rack i sig har params, bara settings..
-
 
 * rensa i skapande av globala objekt.
 
@@ -24,7 +28,7 @@ Då behöver vi väl jämföra nuv position med ny föreslagen, så vi inte kall
 Och då behöver vi veta om värdet vi är på väg att skriva är persistant eller temp (automation).
 Kan vänta med automation med förbreda för det. (på väg att skapa egen klass här..)
 
-* mjuka övergångar - nån slags filter..
+* mjuka övergångar - delta för parametrar. Registreras vid compile-time.
 
 * skicka svar från parametrar med både 0-1 och värdet, ex "40L"
 gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS istället för hela vägen tillbaka..
@@ -46,6 +50,8 @@ gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS ist�
 
 
 FIXAT:
+
+* Midi-in hotplugging. At interval (Stu)
 
 * bättre initiering av callback - varför krash? Är det midi eller audio?
 

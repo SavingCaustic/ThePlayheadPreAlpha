@@ -41,13 +41,40 @@ class MidiManager {
     bool mountDevice(const std::string &deviceName) {
         for (auto &driver : midiDrivers) {
             // Only try to start an unmounted device
-            if (!driver.hasMessages() && driver.start(deviceName)) {
-                std::cout << "Mounted device: " << deviceName << std::endl;
-                return true;
+            if (!driver.isRunning()) {
+                if (driver.start(deviceName)) {
+                    std::cout << "Mounted device: " << deviceName << std::endl;
+                    return true;
+                }
             }
         }
         std::cerr << "No available slots for new MIDI devices." << std::endl;
         return false;
+    }
+
+    bool unmountDevice(const std::string &deviceName) {
+        for (auto &driver : midiDrivers) {
+            // Only try to start an unmounted device
+            if (driver.getDeviceName() == deviceName) {
+                std::cout << "Unmounting device: " << deviceName << std::endl;
+                driver.stop();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Lists all mounted MIDI devices
+    std::vector<std::string> getMountedDevices() {
+        std::vector<std::string> deviceNames;
+        std::string s;
+        for (auto &driver : midiDrivers) {
+            s = driver.getDeviceName();
+            if (s != "") {
+                deviceNames.push_back(s);
+            }
+        }
+        return deviceNames;
     }
 
     // Stop all mounted devices

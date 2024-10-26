@@ -1,6 +1,6 @@
 Two different types of parameters! *BOTH* saved/loaded as patch/song
-* params[] <= audio thread owner, midi cc etc
-* settings[] <= web server owner, creating objects etc.
+* params[] <= (float) audio thread owner, midi cc etc
+* settings[] <= (string) web server owner, creating objects etc.
 
 PARAMS: run-time parameters
 * Midi CC
@@ -16,6 +16,14 @@ SETTINGS: non run-time (settings?)
 * may be proceeded with racks (or units) being off-line
 * yeah a unit must be taken off-line before it can be deleted..
 online = true/false
+
+AND:
+a unit may host a collection of DeltaParams
+with name, targetValue, currentValue, and delta
+so VCA_SUSTAIN will over a render-period (64 samples), increase linear,
+but before each render-block set its delta according to
+delta = target - current;
+when too small, either bit/condition to skip delta or just use -0..
 
 rack {
   setttings {

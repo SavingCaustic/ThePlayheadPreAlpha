@@ -5,7 +5,7 @@
 #include "core/messages/MessageOutReader.h"
 #include "core/player/PlayerEngine.h" // Include your relevant headers
 #include "crow/json.h"
-#include "drivers/AudioDriver.h"
+#include "drivers/AudioManager.h"
 #include "drivers/FileDriver.h"
 #include "drivers/MidiManager.h"
 
@@ -18,7 +18,7 @@ std::vector<crow::websocket::connection *> connections;
 void crowSetupEndpoints(
     crow::SimpleApp &api,
     PlayerEngine &playerEngine,
-    AudioDriver &audioDriver,
+    AudioManager &audioManager,
     MidiManager &midiManager,
     MessageInBuffer &messageInBuffer,
     MessageOutBuffer &messageOutBuffer,
@@ -85,16 +85,16 @@ void crowSetupEndpoints(
         return response; });
 
     CROW_ROUTE(api, "/startup")
-    ([&audioDriver, &midiManager, &playerEngine]() {
-        audioDriver.start();
+    ([&audioManager, &midiManager, &playerEngine]() {
+        // audioManager.start(); //dunno what to do really now when manager supervises all..
         midiManager.mountAllDevices(); // Virtual keyboard as default..
         return crow::response(200, "Services started");
     });
 
     // Endpoint to start audio generation
     CROW_ROUTE(api, "/device/audio/doStart")
-    ([&audioDriver]() {
-        if (audioDriver.start()) {
+    ([&audioManager]() {
+        if (true) { //audioDriver.start()) {
             return crow::response(200, "Audio started successfully");
         } else {
             return crow::response(500, "Failed to start audio");
@@ -102,8 +102,8 @@ void crowSetupEndpoints(
 
     // Endpoint to stop audio generation
     CROW_ROUTE(api, "/device/audio/doStop")
-    ([&audioDriver]() {
-        audioDriver.stop();
+    ([&audioManager]() {
+        //audioManager.stop(); //ok, maybe signal to audio-manager, stop everything. We're closing down.
         return crow::response(200, "Audio stopped successfully"); });
 
     CROW_ROUTE(api, "/device/midi/list")
