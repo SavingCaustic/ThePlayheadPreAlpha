@@ -25,6 +25,8 @@ class AudioMath {
 
     static void generateLUT();
 
+    static void normalizeLUT(float *lut, unsigned int lutSize);
+
   private:
     static constexpr size_t sineLutSize = 256; // Can stay here
     static std::array<float, sineLutSize> sineLut;

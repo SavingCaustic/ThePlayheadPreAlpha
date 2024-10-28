@@ -1,12 +1,26 @@
 TODO
 ====
+* snap. nästan. :)
+Vid ladda, finns inga patch-värden än. Ladda defaults från params.
+Dubbelkolla. Detune o semi ska bli 0.
+sen är snap klar!! :D
 
-* Audio in.. Kanske ska vi ha en AudioManager. Denna kan ha in-buffers (alltid 2st), så kopplar DSP upp sig till deessa.
-  Och det är audioManager som slår av/på själva drivern..
+* Alright, let's remove stuff from SynthInterface that probably should be in SynthManager?
+* But is there a SynthManager?? It's always in a rack..
+* Where to put the json-stuff.. maybe ok to have the load/save-stuff in the interface?
+
+
+* ok fixa detta med parameters nu.
+* parameters är i class. + lambda.
+* paramVals är data av parameters.
+* stringVals är grejer som sätts av.
+* deltas kan användas av DSP. 
 
 * WavReader kan ha Intro + SideA + SideB. När läsning av sideB börjar ska sideA uppdateras, om inte då hela alltet ryms i
 intro + A + B. 32+32+32 = 96 kB. => mono 2 sek. Sedan behöver läsning ske varje sek.
 Denna är ju synkron. Bara en tråd.
+
+* Nåt med audioManager hotplugging som behver skruvas.
 
 * ugh.. Hur göra med allt detta med Rack, units. Untis som kanske används någon annanstans.
 Och hur göra med MidiCC som kan användas av både synth och effekt. Viktigt att mapping finns på rack.
@@ -50,6 +64,9 @@ gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS ist�
 
 
 FIXAT:
+
+* Audio in.. Kanske ska vi ha en AudioManager. Denna kan ha in-buffers (alltid 2st), så kopplar DSP upp sig till deessa.
+  Och det är audioManager som slår av/på själva drivern..
 
 * Midi-in hotplugging. At interval (Stu)
 

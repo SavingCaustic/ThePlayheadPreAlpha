@@ -74,6 +74,22 @@ void AudioMath::generateLUT() {
     }
 }
 
+void AudioMath::normalizeLUT(float *lut, unsigned int lutSize) {
+    float maxVal = 0;
+    float gain = 0;
+    for (int i = 0; i < lutSize; i++) {
+        if (lut[i] > maxVal) {
+            maxVal = lut[i];
+        }
+    }
+    if (maxVal > 1) {
+        gain = 1.0f / maxVal;
+        for (int i = 0; i < lutSize; i++) {
+            lut[i] *= gain;
+        }
+    }
+}
+
 float AudioMath::clamp(float value, float min, float max) {
     if (value < min)
         return min;
@@ -87,8 +103,7 @@ float AudioMath::linScale(float value, float min, float max) {
 }
 
 float AudioMath::logScale(float value, float minValue, float octaves) {
-    // note that input is integer! 0-127. This should be rewritten to 0-1
     float result = minValue * std::exp2(value * octaves);
-    std::cout << "log2 of " << value << " is " << result << std::endl;
+    // std::cout << "log2 of " << value << " is " << result << std::endl;
     return result;
 }

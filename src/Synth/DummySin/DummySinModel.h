@@ -13,6 +13,7 @@
 #include <string>
 #include <unordered_map>
 
+// oh this needs to go.. What about it. It's a deltaEaser. DSP responsible for calling them.
 struct Easer {
     float currentValue;
     float targetValue;
@@ -92,8 +93,11 @@ class Model : public SynthInterface {
 
     // LPF variables
     float previousLeft = 0.0f;
+    float highPassedSample = 0.0f;
+    float lowPassedSample = 0.0f;
     float previousRight = 0.0f;
     float alpha = 0.0f; // Filter coefficient
+    float alpha2 = 0.0f;
     int cutoffHz = 2000;
     float gainLeft = 0.7;
     float gainRight = 0.7;
@@ -107,9 +111,9 @@ class Model : public SynthInterface {
     // Private methods
     // void setupCCmapping(const std::string &path);
 
-    void initLPF();
-    void initBPF();
-    void initHPF();
+    void initFilter();
+
+    void applyFilter(float &sample);
 
     void applySine(float multiple, float amplitude);
 
@@ -123,6 +127,7 @@ class Model : public SynthInterface {
     float lutIdx = 0;
     float angle = AudioMath::getMasterTune() * LUT_SIZE * (1.0f / TPH_DSP_SR);
     float bendCents = 0;
+    int semitone = 0;
 };
 
 } // namespace Synth::DummySin

@@ -1,5 +1,6 @@
 {
     "1": "cutoff",
     "74": "pan",
-    "71": "detune"
+    "84": "filter_type",
+    "10": "semitone"
 }

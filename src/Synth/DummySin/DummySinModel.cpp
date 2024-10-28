@@ -1,7 +1,6 @@
 #include "./DummySinModel.h"
-// #include "core/Rack.h"
-// #include "ext/dr_wav.h" //not used but now we have it..
-// #include <iostream>
+#include <cmath>
+#include <iostream>
 #include <vector>
 
 namespace Synth::DummySin {
@@ -16,8 +15,8 @@ Model::Model(float *audioBuffer, std::size_t bufferSize)
 }
 
 void Model::setupParams() {
-    if (SynthInterface::parameterDefinitions.empty()) {
-        SynthInterface::parameterDefinitions = {
+    if (SynthInterface::parameterDefs.empty()) {
+        SynthInterface::parameterDefs = {
             {"pan", {0.1f, 0, false, 0, 1, [this](float v) {
                          gainLeft = AudioMath::ccos(v * 0.25f);  // Left gain decreases as panVal goes to 1
                          gainRight = AudioMath::csin(v * 0.25f); // Right gain increases as panVal goes to 1
@@ -25,159 +24,145 @@ void Model::setupParams() {
             {"cutoff", {0.5f, 0, true, 50, 8, [this](float v) {
                             std::cout << "Setting cutoff to " << v << std::endl;
                             cutoffHz = v;
-                            initBPF();
+                            initFilter();
                         }}},
             {"detune", {0.5f, 0, false, -100, 100, [this](float v) {
-                            // note that attributes are from-to.
                             std::cout << "Setting detune to " << v << std::endl;
-                            // cutoffHz = v;
-                            // initLPF();
                         }}},
-            {"filter_mode", {0.0f, 3, false, 0, 2, [this](float v) {
-                                 // go rough and just use numer, or cast to emum.
-                                 // maybe enum just half baked so skip..
-                                 filterType = FilterType::LPF;
-                                 initLPF();
-                             }}}};
+            {"filter_type", {0.0f, 3, false, 0, 2, [this](float v) {
+                                 int iv = static_cast<int>(v);
+                                 switch (iv) {
+                                 case 0:
+                                     filterType = FilterType::LPF;
+                                     break;
+                                 case 1:
+                                     filterType = FilterType::BPF;
+                                     break;
+                                 case 2:
+                                     filterType = FilterType::HPF;
+                                     break;
+                                 }
+                                 initFilter();
+                             }}},
+            {"semitone", {0.5f, 13, false, -6, 6, [this](float v) {
+                              std::cout << "Setting semitone to " << v << std::endl;
+                              semitone = round(v);
+                          }}}};
     }
 }
 
 void Model::reset() {
-    if (false) {
-        // make sawtooth..
-        for (int i = 1; i < 14; i++) {
-            this->applySine(i, 0.5 / i);
-        }
-    } else {
-        this->applySine(1, 0.5);
-        this->applySine(2, 0.4);
-        this->applySine(3, 0.3);
-        this->applySine(4, 0.2);
-        this->applySine(5, 0.1);
-        this->applySine(6, 0.1);
-        this->applySine(7, 0.3);
-    }
+    this->applySine(1, 0.5);
+    this->applySine(2, 0.4);
+    this->applySine(3, 0.3);
+    this->applySine(4, 0.2);
+    this->applySine(5, 0.1);
+    this->applySine(6, 0.1);
+    this->applySine(7, 0.3);
+    AudioMath::normalizeLUT(lut1, LUT_SIZE);
 }
 
 void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
-    u_int8_t messageType = cmd & 0xf0;
+    uint8_t messageType = cmd & 0xf0;
     float fParam2 = static_cast<float>(param2) * (1.0f / 127.0f);
     switch (messageType) {
     case 0x80:
-        // Note off, only bother if match to note playing..
-        if (param1 == notePlaying) {
+        if (param1 == notePlaying)
             vcaLevelTarget = 0.0f;
-        }
         break;
     case 0x90:
-        // Note on
         notePlaying = param1;
-        // bend cents needs to be calculated on render..
         vcaLevelTarget = 1.0f;
         break;
     case 0xb0:
-        // Control change (CC)
         SynthInterface::handleMidiCC(param1, fParam2);
         break;
     case 0xe0: {
-        // Pitch bend extra varialbes - use curly braces..
         int pitchBendValue = (static_cast<int>(param2) << 7) | static_cast<int>(param1);
-        int pitchBendCentered = pitchBendValue - 8192;
-        std::cout << "PB:" << pitchBendCentered << std::endl;
-        // Scale the pitch bend to +/- 100 cents
-        bendCents = (pitchBendCentered / 8192.0f) * 200.0f;
+        bendCents = ((pitchBendValue - 8192) / 8192.0f) * 200.0f;
         break;
     }
-    default:
-        // Handle other messages
-        break;
     }
 }
 
 void Model::applySine(float multiple, float amplitude) {
     for (size_t i = 0; i < LUT_SIZE; ++i) {
-        float rad = (2.0f * M_PI * i * multiple / LUT_SIZE);
-        lut1[i] += std::sin(rad) * amplitude;
+        lut1[i] += std::sin(2.0f * M_PI * i * multiple / LUT_SIZE) * amplitude;
     }
 }
 
-void Model::initLPF() {
-    float RC = 1.0f / (2.0f * M_PI * this->cutoffHz);
+void Model::initFilter() {
+    // also called on cutoff-change
+    float RC, RC2;
     float dt = 1.0f / TPH_DSP_SR;
-    alpha = dt / (RC + dt);
-}
+    std::cout << "Initializing filter with cutoff frequency: " << cutoffHz << std::endl;
 
-void Model::initBPF() {
-    // Example calculation for BPF
-    float RC1 = 1.0f / (2.0f * M_PI * this->cutoffHz);
-    float RC2 = 1.0f / (2.0f * M_PI * (this->cutoffHz * 1.5f)); // Example bandwidth
-    float dt = 1.0f / TPH_DSP_SR;
-    alpha = dt / (RC1 + dt);
-    // You may need to store more states for the BPF filter
-}
+    switch (filterType) {
+    case FilterType::LPF:
+        RC = 1.0f / (2.0f * M_PI * cutoffHz);
+        RC2 = 1.0f / (2.0f * M_PI * (cutoffHz * 1.5f)); // Example for bandwidth
+        alpha = dt / (RC + dt);                         // Low-pass alpha
+        alpha2 = dt / (RC2 + dt);                       // High-pass alpha
+        break;
 
-void Model::initHPF() {
-    float RC = 1.0f / (2.0f * M_PI * this->cutoffHz);
-    float dt = 1.0f / TPH_DSP_SR;
-    alpha = RC / (RC + dt);
+    case FilterType::BPF:
+        RC = 1.0f / (2.0f * M_PI * cutoffHz);
+        RC2 = 1.0f / (2.0f * M_PI * (cutoffHz * 1.5f)); // Example for bandwidth
+        alpha = dt / (RC + dt);
+        std::cout << "BPF alpha: " << alpha << std::endl;
+        break;
+
+    case FilterType::HPF:
+        RC = 1.0f / (2.0f * M_PI * cutoffHz);
+        alpha = RC / (RC + dt);
+        std::cout << "HPF alpha: " << alpha << std::endl;
+        break;
+    }
 }
 
 bool Model::renderNextBlock() {
-    // we could declare this signal as mono. would be good to try.
-    float hz = 0;
-    hz = AudioMath::noteToHz(notePlaying, bendCents);
-    angle = hz * LUT_SIZE * (1.0f / TPH_DSP_SR);
-    // note that unlike JUCE, we produce both channels at once. When ever more efficient..
-    for (std::size_t i = 0; i < bufferSize; i += 2) {
-        lutIdx = lutIdx + angle;
-        if (lutIdx >= LUT_SIZE) {
-            lutIdx -= LUT_SIZE;
-        }
-        // LUT out of bounds: int intIdx = static_cast<int>(lutIdx + (lutIdx < 0 ? -0.5f : 0.5f));
+    float hz = AudioMath::noteToHz(notePlaying + semitone, bendCents);
+    angle = hz * LUT_SIZE / TPH_DSP_SR;
+
+    for (std::size_t i = 0; i < bufferSize; i++) {
+        lutIdx = (lutIdx + angle) < LUT_SIZE ? (lutIdx + angle) : (lutIdx + angle - LUT_SIZE);
         int intIdx = static_cast<int>(lutIdx);
-        float y = lut1[intIdx] * 0.5;
-        buffer[i] = y * this->gainLeft * vcaLevel;
-        buffer[i + 1] = y * this->gainRight * vcaLevel;
+        float y = lut1[intIdx] * 0.5f * vcaLevel;
+
+        buffer[i] = y * gainLeft;
+
         vcaLevel += vcaLevelDelta;
+        applyFilter(buffer[i]);
     }
-    switch (this->filterType) {
+
+    vcaLevelDelta = (vcaLevelTarget - vcaLevel) * 0.015f;
+
+    return false; // mono
+}
+
+void Model::applyFilter(float &sample) {
+    switch (filterType) {
     case FilterType::LPF:
-        for (std::size_t i = 0; i < bufferSize; i += 2) {
-            float leftInput = buffer[i];
-            float rightInput = buffer[i + 1];
-            buffer[i] = alpha * leftInput + (1.0f - alpha) * previousLeft;
-            previousLeft = buffer[i];
-            buffer[i + 1] = alpha * rightInput + (1.0f - alpha) * previousRight;
-            previousRight = buffer[i + 1];
-        }
+        sample = alpha * sample + (1.0f - alpha) * previousLeft;
+        previousLeft = sample;
         break;
     case FilterType::BPF:
-        // Simple Band Pass Filter Implementation (can be refined)
-        for (std::size_t i = 0; i < bufferSize; i += 2) {
-            float leftInput = buffer[i];
-            float rightInput = buffer[i + 1];
-            buffer[i] = alpha * (leftInput - previousLeft) + previousLeft;
-            previousLeft = buffer[i];
-            buffer[i + 1] = alpha * (rightInput - previousRight) + previousRight;
-            previousRight = buffer[i + 1];
-        }
+        // High-pass stage
+        highPassedSample = alpha2 * (sample - previousLeft) + (1 - alpha2) * highPassedSample;
+        previousLeft = sample; // Store the current sample for the next iteration
+
+        // Low-pass stage on the high-passed signal
+        lowPassedSample = alpha * highPassedSample + (1 - alpha) * lowPassedSample;
+
+        // Output the band-passed sample
+        sample = lowPassedSample;
         break;
     case FilterType::HPF:
-        for (std::size_t i = 0; i < bufferSize; i += 2) {
-            float leftInput = buffer[i];
-            float rightInput = buffer[i + 1];
-            buffer[i] = alpha * (previousLeft + leftInput - buffer[i]);
-            previousLeft = buffer[i];
-            buffer[i + 1] = alpha * (previousRight + rightInput - buffer[i + 1]);
-            previousRight = buffer[i + 1];
-        }
+        highPassedSample = alpha * (sample - previousLeft + highPassedSample);
+        previousLeft = sample; // Store the current unfiltered sample for the next iteration
+        sample = highPassedSample;
         break;
     }
-
-    // update vcaLevelDelta
-    vcaLevelDelta = (vcaLevelTarget - vcaLevel) * 0.015; // 0.15=64=>0.96!
-
-    return true;
 }
 
 } // namespace Synth::DummySin

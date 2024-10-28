@@ -41,7 +41,7 @@ class AudioErrorProxy {
         while (audioErrorBuffer->hasData()) { // Use hasData() instead of comparing wrIndex and rdIndex
             if (audioErrorBuffer->read(fwdErr)) {
                 errorBuffer->write(fwdErr); // Forward to main error buffer
-                std::cout << "forwarding err from audioBuff to mainBuff" << std::endl;
+                // std::cout << "forwarding err from audioBuff to mainBuff" << std::endl;
             }
         }
     }

@@ -26,10 +26,12 @@ class SynthInterface {
     void handleMidiCC(u_int8_t ccNumber, float value);
     bool pushMyParam(const std::string &name, float val);
 
+    void invokeLambda(const std::string &name, const ParamDefinition &paramDef);
     void setupCCmapping(const std::string &synthName);
 
     // Optionally, you can add methods to interact with parameters if needed
-    static std::unordered_map<std::string, ParamDefinition> parameterDefinitions;
+    static std::unordered_map<std::string, ParamDefinition> parameterDefs;
+    std::unordered_map<std::string, float> paramVals;
 
   protected:
     // belonging to class, not instance

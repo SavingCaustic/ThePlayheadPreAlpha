@@ -73,7 +73,7 @@ bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue,
 void PlayerEngine::sendError(int code, const std::string &message) {
     // dunno if this should be kept. But still, units have to be context-aware..
     if (audioErrorBuffer->addAudioError(code, message)) {
-        std::cout << "wrote error to audioErrorLog" << std::endl;
+        // std::cout << "wrote error to audioErrorLog" << std::endl;
     } else {
         std::cout << "error log was full" << std::endl;
     }

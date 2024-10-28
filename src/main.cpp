@@ -75,13 +75,13 @@ int main() {
     // Add our custom handler
     signal(SIGINT, signal_handler);
     //
-    std::unordered_map<std::string, VariantType> deviceSettings;
+    std::unordered_map<std::string, std::string> deviceSettings;
     // initialize
-    deviceSettings["buffer_size"] = 128;
-    deviceSettings["audio_sr"] = 48000;
-    deviceSettings["audio_device"] = 1;
-    deviceSettings["midi_device"] = 1;
-    deviceSettings["http_port"] = 18080;
+    deviceSettings["buffer_size"] = "128";
+    deviceSettings["audio_sr"] = "48000";
+    deviceSettings["audio_device"] = "1";
+    deviceSettings["midi_device"] = "1";
+    deviceSettings["http_port"] = "18080";
     // Load settings from JSON and override default settings
 
     // Kickstart the StudioRunner (low-priority job scheduler)
@@ -90,7 +90,7 @@ int main() {
     SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
     // this could be and endpoint..
     //  now what playerEngine is initiated, setup the callback.
-    unsigned long framesPerBuffer = std::get<int>(deviceSettings["buffer_size"]);
+    unsigned long framesPerBuffer = static_cast<unsigned long>(std::stoi(deviceSettings["buffer_size"]));
     /*sAudioManager.registerCallback([framesPerBuffer](float *buffer, unsigned long) {
         // Call the static renderNextBlock method from sPlayerEngine
         sPlayerEngine.renderNextBlock(buffer, framesPerBuffer);
@@ -108,7 +108,7 @@ int main() {
     AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
     //
     crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
-    int httpPort = std::get<int>(deviceSettings["http_port"]);
+    int httpPort = std::stoi(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {
         if (false & DEBUG_MODE) {

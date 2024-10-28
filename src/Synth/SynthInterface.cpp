@@ -3,51 +3,76 @@
 #include <core/ext/nlohmann/json.hpp>
 #include <drivers/FileDriver.h>
 #include <iostream>
-// none of code below is specific to synth.
-// they should be removed.
 
 // Initialize the static unordered_map
-std::unordered_map<std::string, ParamDefinition> SynthInterface::parameterDefinitions;
+std::unordered_map<std::string, ParamDefinition> SynthInterface::parameterDefs;
 
 void SynthInterface::initializeParameters() {
     float valToLambda;
-    for (const auto &[key, def] : parameterDefinitions) {
-        if (def.transformFunc) {
-            // not so fast, we need to use the right conversion
-            if (def.logCurve) {
-                // do log stuff
-                valToLambda = AudioMath::logScale(def.defaultValue, def.minValue, def.rangeFactor);
-            } else {
-                // do lin stuff
-                valToLambda = AudioMath::linScale(def.defaultValue, def.minValue, def.rangeFactor);
-            } // and what about snaps and enums?
-            def.transformFunc(valToLambda);
+    for (const auto &[key, def] : parameterDefs) {
+        invokeLambda(key, def);
+    }
+}
+
+// Struct for parameter definitions
+/*
+struct ParamDefinition {
+    float defaultValue;                       // Default value (e.g., 0-1 for continuous values)
+    int snapSteps;                            // Snap-steps (e.g., semitone or octave selection)
+    bool logCurve;                            // Logarithmic curve if true, linear if false
+    int minValue;                             // Minimum value
+    int rangeFactor;                          // Factor for scaling (based on log or linear curve)
+    std::function<void(float)> transformFunc; // Lambda for handling parameter changes
+};
+*/
+
+void SynthInterface::invokeLambda(const std::string &name, const ParamDefinition &paramDef) {
+    float valToLambda;
+    float val;
+    val = paramVals[name];
+    if (paramDef.logCurve) {
+        // do log stuff
+        valToLambda = AudioMath::logScale(val, paramDef.minValue, paramDef.rangeFactor);
+    } else {
+        // do lin stuff. Snaps will also go here - from float to int-ish..
+        valToLambda = AudioMath::linScale(val, paramDef.minValue, paramDef.rangeFactor);
+        if (paramDef.snapSteps > 0) {
+            valToLambda = round(valToLambda);
         }
+    }
+
+    // Check if a callback function exists and call it with the provided value
+    if (paramDef.transformFunc) {
+        paramDef.transformFunc(valToLambda); // Call the lambda
+    } else {
+        std::cerr << "No callback function for parameter: " << name << "\n";
     }
 }
 
 void SynthInterface::pushStrParam(const std::string &name, float val) {
-    // called from Rack, param not yet resolved.
-    // std::cout << "dealing with " << &name << " and its new value " << val << std::endl;
-    auto it = parameterDefinitions.find(name); // Look for the parameter in the definitions
-    float valToLambda;
-    if (it != parameterDefinitions.end()) {
+    auto it = parameterDefs.find(name); // Look for the parameter in the definitions
+    if (it != parameterDefs.end()) {
         const ParamDefinition &paramDef = it->second; // Get the parameter definition
-        // transform value here and let lambda focus on setting registers.
-        if (paramDef.logCurve) {
-            // do log stuff
-            valToLambda = AudioMath::logScale(val, paramDef.minValue, paramDef.rangeFactor);
-        } else {
-            // do lin stuff
-            valToLambda = AudioMath::linScale(val, paramDef.minValue, paramDef.rangeFactor);
-        } // and what about snaps and enums?
 
-        // Check if a callback function exists and call it with the provided value
-        if (paramDef.transformFunc) {
-            paramDef.transformFunc(valToLambda); // Call the lambda
-        } else {
-            std::cerr << "No callback function for parameter: " << name << "\n";
+        float snappedVal = val; // Keep original value for non-snapped parameters
+        if (paramDef.snapSteps > 0) {
+            // Snap value to discrete steps
+            snappedVal = round(val * (paramDef.snapSteps - 1.0f)) / (paramDef.snapSteps - 1.0f);
+            // std::cout << "snapSteps:" << paramDef.snapSteps << ", snappedVal:" << snappedVal << " paramVal: " << paramVals[name] << std::endl;
+            if (std::abs(snappedVal - paramVals[name]) < (0.9f / paramDef.snapSteps)) {
+                return;
+            }
         }
+        // Save the normalized (0-1) value to paramVals
+        // maybe omit if automation, but at same time, dsp may read these?
+        if (paramDef.snapSteps > 0) {
+            paramVals[name] = snappedVal;
+        } else {
+            paramVals[name] = val;
+        }
+        // now affect the dsp.
+        invokeLambda(name, paramDef);
+
     } else {
         std::cerr << "Parameter not found: " << name << "\n";
     }
@@ -61,10 +86,11 @@ bool SynthInterface::pushMyParam(const std::string &name, float val) {
 }
 
 // present parameters as json, since there is no file for this in assets..
+// why? Because frontend would like it.. endpoint in test.
 nlohmann::json SynthInterface::getParamDefsAsJson() {
     nlohmann::json jsonOutput;
     // Iterate over parameterDefinitions and create a JSON object
-    for (const auto &[paramName, paramDef] : parameterDefinitions) {
+    for (const auto &[paramName, paramDef] : parameterDefs) {
         nlohmann::json paramJson;
         paramJson["defaultValue"] = paramDef.defaultValue;
         paramJson["logCurve"] = paramDef.logCurve;
@@ -74,7 +100,7 @@ nlohmann::json SynthInterface::getParamDefsAsJson() {
         // Add the parameter entry to the main JSON object
         jsonOutput[paramName] = paramJson;
     }
-    return jsonOutput.dump(4);
+    return jsonOutput.dump(4); //?? huh??
 }
 
 // CC-mapping stuff
@@ -107,6 +133,6 @@ void SynthInterface::handleMidiCC(u_int8_t ccNumber, float value) {
         const std::string &paramName = it->second;
         pushStrParam(paramName, value); // Call the synth-specific parameter handling
     } else {
-        std::cerr << "CC " << ccNumber << " not mapped." << std::endl;
+        std::cerr << "CC " << static_cast<int>(ccNumber) << " not mapped." << std::endl;
     }
 }

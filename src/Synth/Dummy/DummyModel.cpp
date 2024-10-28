@@ -16,8 +16,8 @@ Model::Model(float *audioBuffer, std::size_t bufferSize)
 }
 
 void Model::setupParams() {
-    if (SynthInterface::parameterDefinitions.empty()) {
-        SynthInterface::parameterDefinitions = {
+    if (SynthInterface::parameterDefs.empty()) {
+        SynthInterface::parameterDefs = {
             {"pan", {0.1f, 0, false, 0, 1, [this](float v) {
                          gainLeft = AudioMath::ccos(v * 0.25f);  // Left gain decreases as panVal goes to 1
                          gainRight = AudioMath::csin(v * 0.25f); // Right gain increases as panVal goes to 1
