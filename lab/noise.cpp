@@ -6,7 +6,7 @@
 
 #define FRAMES_PER_BUFFER 64
 #define SAMPLE_RATE 48000
-#define DEVICE_ID 10
+#define DEVICE_ID 5
 
 // use /lab/portlist to find devices for machine
 

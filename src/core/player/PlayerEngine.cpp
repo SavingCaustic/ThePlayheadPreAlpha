@@ -88,8 +88,8 @@ bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) 
     racks[rackId].setSynth(synthName);
     //   Now, setup the synth for the rack
     racks[rackId].setEffect("Chorus");
-    racks[rackId].setEffect("Delay", 2);
-    // to be improved..
+    // racks[rackId].setEffect("Delay", 2);
+    //  to be improved..
     rackReceivingMidi = 0;
     return false;
 }

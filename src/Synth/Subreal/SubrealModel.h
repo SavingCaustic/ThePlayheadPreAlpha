@@ -6,8 +6,6 @@
 #include "Synth/SynthInterface.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
-#include "core/audio/envelope/AR.h"
-#include "core/audio/misc/Easer.h"
 #include "core/parameters/params.h"
 #include <array>
 #include <cstdlib> // for rand()
@@ -15,12 +13,70 @@
 #include <string>
 #include <unordered_map>
 
-namespace Synth::DummySin {
+// oh this needs to go.. What about it. It's a deltaEaser. DSP responsible for calling them.
+struct Easer {
+    float currentValue;
+    float targetValue;
+    float (*easingFunc)(float, float, float); // Easing function: input, target, time
+    bool isActive;
+
+    Easer() : currentValue(0.0f), targetValue(0.0f), easingFunc(nullptr), isActive(false) {}
+
+    void update(float deltaTime) {
+        if (isActive) {
+            currentValue = easingFunc(currentValue, targetValue, deltaTime);
+            if (fabs(currentValue - targetValue) < 0.001f) { // Threshold to stop easing
+                isActive = false;
+            }
+        }
+    }
+
+    void start(float newTargetValue, float (*newEasingFunc)(float, float, float)) {
+        targetValue = newTargetValue;
+        easingFunc = newEasingFunc;
+        isActive = true;
+    }
+};
+
+namespace Synth::Subreal {
+
+struct AR {
+    float vol = 0;
+    int state = 0;
+
+    void noteOn() {
+        state = 1;
+    }
+
+    void process() {
+        if (state == 1) {
+            if (vol < 1) {
+                vol += (1 - vol) * 0.1;
+            }
+        }
+    }
+};
+
+enum class OscWave {
+    SIN,
+    TRI,
+    SAW,
+    SQR
+};
 
 enum class FilterType {
     LPF, // Low Pass Filter
     BPF, // Band Pass Filter
     HPF  // High Pass Filter
+};
+
+struct VoiceTemplate {
+    // this is where parameters are pushed and on voice initialization values are grabbed from here.
+    float vca_attack;
+    float vca_decay;
+    float vca_sustain;
+    float vca_fade;
+    float vca_release;
 };
 
 // Artifacts at C1. constexpr int LUT_SIZE = 1024;
@@ -50,6 +106,7 @@ class Model : public SynthInterface {
     float vcaLevelTarget = 0;
 
     FilterType filterType; // New member variable for filter type
+    VoiceTemplate voiceTemplate;
 
     // LPF variables
     float previousLeft = 0.0f;
@@ -62,10 +119,6 @@ class Model : public SynthInterface {
     float gainLeft = 0.7;
     float gainRight = 0.7;
 
-    audio::envelope::AR vcaAR;
-    audio::envelope::ARState vcaARstate;
-    audio::misc::Easer vcaEaser;
-
     // Parameter definitiongs
     // std::unordered_map<std::string, ParamDefinition> parameterDefinitions;
 
@@ -76,6 +129,10 @@ class Model : public SynthInterface {
     // void setupCCmapping(const std::string &path);
 
     void initFilter();
+
+    void initOsc1();
+
+    void initOsc2();
 
     void applyFilter(float &sample);
 
@@ -92,7 +149,6 @@ class Model : public SynthInterface {
     float angle = AudioMath::getMasterTune() * LUT_SIZE * (1.0f / TPH_DSP_SR);
     float bendCents = 0;
     int semitone = 0;
-    int debugCount = 0;
 };
 
-} // namespace Synth::DummySin
+} // namespace Synth::Subreal

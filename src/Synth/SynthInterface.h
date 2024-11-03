@@ -30,7 +30,7 @@ class SynthInterface {
     void setupCCmapping(const std::string &synthName);
 
     // Optionally, you can add methods to interact with parameters if needed
-    static std::unordered_map<std::string, ParamDefinition> parameterDefs;
+    static std::unordered_map<std::string, ParamDefinition> paramDefs;
     std::unordered_map<std::string, float> paramVals;
 
   protected:

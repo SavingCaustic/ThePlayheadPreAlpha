@@ -5,11 +5,11 @@
 #include <iostream>
 
 // Initialize the static unordered_map
-std::unordered_map<std::string, ParamDefinition> SynthInterface::parameterDefs;
+std::unordered_map<std::string, ParamDefinition> SynthInterface::paramDefs;
 
 void SynthInterface::initializeParameters() {
     float valToLambda;
-    for (const auto &[key, def] : parameterDefs) {
+    for (const auto &[key, def] : paramDefs) {
         invokeLambda(key, def);
     }
 }
@@ -50,8 +50,8 @@ void SynthInterface::invokeLambda(const std::string &name, const ParamDefinition
 }
 
 void SynthInterface::pushStrParam(const std::string &name, float val) {
-    auto it = parameterDefs.find(name); // Look for the parameter in the definitions
-    if (it != parameterDefs.end()) {
+    auto it = paramDefs.find(name); // Look for the parameter in the definitions
+    if (it != paramDefs.end()) {
         const ParamDefinition &paramDef = it->second; // Get the parameter definition
 
         float snappedVal = val; // Keep original value for non-snapped parameters
@@ -90,7 +90,7 @@ bool SynthInterface::pushMyParam(const std::string &name, float val) {
 nlohmann::json SynthInterface::getParamDefsAsJson() {
     nlohmann::json jsonOutput;
     // Iterate over parameterDefinitions and create a JSON object
-    for (const auto &[paramName, paramDef] : parameterDefs) {
+    for (const auto &[paramName, paramDef] : paramDefs) {
         nlohmann::json paramJson;
         paramJson["defaultValue"] = paramDef.defaultValue;
         paramJson["logCurve"] = paramDef.logCurve;
