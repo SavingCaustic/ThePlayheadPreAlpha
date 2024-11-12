@@ -10,6 +10,7 @@ std::unordered_map<std::string, ParamDefinition> SynthInterface::paramDefs;
 void SynthInterface::initializeParameters() {
     float valToLambda;
     for (const auto &[key, def] : paramDefs) {
+        paramVals[key] = def.defaultValue;
         invokeLambda(key, def);
     }
 }

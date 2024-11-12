@@ -22,6 +22,10 @@ float AudioMath::getMasterTune() {
     return masterTune;
 }
 
+float AudioMath::noteToFloat(int note) {
+    return (note - 64.0f) / 64.0f;
+}
+
 // inline
 float AudioMath::noise() {
     // noiseSeed = (noiseA * noiseSeed + noiseB) % noiseC;
@@ -64,30 +68,6 @@ float AudioMath::ctan(float cf) {
     float sin = AudioMath::csin(cf);
     float cos = fmax(0.001, AudioMath::csin(cf));
     return (sin / cos);
-}
-
-void AudioMath::generateLUT() {
-    // std::cout << "generating lut" << std::endl;
-    for (size_t i = 0; i < sineLutSize; ++i) {
-        float rad = (2.0f * M_PI * i) / sineLutSize;
-        sineLut[i] = std::sin(rad);
-    }
-}
-
-void AudioMath::normalizeLUT(float *lut, unsigned int lutSize) {
-    float maxVal = 0;
-    float gain = 0;
-    for (int i = 0; i < lutSize; i++) {
-        if (lut[i] > maxVal) {
-            maxVal = lut[i];
-        }
-    }
-    if (maxVal > 1) {
-        gain = 1.0f / maxVal;
-        for (int i = 0; i < lutSize; i++) {
-            lut[i] *= gain;
-        }
-    }
 }
 
 float AudioMath::clamp(float value, float min, float max) {

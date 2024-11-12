@@ -6,22 +6,20 @@
 #include "Synth/SynthInterface.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
-#include "core/audio/envelope/AR.h"
+#include "core/audio/envelope/ADSFR.h"
+#include "core/audio/filter/MultiFilter.h"
+#include "core/audio/lfo/RampLfo.cpp"
+#include "core/audio/lfo/SimpleLfo.cpp"
 #include "core/audio/misc/Easer.h"
+#include "core/audio/osc/LUT.h"
 #include "core/parameters/params.h"
 #include <array>
-#include <cstdlib> // for rand()
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <unordered_map>
 
 namespace Synth::DummySin {
-
-enum class FilterType {
-    LPF, // Low Pass Filter
-    BPF, // Band Pass Filter
-    HPF  // High Pass Filter
-};
 
 // Artifacts at C1. constexpr int LUT_SIZE = 1024;
 constexpr int LUT_SIZE = 4096;
@@ -45,26 +43,22 @@ class Model : public SynthInterface {
     float *buffer;          // Pointer to audio buffer
     std::size_t bufferSize; // Size of the audio buffer
 
-    float vcaLevelDelta = 0;
-    float vcaLevel = 0.0;
-    float vcaLevelTarget = 0;
-
-    FilterType filterType; // New member variable for filter type
-
-    // LPF variables
-    float previousLeft = 0.0f;
-    float highPassedSample = 0.0f;
-    float lowPassedSample = 0.0f;
-    float previousRight = 0.0f;
-    float alpha = 0.0f; // Filter coefficient
-    float alpha2 = 0.0f;
-    int cutoffHz = 2000;
-    float gainLeft = 0.7;
-    float gainRight = 0.7;
-
-    audio::envelope::AR vcaAR;
-    audio::envelope::ARState vcaARstate;
+    audio::osc::LUT lut1;
+    audio::osc::LUT lut2;
+    audio::osc::LUTosc osc1;
+    audio::osc::LUTosc osc2;
+    audio::filter::MultiFilter filter;
+    audio::envelope::ADSFR vcaAR;
+    audio::envelope::Slope vcaARslope;
+    audio::lfo::RampLfo lfo1;
+    audio::lfo::SimpleLfo lfo2;
+    audio::misc::Easer oscMixEaser;
     audio::misc::Easer vcaEaser;
+    float velocityLast = 0; // super-easy easer
+    float vcaEaserVal;
+
+    // float vcaEaser,
+    // vcaEaserStep;
 
     // Parameter definitiongs
     // std::unordered_map<std::string, ParamDefinition> parameterDefinitions;
@@ -81,18 +75,25 @@ class Model : public SynthInterface {
 
     void applySine(float multiple, float amplitude);
 
+    // void renderVoice();
+
+    void motherboardActions();
+
     void initializeParameters();
     // Handle incoming MIDI CC messages
     void handleMidiCC(uint8_t ccNumber, float value);
     //
-    int notePlaying = 0; // 0 = no note
+    int notePlaying = 0;    // 0 = no note
+    float noteVelocity = 0; // 0-1;
     void setupParams();
-    float lut1[LUT_SIZE]{};
-    float lutIdx = 0;
-    float angle = AudioMath::getMasterTune() * LUT_SIZE * (1.0f / TPH_DSP_SR);
     float bendCents = 0;
     int semitone = 0;
+    int osc2octave = 0;
     int debugCount = 0;
+    float lfo1Depth = 0.5;
+    float fmSens = 0.0f;
+    float senseTracking = 0.0f;
+    float lfo1vca = 0.0f;
 };
 
 } // namespace Synth::DummySin

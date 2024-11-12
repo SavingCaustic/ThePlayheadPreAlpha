@@ -37,8 +37,8 @@ class Model : public EffectInterface {
     int wrPointer = 0;
     int rdPointer = 0;
     float mix = 0.3;
-    float feedback = 0.05;
-    float time = 0.6;
+    float feedback = 0.2f;
+    float time = 0.57f; // 105 bpm
 
     void initializeParameters();
     // Handle incoming MIDI CC messages

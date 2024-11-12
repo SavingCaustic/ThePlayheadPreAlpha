@@ -105,7 +105,9 @@ int main() {
 
     sErrorHandler.start();
 
-    AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
+    sPlayerEngine.setupRackWithSynth(0, "DummySin");
+
+    // AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
     //
     crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
     int httpPort = std::stoi(deviceSettings["http_port"]);

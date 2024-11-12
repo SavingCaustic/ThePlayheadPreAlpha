@@ -2,10 +2,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug myDaw",
+            "name": "Step-Debug MyDAW2",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/MyDAW2",
+            "program": "${workspaceFolder}/build_debug/MyDAW2",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -28,10 +28,10 @@
             "visualizerFile": "${workspaceFolder}/.vscode/gdb_visualizer.json"
         },
         {
-            "name": "Release myDaw",
+            "name": "Release MyDAW2",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/MyDA2",
+            "program": "${workspaceFolder}/build_release/MyDAW2",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

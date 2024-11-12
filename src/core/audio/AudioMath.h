@@ -10,6 +10,7 @@
 class AudioMath {
   public:
     static float noteToHz(int note, int cent = 0);
+    static float noteToFloat(int note);
     static void setMasterTune(float newMasterTune);
     static float getMasterTune();
     static float noise();
