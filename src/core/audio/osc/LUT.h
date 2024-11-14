@@ -6,7 +6,7 @@
 
 namespace audio::osc {
 
-constexpr int LUT_SIZE = 4096;
+constexpr int LUT_SIZE = 16384;
 
 class LUT {
   public:

@@ -1,4 +1,4 @@
 build/
 build_debug/
 build_release/
-echo.wav
+echo*.wav

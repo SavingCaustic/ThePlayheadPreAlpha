@@ -44,7 +44,7 @@ void Model::setupParams() {
                                vcaAR.setTime(audio::envelope::DECAY, v);
                                std::cout << "setting decay to " << v << " ms" << std::endl;
                            }}},
-            {"vca_sustain", {0.8f, 0, false, 0, 1, [this](float v) {
+            {"vca_sustain", {0.0f, 0, false, 0, 1, [this](float v) {
                                  vcaAR.setLevel(audio::envelope::SUSTAIN, v);
                                  std::cout << "setting sustain to " << v << std::endl;
                              }}},
