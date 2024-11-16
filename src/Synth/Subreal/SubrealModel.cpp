@@ -12,6 +12,10 @@ Model::Model(float *audioBuffer, std::size_t bufferSize)
     setupParams(); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
     SynthInterface::initializeParameters();
     SynthInterface::setupCCmapping("Subreal");
+    voices.reserve(8); // Preallocate memory for 8 voices
+    for (int i = 0; i < 8; ++i) {
+        voices.emplace_back(*this); // Pass reference to Model
+    }
     reset();
 }
 
@@ -94,7 +98,7 @@ void Model::reset() {
     lut2.normalize();
     for (u_int16_t i = 0; i < 8; i++) {
         // voices[i].setModelRef(*this);
-        sVoices[i].reset();
+        voices[i].reset();
     }
 }
 
@@ -114,7 +118,7 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
         break;
     case 0x80:
         // scan all voices for matching note, if no match, ignore
-        for (Voice &myVoice : sVoices) {
+        for (Voice &myVoice : voices) {
             if (myVoice.notePlaying == param1) {
                 // well really, we should set the ARstate to release
                 // myVoice.noteOff();
@@ -146,7 +150,7 @@ uint8_t Model::findVoiceToAllocate(uint8_t note) {
     uint8_t releasedVoiceAmp = 1;
     // 8 shouldn't be hardcoded..
     for (int i = 0; i < 8; i) {
-        Voice &myVoice = sVoices[i];
+        Voice &myVoice = voices[i];
         if (myVoice.notePlaying == note) {
             // re-use (what about lfo-ramp here..)
             sameVoice = i;
@@ -186,7 +190,7 @@ bool Model::renderNextBlock() {
         this->buffer[i] = 0.0f;
     }
     for (uint8_t i = 0; i < voiceCount; i++) {
-        Voice myVoice = sVoices[i];
+        Voice myVoice = voices[i];
         if (myVoice.checkVoiceActive()) {
             myVoice.renderNextVoiceBlock();
             blockCreated = true;

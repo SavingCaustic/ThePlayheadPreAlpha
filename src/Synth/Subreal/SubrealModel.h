@@ -5,8 +5,7 @@
 #include "core/audio/AudioMath.h"
 #include "core/audio/envelope/ADSFR.h"
 #include "core/audio/filter/MultiFilter.h"
-#include "core/audio/lfo/RampLfo.cpp"
-#include "core/audio/lfo/SimpleLfo.cpp"
+#include "core/audio/lfo/LFO.h"
 #include "core/audio/misc/Easer.h"
 #include "core/audio/osc/LUT.h"
 #include "core/parameters/params.h"
@@ -51,8 +50,8 @@ class Model : public SynthInterface {
     audio::osc::LUT lut2;
 
   protected:
-    std::size_t bufferSize; // Size of the audio buffer
-    Voice sVoices[8];
+    std::size_t bufferSize;    // Size of the audio buffer
+    std::vector<Voice> voices; // Vector to hold Voice objects
     audio::filter::MultiFilter filter;
     audio::lfo::RampLfo lfo1;
     audio::lfo::SimpleLfo lfo2;
@@ -85,6 +84,8 @@ class Model : public SynthInterface {
     float lfo1Depth = 0.5;
     float lfo1vca = 0.0f;
 };
+
+// VOICE - could be moved to separate file
 
 class Voice {
     // pass reference to model so we can use AR there. The voice has the ARslope.

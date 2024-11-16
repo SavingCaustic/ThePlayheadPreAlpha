@@ -1,4 +1,4 @@
-#include "Synth/DummySin/DummySinModel.h"
+#include "Synth/Subreal/SubrealModel.h"
 #include "Synth/SynthInterface.h"
 #include "core/utils/WavWriter.h"
 #include <atomic>
@@ -25,7 +25,7 @@ void signal_handler(int signal) {
 int main() {
     float audioBuffer[64];
     const std::size_t bufferSize = 64;
-    Synth::DummySin::Model mySynth(audioBuffer, bufferSize);
+    Synth::Subreal::Model mySynth(audioBuffer, bufferSize);
     Utils::WavWriter writer("echo.wav", 48000, 64);
 
     // play some notes listening for cracks..

@@ -1,3 +1,4 @@
+#pragma once
 #include <constants.h>
 #include <iostream>
 // can't see this being used anywhere really..

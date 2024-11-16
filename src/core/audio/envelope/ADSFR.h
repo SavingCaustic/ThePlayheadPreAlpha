@@ -129,13 +129,13 @@ class ADSFR {
         case FADE:
             slope.state = FADE;
             slope.goalVal = 0;
-            slope.targetVal = slope.currVal * -0.62f;
+            slope.targetVal = slope.currVal * -0.1f;
             slope.factor = fFactor;
             break;
         case RELEASE:
             slope.state = RELEASE;
             slope.goalVal = 0;
-            slope.targetVal = slope.currVal * -0.62f;
+            slope.targetVal = slope.currVal * -0.1f;
             slope.factor = rFactor;
             break;
         case OFF:
