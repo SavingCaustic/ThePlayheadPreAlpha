@@ -31,7 +31,7 @@ int main() {
     // play some notes listening for cracks..
     for (int t = 0; t < 50; t++) {
         u_int8_t note = 40 + ((t * 5) % 26);
-        mySynth.parseMidi(0x90, note, 0x80);
+        mySynth.parseMidi(0x90, note, 0x70);
         for (int i = 0; i < 65; i++) {
             mySynth.renderNextBlock();
             writer.write(audioBuffer);

@@ -1,0 +1,12 @@
+{
+    "1": "lfo1_vca",
+    "7": "osc_mix",
+    "74": "vca_attack",
+    "71": "vca_decay",
+    "5": "vca_sustain",
+    "84": "vca_release",
+    "78": "osc1_fmsens",
+    "76": "osc1_senstrack",
+    "77": "osc2_oct",
+    "10": "osc2_semi"    
+}

@@ -1,18 +1,17 @@
-#include "./DummySinModel.h"
+#include "Synth/Subreal/SubrealModel.h"
 #include "core/audio/envelope/ADSFR.h"
-#include "core/audio/filter/MultiFilter.h"
 #include <cmath>
 #include <iostream>
 #include <vector>
 
-namespace Synth::DummySin {
+namespace Synth::Subreal {
 
 // Constructor to accept buffer and size
 Model::Model(float *audioBuffer, std::size_t bufferSize)
-    : buffer(audioBuffer), bufferSize(bufferSize), osc1(lut1), osc2(lut2) {
+    : buffer(audioBuffer), bufferSize(bufferSize) {
     setupParams(); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
     SynthInterface::initializeParameters();
-    SynthInterface::setupCCmapping("DummySin");
+    SynthInterface::setupCCmapping("Subreal");
     reset();
 }
 
@@ -33,7 +32,7 @@ void Model::setupParams() {
                               osc2octave = round(v);
                           }}},
             {"osc_mix", {0.5f, 0, false, 0, 1, [this](float v) {
-                             oscMixEaser.setTarget(v);
+                             // odd here - should easer be at voice or model? oscMixEaser.setTarget(v);
                              std::cout << "setting osc-mix to " << v << std::endl;
                          }}},
             {"vca_attack", {0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
@@ -93,6 +92,10 @@ void Model::reset() {
     lut2.applySine(1, 0.6);
     /*lut2.applySine(3, 0.3); */
     lut2.normalize();
+    for (u_int16_t i = 0; i < 8; i++) {
+        // voices[i].setModelRef(*this);
+        sVoices[i].reset();
+    }
 }
 
 void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
@@ -103,23 +106,20 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
         // special case, if vel < 64 and note = notePlaying => reOn
         if (false) {
             // if (param1 == notePlaying && param2 < 64) { - not working very well..
-            vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_REON);
+            // vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_REON);
         } else {
-            notePlaying = param1;
-            noteVelocity = fParam2 + 0.1f;
-            vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_ON);
-            // osc1.reset(); //start at angle0
-            // osc1.reset();
-            // osc2.reset();
-            //
-            // float notePan = 1.0f - (64 - param1) / 64;
-            // gainLeft = AudioMath::ccos(notePan * 0.25f);  // Left gain decreases as panVal goes to 1
-            // gainRight = AudioMath::csin(notePan * 0.25f); // Right gain increases as panVal goes to 1
+            uint8_t voiceIdx = findVoiceToAllocate(param1);
+            // ok now start that note..
         }
         break;
     case 0x80:
-        if (param1 == notePlaying)
-            vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_OFF);
+        // scan all voices for matching note, if no match, ignore
+        for (Voice &myVoice : sVoices) {
+            if (myVoice.notePlaying == param1) {
+                // well really, we should set the ARstate to release
+                // myVoice.noteOff();
+            }
+        }
         break;
     case 0xb0:
         SynthInterface::handleMidiCC(param1, fParam2);
@@ -132,53 +132,75 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
     }
 }
 
-bool Model::renderNextBlock() {
-    float osc1hz, osc2hz;
-    constexpr int chunkSize = 16;
-    float osc1hzOld;
-
-    vcaAR.updateDelta(vcaARslope);
-    if (vcaARslope.state != audio::envelope::OFF) {
-        osc2hz = AudioMath::noteToHz(notePlaying + semitone + osc2octave * 12, bendCents);
-        osc2.setAngle(osc2hz);
-        vcaEaser.setTarget(vcaARslope.currVal + vcaARslope.gap); // + lfo1.getLFOval());
-        if (debugCount % 1024 == 0) {
-            std::cout << "setting easer to:" << vcaARslope.currVal << std::endl;
+uint8_t Model::findVoiceToAllocate(uint8_t note) {
+    /* search for:
+  1) Same note - re-use voice
+  2) Idle voice
+  3) Released voice - find most silent.
+  4) Give up - return -1
+*/
+    uint8_t targetVoice = -1;
+    uint8_t sameVoice = -1;
+    uint8_t idleVoice = -1;
+    uint8_t releasedVoice = -1;
+    uint8_t releasedVoiceAmp = 1;
+    // 8 shouldn't be hardcoded..
+    for (int i = 0; i < 8; i) {
+        Voice &myVoice = sVoices[i];
+        if (myVoice.notePlaying == note) {
+            // re-use (what about lfo-ramp here..)
+            sameVoice = i;
+            break;
         }
-        for (std::size_t i = 0; i < bufferSize; i++) {
-            float y2 = osc2.getNextSample(0);
-            if (i % chunkSize == 0) {
-                osc1hz = AudioMath::noteToHz(notePlaying, bendCents);
-                osc1hzOld += (osc1hz - osc1hzOld) / 100;
-                osc1.setAngle(osc1hz);
+        if (idleVoice == -1) {
+            // not found yet so keep looking
+            if (myVoice.getVCAstate() == audio::envelope::ADSFRState::OFF) {
+                idleVoice = i;
             }
-            float tracking = fmax(0, (1.0f + senseTracking * AudioMath::noteToFloat(notePlaying) * 10));
-            float y1 = osc1.getNextSample(y2 * tracking * fmSens * 2.0f * noteVelocity);
-
-            velocityLast += (noteVelocity - velocityLast) / 10.0f;
-            vcaEaserVal = vcaEaser.getValue(); // * lfo1vca;
-            float oscMix = oscMixEaser.getValue();
-            buffer[i] = ((y1 * (1 - oscMix) + y2 * oscMix)) * vcaEaserVal * velocityLast * 2.0f;
         }
-        vcaAR.commit(vcaARslope);
-        debugCount++;
-        if (debugCount % 1024 == 0) {
-            std::cout << "Level: " << vcaARslope.currVal << ", Delta:" << vcaARslope.gap << std::endl;
-        }
-    } else {
-        notePlaying = 0;
-        for (std::size_t i = 0; i < bufferSize; i++) {
-            buffer[i] = 0;
+        if (myVoice.getVCAstate() == audio::envelope::ADSFRState::RELEASE) {
+            // candidate, see if amp lower than current.
+            float temp = myVoice.getVCALevel();
+            if (temp < releasedVoiceAmp) {
+                // candidate!
+                releasedVoice = i;
+                releasedVoiceAmp = temp;
+            }
         }
     }
-
-    motherboardActions();
-    return false; // mono
+    targetVoice = (sameVoice != -1) ? sameVoice : ((idleVoice != -1) ? idleVoice : ((releasedVoice != -1) ? releasedVoice : (-1)));
+    return targetVoice;
 }
 
-void Model::motherboardActions() {
-    lfo1.updatePhase();
-    lfo2.updatePhase();
+bool Model::renderNextBlock() {
+    // make stuff not done inside chunk.
+    int blockSize = TPH_RACK_RENDER_SIZE;
+    // LFO1
+    //$se = $this->settings;
+    //$lfoHz = $this->getNum('LFO1_RATE');
+    //$this->lfo1Sample = $this->lfo1->getNextSample($blockSize * $lfoHz);
+    // iterate over all voices and create a summed output.
+    uint8_t voiceCount = 8;
+    bool blockCreated = false;
+    for (int i = 0; i < TPH_RACK_BUFFER_SIZE; i++) {
+        this->buffer[i] = 0.0f;
+    }
+    for (uint8_t i = 0; i < voiceCount; i++) {
+        Voice myVoice = sVoices[i];
+        if (myVoice.checkVoiceActive()) {
+            myVoice.renderNextVoiceBlock();
+            blockCreated = true;
+        }
+    }
+    // always stereo for now..
+    return true;
 }
 
-} // namespace Synth::DummySin
+const audio::osc::LUT &Model::getLUT1() const {
+    return lut1; // Return a const reference to lut1
+}
+
+const audio::osc::LUT &Model::getLUT2() const {
+    return lut2; // Return a const reference to lut2
+}
+} // namespace Synth::Subreal

@@ -3,8 +3,8 @@
 #include "Effect/Chorus/ChorusModel.h"
 #include "Effect/Chorus2/Chorus2Model.h"
 #include "Effect/Delay/DelayModel.h"
-#include "Synth/Dummy/DummyModel.h"
-#include "Synth/DummySin/DummySinModel.h"
+#include "Synth/Monolith/MonolithModel.h"
+#include "Synth/Subreal/SubrealModel.h"
 //
 // #include "../Synth/SynthInterface.h"
 #include "constants.h"
@@ -133,8 +133,8 @@ class Rack {
     // could be loaded somewhere else. Possibly also a synth..
 
     enum class SynthType {
-        Dummy,
-        DummySin,
+        Monolith,
+        Subreal,
         // Add other synth types here
         Unknown
     };
@@ -152,11 +152,11 @@ class Rack {
         SynthType type = getSynthType(synthName);
         bool loadOK = true;
         switch (type) {
-        case SynthType::Dummy:
-            synth = std::make_unique<Synth::Dummy::Model>(audioBuffer.data(), audioBuffer.size());
+        case SynthType::Monolith:
+            synth = std::make_unique<Synth::Monolith::Model>(audioBuffer.data(), audioBuffer.size());
             break;
-        case SynthType::DummySin:
-            synth = std::make_unique<Synth::DummySin::Model>(audioBuffer.data(), audioBuffer.size());
+        case SynthType::Subreal:
+            synth = std::make_unique<Synth::Subreal::Model>(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
         default:
@@ -203,9 +203,9 @@ class Rack {
     SynthType getSynthType(const std::string &synthName) {
         // i really don't know what i need this for..
         if (synthName == "Dummy")
-            return SynthType::Dummy;
-        if (synthName == "DummySin")
-            return SynthType::DummySin;
+            return SynthType::Monolith;
+        if (synthName == "Subreal")
+            return SynthType::Subreal;
         // Add other synth type checks here
         return SynthType::Unknown;
     }

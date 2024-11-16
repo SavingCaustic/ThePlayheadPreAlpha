@@ -80,14 +80,14 @@ void PlayerEngine::sendError(int code, const std::string &message) {
 }
 
 void PlayerEngine::testRackSetup() {
-    this->setupRackWithSynth(0, "DummySin");
+    this->setupRackWithSynth(0, "Monolith");
 }
 
 bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) {
     // Check if the rack already exists
     racks[rackId].setSynth(synthName);
     //   Now, setup the synth for the rack
-    // racks[rackId].setEffect("Delay"); // Chorus
+    racks[rackId].setEffect("Delay"); // Chorus
     // racks[rackId].setEffect("Delay", 2);
     //   to be improved..
     rackReceivingMidi = 0;

@@ -19,7 +19,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace Synth::DummySin {
+namespace Synth::Monolith {
 
 // Artifacts at C1. constexpr int LUT_SIZE = 1024;
 constexpr int LUT_SIZE = 4096;
@@ -96,4 +96,4 @@ class Model : public SynthInterface {
     float lfo1vca = 0.0f;
 };
 
-} // namespace Synth::DummySin
+} // namespace Synth::Monolith
