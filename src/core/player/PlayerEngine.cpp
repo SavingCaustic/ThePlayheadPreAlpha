@@ -87,7 +87,7 @@ bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) 
     // Check if the rack already exists
     racks[rackId].setSynth(synthName);
     //   Now, setup the synth for the rack
-    racks[rackId].setEffect("Delay"); // Chorus
+    // racks[rackId].setEffect("Delay"); // Chorus
     // racks[rackId].setEffect("Delay", 2);
     //   to be improved..
     rackReceivingMidi = 0;
@@ -177,6 +177,10 @@ bool PlayerEngine::pollMidiIn() {
     MidiMessage newMessage;
     if (this->rackReceivingMidi >= 0) {
         while (midiManager->getNextMessage(newMessage)) {
+            // here, recover note-on with vel 0 to note off.
+            if (newMessage.cmd & 0xf0 == 0x90 && newMessage.param2 == 0) {
+                newMessage.cmd -= 0x10;
+            }
             racks[this->rackReceivingMidi].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
             this->sendError(200, "midi recieved");
             if (newMessage.cmd == 0x90)

@@ -202,7 +202,7 @@ class Rack {
 
     SynthType getSynthType(const std::string &synthName) {
         // i really don't know what i need this for..
-        if (synthName == "Dummy")
+        if (synthName == "Monolith")
             return SynthType::Monolith;
         if (synthName == "Subreal")
             return SynthType::Subreal;

@@ -1,3 +1,4 @@
+#include "Synth/Monolith/MonolithModel.h"
 #include "Synth/Subreal/SubrealModel.h"
 #include "Synth/SynthInterface.h"
 #include "core/utils/WavWriter.h"
@@ -25,17 +26,24 @@ void signal_handler(int signal) {
 int main() {
     float audioBuffer[64];
     const std::size_t bufferSize = 64;
+    // Synth::Monolith::Model mySynth(audioBuffer, bufferSize);
     Synth::Subreal::Model mySynth(audioBuffer, bufferSize);
     Utils::WavWriter writer("echo.wav", 48000, 64);
 
     // play some notes listening for cracks..
+    // uhm, i'm not sure the synths themself should parse midi..
+    // given noteOn with vel 0 is note off etc..
     for (int t = 0; t < 50; t++) {
         u_int8_t note = 40 + ((t * 5) % 26);
         mySynth.parseMidi(0x90, note, 0x70);
+        mySynth.parseMidi(0x90, note + 3, 0x70);
+        mySynth.parseMidi(0x90, note + 7, 0x70);
         for (int i = 0; i < 65; i++) {
             mySynth.renderNextBlock();
             writer.write(audioBuffer);
         }
+        mySynth.parseMidi(0x80, note + 7, 0x00);
+        mySynth.parseMidi(0x80, note + 3, 0x00);
         mySynth.parseMidi(0x80, note, 0x00);
         for (int i = 0; i < 65; i++) {
             mySynth.renderNextBlock();

@@ -5,6 +5,7 @@
 #include <vector>
 
 namespace Synth::Subreal {
+constexpr int VOICE_COUNT = 8;
 
 // Constructor to accept buffer and size
 Model::Model(float *audioBuffer, std::size_t bufferSize)
@@ -12,11 +13,11 @@ Model::Model(float *audioBuffer, std::size_t bufferSize)
     setupParams(); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
     SynthInterface::initializeParameters();
     SynthInterface::setupCCmapping("Subreal");
+    reset();           // setup luts. Must come before voice allocation.
     voices.reserve(8); // Preallocate memory for 8 voices
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < VOICE_COUNT; ++i) {
         voices.emplace_back(*this); // Pass reference to Model
     }
-    reset();
 }
 
 void Model::setupParams() {
@@ -26,7 +27,6 @@ void Model::setupParams() {
                                  fmSens = v;
                              }}},
             {"osc1_senstrack", {0.5f, 0, false, -1, 1, [this](float v) {
-                                    std::cout << "setting sense-tracking to " << v << std::endl;
                                     senseTracking = v;
                                 }}},
             {"osc2_semi", {0.5f, 13, false, -6, 6, [this](float v) {
@@ -36,8 +36,8 @@ void Model::setupParams() {
                               osc2octave = round(v);
                           }}},
             {"osc_mix", {0.5f, 0, false, 0, 1, [this](float v) {
-                             // odd here - should easer be at voice or model? oscMixEaser.setTarget(v);
-                             std::cout << "setting osc-mix to " << v << std::endl;
+                             // easer should be at model. skipping easer for now
+                             oscMix = v;
                          }}},
             {"vca_attack", {0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
                                 vcaAR.setTime(audio::envelope::ATTACK, v);
@@ -96,10 +96,6 @@ void Model::reset() {
     lut2.applySine(1, 0.6);
     /*lut2.applySine(3, 0.3); */
     lut2.normalize();
-    for (u_int16_t i = 0; i < 8; i++) {
-        // voices[i].setModelRef(*this);
-        voices[i].reset();
-    }
 }
 
 void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
@@ -112,8 +108,11 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
             // if (param1 == notePlaying && param2 < 64) { - not working very well..
             // vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_REON);
         } else {
-            uint8_t voiceIdx = findVoiceToAllocate(param1);
+            int8_t voiceIdx = findVoiceToAllocate(param1);
             // ok now start that note..
+            if (voiceIdx >= 0) {
+                voices[voiceIdx].noteOn(param1, (fParam2 + 0.1));
+            }
         }
         break;
     case 0x80:
@@ -121,7 +120,7 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
         for (Voice &myVoice : voices) {
             if (myVoice.notePlaying == param1) {
                 // well really, we should set the ARstate to release
-                // myVoice.noteOff();
+                myVoice.noteOff();
             }
         }
         break;
@@ -136,20 +135,20 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
     }
 }
 
-uint8_t Model::findVoiceToAllocate(uint8_t note) {
+int8_t Model::findVoiceToAllocate(uint8_t note) {
     /* search for:
   1) Same note - re-use voice
   2) Idle voice
   3) Released voice - find most silent.
   4) Give up - return -1
 */
-    uint8_t targetVoice = -1;
-    uint8_t sameVoice = -1;
-    uint8_t idleVoice = -1;
-    uint8_t releasedVoice = -1;
-    uint8_t releasedVoiceAmp = 1;
+    int8_t targetVoice = -1;
+    int8_t sameVoice = -1;
+    int8_t idleVoice = -1;
+    int8_t releasedVoice = -1;
+    int8_t releasedVoiceAmp = 1;
     // 8 shouldn't be hardcoded..
-    for (int i = 0; i < 8; i) {
+    for (int i = 0; i < VOICE_COUNT; i++) {
         Voice &myVoice = voices[i];
         if (myVoice.notePlaying == note) {
             // re-use (what about lfo-ramp here..)
@@ -161,14 +160,15 @@ uint8_t Model::findVoiceToAllocate(uint8_t note) {
             if (myVoice.getVCAstate() == audio::envelope::ADSFRState::OFF) {
                 idleVoice = i;
             }
-        }
-        if (myVoice.getVCAstate() == audio::envelope::ADSFRState::RELEASE) {
-            // candidate, see if amp lower than current.
-            float temp = myVoice.getVCALevel();
-            if (temp < releasedVoiceAmp) {
-                // candidate!
-                releasedVoice = i;
-                releasedVoiceAmp = temp;
+            // ok try to overtake..
+            if (myVoice.getVCAstate() == audio::envelope::ADSFRState::RELEASE) {
+                // candidate, see if amp lower than current.
+                float temp = myVoice.getVCALevel();
+                if (temp < releasedVoiceAmp) {
+                    // candidate!
+                    releasedVoice = i;
+                    releasedVoiceAmp = temp;
+                }
             }
         }
     }
@@ -178,26 +178,37 @@ uint8_t Model::findVoiceToAllocate(uint8_t note) {
 
 bool Model::renderNextBlock() {
     // make stuff not done inside chunk.
-    int blockSize = TPH_RACK_RENDER_SIZE;
     // LFO1
     //$se = $this->settings;
     //$lfoHz = $this->getNum('LFO1_RATE');
     //$this->lfo1Sample = $this->lfo1->getNextSample($blockSize * $lfoHz);
     // iterate over all voices and create a summed output.
-    uint8_t voiceCount = 8;
-    bool blockCreated = false;
-    for (int i = 0; i < TPH_RACK_BUFFER_SIZE; i++) {
-        this->buffer[i] = 0.0f;
+    for (uint8_t i = 0; i < bufferSize; i++) {
+        synthBuffer[i] = 0;
     }
-    for (uint8_t i = 0; i < voiceCount; i++) {
-        Voice myVoice = voices[i];
-        if (myVoice.checkVoiceActive()) {
-            myVoice.renderNextVoiceBlock();
-            blockCreated = true;
+    for (uint8_t i = 0; i < VOICE_COUNT; i++) {
+        if (voices[i].checkVoiceActive()) {
+            voices[i].renderNextVoiceBlock(bufferSize);
         }
     }
-    // always stereo for now..
-    return true;
+    float dist;
+    for (uint8_t i = 0; i < bufferSize; i++) {
+        // we could add some sweet dist here..
+        dist = synthBuffer[i];
+        dist = dist * dist; // skip polarity..
+        buffer[i] = synthBuffer[i] * (5 - dist) * 0.1f;
+    }
+    // not always stereo for now..
+    return false;
+}
+
+float Model::getOscMix() {
+    return oscMix;
+}
+
+void Model::addToSample(std::size_t sampleIdx, float val) {
+    // use local buffer for spead. Possibly double..
+    this->synthBuffer[sampleIdx] += val;
 }
 
 const audio::osc::LUT &Model::getLUT1() const {

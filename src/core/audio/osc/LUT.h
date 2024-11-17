@@ -6,8 +6,6 @@
 
 namespace audio::osc {
 
-constexpr int LUT_SIZE = 16384;
-
 class LUT {
   public:
     LUT() {
@@ -15,6 +13,7 @@ class LUT {
         for (int i = 0; i < LUT_SIZE; i++) {
             wave[i] = 0.0f;
         }
+        wave[0] = 0.0f;
     }
 
     void applySine(float multiple, float amplitude) {
@@ -39,7 +38,11 @@ class LUT {
     }
 
     // Provide public access to `wave` array
-    const float *getWave() const { return wave; }
+    // const float *getWave() const { return wave; }
+
+    float getSample(size_t index) const {
+        return wave[index];
+    }
 
   private:
     float wave[LUT_SIZE]{};
@@ -52,7 +55,7 @@ class LUTosc {
     inline float getNextSample(float offset) {
         int intOffset = (offset * LUT_SIZE);
         int intIdx = (intOffset + static_cast<int>(lutIdx)) & (LUT_SIZE - 1); // Safeguard with modulus operator
-        float y = lutWave.getWave()[intIdx] * 0.5f;
+        float y = lutWave.getSample(intIdx) * 0.5f;
 
         // Update lutIdx and wrap around
         lutIdx += angle;

@@ -105,7 +105,7 @@ int main() {
 
     sErrorHandler.start();
 
-    sPlayerEngine.setupRackWithSynth(0, "DummySin");
+    sPlayerEngine.setupRackWithSynth(0, "Subreal");
 
     // AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
     //

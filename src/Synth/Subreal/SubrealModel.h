@@ -16,10 +16,6 @@
 #include <unordered_map>
 
 namespace Synth::Subreal {
-// using LUT = audio::osc::LUTosc;
-
-//  Artifacts at C1. constexpr int LUT_SIZE = 1024;
-constexpr int LUT_SIZE = 4096;
 
 class Voice;
 class Model : public SynthInterface {
@@ -36,21 +32,26 @@ class Model : public SynthInterface {
     // Method to render the next block of audio
     bool renderNextBlock() override;
 
+    void addToSample(std::size_t sampleIdx, float val);
+    float getOscMix();
+
     const audio::osc::LUT &getLUT1() const;
     const audio::osc::LUT &getLUT2() const;
 
+    float oscMix = 0.5;
     int semitone = 0;
     int osc2octave = 0;
     float bendCents = 0;
     float senseTracking = 0.0f;
     audio::envelope::ADSFR vcaAR;
-    float *buffer; // Pointer to audio buffer
+    float *buffer; // Pointer to audio buffer, minimize write so:
+    float synthBuffer[TPH_RACK_BUFFER_SIZE];
     float fmSens = 0.0f;
     audio::osc::LUT lut1;
     audio::osc::LUT lut2;
+    std::size_t bufferSize; // Size of the audio buffer
 
   protected:
-    std::size_t bufferSize;    // Size of the audio buffer
     std::vector<Voice> voices; // Vector to hold Voice objects
     audio::filter::MultiFilter filter;
     audio::lfo::RampLfo lfo1;
@@ -69,7 +70,7 @@ class Model : public SynthInterface {
     // void setupCCmapping(const std::string &path);
 
     // void renderVoice();
-    uint8_t findVoiceToAllocate(uint8_t note);
+    int8_t findVoiceToAllocate(uint8_t note);
 
     void motherboardActions();
 
@@ -77,15 +78,15 @@ class Model : public SynthInterface {
     // Handle incoming MIDI CC messages
     void handleMidiCC(uint8_t ccNumber, float value);
     //
-    int notePlaying = 0;    // 0 = no note
-    float noteVelocity = 0; // 0-1;
     void setupParams();
     int debugCount = 0;
     float lfo1Depth = 0.5;
     float lfo1vca = 0.0f;
 };
 
+// ---------------------------------------
 // VOICE - could be moved to separate file
+// ---------------------------------------
 
 class Voice {
     // pass reference to model so we can use AR there. The voice has the ARslope.
@@ -93,12 +94,27 @@ class Voice {
     // Constructor initializes modelRef and LUTs for oscillators
     Voice(Model &model)
         : modelRef(model),
-          osc1(modelRef.getLUT1()), // Initialize osc1 with LUT from model
-          osc2(modelRef.getLUT2())  // Initialize osc2 with LUT from model
-    {}
+          osc1(model.getLUT1()), // Initialize osc1 with LUT from model
+          osc2(model.getLUT2())  // Initialize osc2 with LUT from model
+    {
+        reset();
+    }
 
     void reset() {
         // Called on setup
+        notePlaying = 255; // unsigned byte. best like this..
+    }
+
+    void noteOn(uint8_t midiNote, float velocity) {
+        // requested from voiceAllocate. maybe refactor..
+        notePlaying = midiNote;
+        noteVelocity = velocity;
+        modelRef.vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_ON);
+    }
+
+    void noteOff() {
+        // enter release state in all envelopes.
+        modelRef.vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_OFF);
     }
 
     audio::envelope::ADSFRState getVCAstate() {
@@ -113,17 +129,17 @@ class Voice {
         return vcaARslope.state != audio::envelope::ADSFRState::OFF;
     }
 
-    bool renderNextVoiceBlock() {
+    bool renderNextVoiceBlock(std::size_t bufferSize) {
         float osc1hz, osc2hz;
         constexpr int chunkSize = 16;
         float osc1hzOld = -1;
-
+        float oscMix = modelRef.getOscMix();
         modelRef.vcaAR.updateDelta(vcaARslope);
         if (vcaARslope.state != audio::envelope::OFF) {
             osc2hz = AudioMath::noteToHz(notePlaying + modelRef.semitone + modelRef.osc2octave * 12, modelRef.bendCents);
             osc2.setAngle(osc2hz);
             vcaEaser.setTarget(vcaARslope.currVal + vcaARslope.gap);
-            for (std::size_t i = 0; i < TPH_RACK_BUFFER_SIZE; i++) {
+            for (std::size_t i = 0; i < bufferSize; i++) {
                 float y2 = osc2.getNextSample(0);
                 if (i % chunkSize == 0) {
                     osc1hz = AudioMath::noteToHz(notePlaying, modelRef.bendCents);
@@ -133,10 +149,10 @@ class Voice {
                 float tracking = fmax(0, (1.0f + modelRef.senseTracking * AudioMath::noteToFloat(notePlaying) * 5));
                 float y1 = osc1.getNextSample(y2 * tracking * modelRef.fmSens * 2.0f * noteVelocity);
 
-                velocityLast += (noteVelocity - velocityLast) / 10.0f;
                 vcaEaserVal = vcaEaser.getValue();
-                float oscMix = oscMixEaser.getValue();
-                modelRef.buffer[i] += ((y1 * (1 - oscMix) + y2 * oscMix)) * vcaEaserVal * velocityLast * 2.0f;
+                // voiceBuffer[i] =
+                modelRef.addToSample(i, ((y1 * (1 - oscMix) + y2 * oscMix)) * vcaEaserVal * noteVelocity * 2.0f);
+                // don't work: modelRef.buffer[i] += ((y1 * (1 - oscMix) + y2 * oscMix)) * vcaEaserVal * velocityLast * 2.0f;
             }
             modelRef.vcaAR.commit(vcaARslope);
         } else {
@@ -157,6 +173,7 @@ class Voice {
     float noteVelocity;
     float velocityLast = 0;
     float vcaEaserVal;
+    // float voiceBuffer[TPH_RACK_RENDER_SIZE];
 
   private:
     Model &modelRef; // Use reference to Model

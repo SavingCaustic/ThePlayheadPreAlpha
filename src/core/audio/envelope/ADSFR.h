@@ -135,11 +135,10 @@ class ADSFR {
         case RELEASE:
             slope.state = RELEASE;
             slope.goalVal = 0;
-            slope.targetVal = slope.currVal * -0.1f;
+            slope.targetVal = slope.currVal * -0.01f;
             slope.factor = rFactor;
             break;
         case OFF:
-            std::cout << "reached off" << std::endl;
             slope.state = OFF;
             slope.currVal = 0;
             slope.goalVal = 0;
