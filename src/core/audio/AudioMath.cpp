@@ -14,10 +14,10 @@ float AudioMath::noteToHz(int note, int cent) {
     return masterTune * std::exp2((note - 69 + (cent * 0.01f)) * (1 / 12.0f));
 }
 
-float AudioMath::fnoteToHz(float note, int cent) {
+float AudioMath::fnoteToHz(float note) {
     // implemented for portamento support. I guess.. Cent relates to bend + possibly PEG.
     // this is propably a crap idea. We should have a P-easer with target pitch. That's it.
-    return masterTune * std::exp2((note - 69.0f + (cent * 0.01f)) * (1 / 12.0f));
+    return masterTune * std::exp2((note - 69.0f) * (1 / 12.0f));
 }
 
 void AudioMath::setMasterTune(float newMasterTune) {

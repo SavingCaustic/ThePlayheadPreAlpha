@@ -1,0 +1,26 @@
+// something like this.. 7 controllers, 1 scoller..
+{
+    "labels" : [
+        "OSC1 / OSC2",
+        "OSC3 / MOD"
+    ],
+               "assignments" : [
+                   [
+                       "osc1_tuning",
+                       "osc1_range",
+                       "osc1_wf",
+                       "osc1_mix",
+                       "osc2_tuning",
+                       "osc2_range",
+                       "osc2_wf"
+                   ],
+                   [
+                       "osc3_tuning",
+                       "osc3_range",
+                       "osc3_wf",
+                       "mod_rate",
+                       "mod_depth",
+                       "mod_destination"
+                   ]
+               ]
+}

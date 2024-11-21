@@ -1,12 +1,12 @@
 {
     "1": "lfo1_vca",
-    "7": "osc_mix",
-    "74": "vca_attack",
-    "71": "vca_decay",
-    "5": "vca_sustain",
-    "84": "vca_release",
-    "78": "osc1_fmsens",
-    "76": "osc1_senstrack",
-    "77": "osc2_oct",
-    "10": "osc2_semi"    
+    "7": "kbd_glide",
+    "74": "osc1_detune",
+    "71": "osc1_range",
+    "5": "osc1_wf",
+    "84": "",
+    "78": "osc2_detune",
+    "76": "osc2_range",
+    "77": "osc2_wf",
+    "10": ""
 }
