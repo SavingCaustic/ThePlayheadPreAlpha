@@ -13,24 +13,16 @@ struct Easer {
     float currentValue = 0;
     float delta;
 
-    void setTarget(float target) {
-        this->targetValue = target;
-        this->active = true;
-        this->delta = (targetValue - currentValue) / TPH_RACK_RENDER_SIZE;
-    }
+    void setTarget(float target);
 
     inline float getValue() {
-        if (!this->active) {
+        if (this->active) {
+            return this->getNewValue();
+        } else {
             return currentValue;
         }
-        currentValue += delta;
-        // Disable easing if we've reached or overshot the target
-        if ((delta >= 0 && currentValue >= targetValue) ||
-            (delta <= 0 && currentValue <= targetValue)) {
-            currentValue = targetValue;
-            active = false;
-        }
-        return currentValue;
     }
+
+    float getNewValue();
 };
 } // namespace audio::misc

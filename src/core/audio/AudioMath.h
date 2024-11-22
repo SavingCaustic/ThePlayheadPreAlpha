@@ -11,7 +11,11 @@ class AudioMath {
   public:
     static float noteToHz(int note, int cent = 0);
     static float noteToFloat(int note);
-    static float fnoteToHz(float note);
+    // static float fnoteToHz(float note);
+    inline static float fnoteToHz(float note) {
+        // implemented for portamento support. I guess.. Cent relates to bend + possibly PEG.
+        return masterTune * std::exp2((note - 69.0f) * (1 / 12.0f));
+    }
     static void setMasterTune(float newMasterTune);
     static float getMasterTune();
     static float noise();

@@ -31,6 +31,8 @@ void Model::setupParams() {
         SynthInterface::paramDefs = {
             {"kbd_glide", {0.5f, 0, true, 1, 10, [this](float v) {
                                portamentoAlpha = 1 - (1.0f / v);
+                               // trust the interface to resolve sendError
+                               this->sendError("changing kbd_glide..");
                            }}},
             {"osc1_detune", {0.5f, 0, false, -2, 2, [this](float v) {
                                  osc1detune = round(v);

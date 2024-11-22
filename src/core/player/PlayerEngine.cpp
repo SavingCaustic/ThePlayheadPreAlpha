@@ -86,6 +86,7 @@ void PlayerEngine::testRackSetup() {
 bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) {
     // Check if the rack already exists
     racks[rackId].setSynth(synthName);
+    sendError(200, "real audio error hello");
     //   Now, setup the synth for the rack
     racks[rackId].setEffect("Delay"); // Chorus
     // racks[rackId].setEffect("Delay", 2);

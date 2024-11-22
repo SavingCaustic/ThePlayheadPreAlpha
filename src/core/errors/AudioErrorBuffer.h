@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iostream>
 
-// Global buffer. Writes made by PlayerEngine & co. Read by proxy.
+// Global buffer. Writes made by PlayerEngine & c:o. Read by proxy.
 
 class AudioErrorBuffer {
   public:

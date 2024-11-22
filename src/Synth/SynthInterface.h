@@ -1,6 +1,7 @@
 #pragma once
 #include <core/ext/nlohmann/json.hpp>
 #include <core/parameters/params.h>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -28,6 +29,12 @@ class SynthInterface {
 
     void invokeLambda(const std::string &name, const ParamDefinition &paramDef);
     void setupCCmapping(const std::string &synthName);
+
+    void sendError(std::string error) {
+        // we should really reach playerEngine here, but preferably through a static method.
+        //  cant't do this: sPlayerEngine.sendError("huh");
+        std::cout << "audio error: " << error << std::endl;
+    }
 
     // Optionally, you can add methods to interact with parameters if needed
     static std::unordered_map<std::string, ParamDefinition> paramDefs;
