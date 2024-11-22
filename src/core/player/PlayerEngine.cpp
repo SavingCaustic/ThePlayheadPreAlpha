@@ -1,9 +1,11 @@
 #include "PlayerEngine.h"
+#include "ErrorWriter.h"
 
 PlayerEngine::PlayerEngine()
     : noiseVolume(0.2f), // Other initializations
       isWritingMessage(false),
-      hRotator() { // Initialize hRotator
+      hRotator(),
+      errorWriter_(*this) { // Initialize hRotator
 }
 
 void PlayerEngine::reset() {
@@ -22,6 +24,9 @@ void PlayerEngine::doReset() {
 void PlayerEngine::initializeRacks() {
     for (int i = 0; i < TPH_RACK_COUNT; ++i) {
         racks[i].setPlayerEngine(*this);
+        std::cout << "couple from pe" << std::endl;
+        racks[i].setErrorWriter(errorWriter_); // Pass the ErrorWriter reference
+        errorWriter_.logError(100, "apan i bur");
     }
 }
 
@@ -72,11 +77,7 @@ bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue,
 
 void PlayerEngine::sendError(int code, const std::string &message) {
     // dunno if this should be kept. But still, units have to be context-aware..
-    if (audioErrorBuffer->addAudioError(code, message)) {
-        // std::cout << "wrote error to audioErrorLog" << std::endl;
-    } else {
-        std::cout << "error log was full" << std::endl;
-    }
+    audioErrorBuffer->addAudioError(code, message);
 }
 
 void PlayerEngine::testRackSetup() {
@@ -88,7 +89,7 @@ bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) 
     racks[rackId].setSynth(synthName);
     sendError(200, "real audio error hello");
     //   Now, setup the synth for the rack
-    racks[rackId].setEffect("Delay"); // Chorus
+    // racks[rackId].setEffect("Delay"); // Chorus
     // racks[rackId].setEffect("Delay", 2);
     //   to be improved..
     rackReceivingMidi = 0;
@@ -183,7 +184,7 @@ bool PlayerEngine::pollMidiIn() {
                 newMessage.cmd -= 0x10;
             }
             racks[this->rackReceivingMidi].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
-            this->sendError(200, "midi recieved");
+            // this->sendError(200, "midi recieved");
             if (newMessage.cmd == 0x90)
                 sendMessage(1, "synth", newMessage.param1, "note on", "see this? :)");
         }

@@ -1,4 +1,5 @@
 #pragma once
+#include "core/player/ErrorWriter.h" // Include ErrorWriter (or forward declare it) to use its methods
 #include <core/ext/nlohmann/json.hpp>
 #include <core/parameters/params.h>
 #include <iostream>
@@ -8,7 +9,16 @@
 
 class SynthInterface {
   public:
+    // Constructor now takes a reference to ErrorWriter
+
     virtual ~SynthInterface() = default;
+
+    // Method to set the ErrorWriter after construction
+    void setErrorWriter(ErrorWriter *errorWriter) {
+        errorWriter_ = errorWriter;
+    }
+
+    void logErr(int code, const std::string &message);
 
     // Pure virtual methods that need to be implemented by derived classes
     virtual void reset() = 0;                                                // Reset the synth to its default state
@@ -44,4 +54,6 @@ class SynthInterface {
     // belonging to class, not instance
     // belonging to instance, because they may be overridden by patch settings.
     std::unordered_map<int, std::string> ccMappings; // MIDI CC -> parameter name mappings
+  private:
+    ErrorWriter *errorWriter_ = nullptr;
 };

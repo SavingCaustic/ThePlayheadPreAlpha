@@ -110,8 +110,8 @@ int main() {
     sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
     sPlayerEngine.bindErrorBuffer(sAudioErrorBuffer);
     sPlayerEngine.bindMidiManager(sMidiManager);
-
     sErrorHandler.start();
+    sPlayerEngine.initializeRacks();
 
     sPlayerEngine.setupRackWithSynth(0, "Monolith");
 

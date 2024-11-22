@@ -44,7 +44,7 @@ class ErrorBuffer {
         while (rdIndex != wrIndex || full) {
             err = buffer[rdIndex];
             rdIndex = (rdIndex + 1) & bufferSizeMask;
-            // std::cout << "Error: " << err.code << " / " << err.message << std::endl;
+            std::cout << "Error: " << err.code << " / " << err.message << std::endl;
             full = false; // Once we read, the buffer can't be full
         }
     }

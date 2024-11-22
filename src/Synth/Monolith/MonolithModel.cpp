@@ -32,10 +32,10 @@ void Model::setupParams() {
             {"kbd_glide", {0.5f, 0, true, 1, 10, [this](float v) {
                                portamentoAlpha = 1 - (1.0f / v);
                                // trust the interface to resolve sendError
-                               this->sendError("changing kbd_glide..");
+                               logErr(105, "changing kbd_glide..");
                            }}},
-            {"osc1_detune", {0.5f, 0, false, -2, 2, [this](float v) {
-                                 osc1detune = round(v);
+            {"osc1_detune", {0.5f, 0, false, -1, 1, [this](float v) {
+                                 osc1detune = (v < 0) ? -pow(fabs(v * 2.0f), 1.5) : pow(v * 2.0f, 1.5);
                              }}},
             {"osc1_range", {0.5f, 6, false, 0, 5, [this](float v) {
                                 osc1rangeFactor = std::exp2(round(v)) * 0.125f;
@@ -44,7 +44,7 @@ void Model::setupParams() {
                                     osc1rangeFactor *= 0.5f;
                             }}},
             {"osc1_wf", {0.4f, 6, false, 0, 5, [this](float v) {
-                             std::cout << "setting new waveform to " << v << std::endl;
+                             logErr(100, "setting new waveform to " + std::to_string(v));
                              osc1wf = static_cast<Waveform>(static_cast<int>(v));
                          }}},
             {"osc1_vol", {0.7f, 0, true, 10, 8, [this](float v) {
@@ -61,7 +61,6 @@ void Model::setupParams() {
                                     osc2rangeFactor *= 0.5f;
                             }}},
             {"osc2_wf", {0.0f, 6, false, 0, 5, [this](float v) {
-                             std::cout << "setting new waveform to " << v << std::endl;
                              osc2wf = static_cast<Waveform>(static_cast<int>(v));
                          }}},
             {"osc2_vol", {0.7f, 0, true, 10, 8, [this](float v) {
@@ -77,8 +76,7 @@ void Model::setupParams() {
                                 if (v == 0)
                                     osc3rangeFactor *= 0.5f;
                             }}},
-            {"osc3_wf", {0.0f, 6, false, 0, 5, [this](float v) {
-                             std::cout << "setting new waveform to " << v << std::endl;
+            {"osc3_wf", {0.66f, 6, false, 0, 5, [this](float v) {
                              osc3wf = static_cast<Waveform>(static_cast<int>(v));
                              if (osc3wf == KNEANGLE)
                                  osc3wf = TOOTHSAW;
@@ -260,10 +258,10 @@ bool Model::renderNextBlock() {
     fNotePlaying = static_cast<float>(notePlaying) * (1.0f - portamentoAlpha) + (fNotePlaying * portamentoAlpha);
 
     // only update angle every 64 sample..
-    osc3angle = AudioMath::fnoteToHz(fNotePlaying + bendSemis) * (1.0f / TPH_DSP_SR) * osc1rangeFactor;
+    osc3angle = AudioMath::fnoteToHz(fNotePlaying + bendSemis + osc3detune) * (1.0f / TPH_DSP_SR) * osc3rangeFactor;
     osc3mod = getSample(osc3wf, osc3idx); // messing up the filter in getSample though..
 
-    osc1angle = AudioMath::fnoteToHz(fNotePlaying + bendSemis) * (1.0f / TPH_DSP_SR) * osc1rangeFactor;
+    osc1angle = AudioMath::fnoteToHz(fNotePlaying + bendSemis + osc1detune) * (1.0f / TPH_DSP_SR) * osc1rangeFactor;
     //
     osc2angle = AudioMath::fnoteToHz(fNotePlaying + bendSemis + osc2detune) * (1.0f / TPH_DSP_SR) * osc2rangeFactor;
 

@@ -1,4 +1,5 @@
 #include "./SynthInterface.h"
+#include "core/player/ErrorWriter.h"
 #include <core/audio/AudioMath.h>
 #include <core/ext/nlohmann/json.hpp>
 #include <drivers/FileDriver.h>
@@ -6,6 +7,14 @@
 
 // Initialize the static unordered_map
 std::unordered_map<std::string, ParamDefinition> SynthInterface::paramDefs;
+
+void SynthInterface::logErr(int code, const std::string &message) {
+    if (errorWriter_) {
+        errorWriter_->logError(code, message);
+    } else {
+        std::cerr << "std:Error [" << code << "]: " << message << std::endl;
+    }
+}
 
 void SynthInterface::initializeParameters() {
     float valToLambda;

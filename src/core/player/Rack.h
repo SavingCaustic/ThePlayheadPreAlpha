@@ -1,10 +1,10 @@
 #pragma once
-
 #include "Effect/Chorus/ChorusModel.h"
 #include "Effect/Chorus2/Chorus2Model.h"
 #include "Effect/Delay/DelayModel.h"
 #include "Synth/Monolith/MonolithModel.h"
 #include "Synth/Subreal/SubrealModel.h"
+#include "core/player/ErrorWriter.h"
 //
 // #include "../Synth/SynthInterface.h"
 #include "constants.h"
@@ -22,6 +22,11 @@ class Rack {
     // Method to set PlayerEngine after construction
     void setPlayerEngine(PlayerEngine &engine) {
         playerEngine = &engine;
+    }
+
+    void setErrorWriter(ErrorWriter &errorWriter) {
+        std::cout << "couple recieved " << std::endl;
+        errorWriter_ = &errorWriter;
     }
 
     alignas(32) std::array<float, TPH_RACK_BUFFER_SIZE> audioBuffer;
@@ -163,8 +168,10 @@ class Rack {
             std::cerr << "Unknown synth type: " << synthName << std::endl;
             loadOK = false;
         }
-        if (loadOK)
+        if (loadOK) {
+            synth->setErrorWriter(errorWriter_);
             this->enabled = true;
+        }
         return (loadOK);
     }
 
@@ -195,8 +202,10 @@ class Rack {
             std::cerr << "Unknown effect type: " << effectName << std::endl;
             loadOK = false;
         }
-        if (loadOK)
+        if (loadOK) {
+            synth->setErrorWriter(errorWriter_);
             this->enabled = true;
+        }
         return (loadOK);
     }
 
@@ -224,6 +233,8 @@ class Rack {
 
   private:
     PlayerEngine *playerEngine; // Reference to PlayerEngine
+    ErrorWriter *errorWriter_ = nullptr;
+
     // std::unique_ptr<SynthInterface> synth;
     std::unique_ptr<SynthInterface> hEventor1; // TOFIX update to EventorInterface
 };

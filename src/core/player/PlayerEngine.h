@@ -22,6 +22,8 @@ class PlayerEngine {
   public:
     PlayerEngine(); // Add reference to constructor
 
+    void bindErrorWriter();
+
     void bindMessageInBuffer(MessageInBuffer &hMessageInBuffer);
     void bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer);
     void bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer);
@@ -48,6 +50,7 @@ class PlayerEngine {
 
   private:
     Rack racks[TPH_RACK_COUNT]; // Array of Rack objects
+    ErrorWriter errorWriter_;   // No longer a pointer, now stack-allocated
     //  Other members...
 
     void clockResetMethod();
