@@ -30,16 +30,8 @@ enum Waveform {
     SQUARE,
     SQUARE33,
     SQUARE25,
-    NUM_WAVEFORMS
-};
-
-enum Waveform3 {
-    TRIANGLE3,
-    SAWTOOTH3,
-    SQUARE3,
-    SQUARE333,
-    SQUARE253,
-    NUM_WAVEFORMS3
+    NUM_WAVEFORMS,
+    TOOTHSAW // special for osc3 - replacing kneangle
 };
 
 class Model : public SynthInterface {
@@ -56,7 +48,7 @@ class Model : public SynthInterface {
     // Method to render the next block of audio
     bool renderNextBlock() override;
 
-    float getSample(Waveform wf, double idx);
+    double getSample(Waveform wf, double idx);
     KeyAction pressKey(u_int8_t key);
     KeyAction releaseKey(u_int8_t key);
 
@@ -78,6 +70,7 @@ class Model : public SynthInterface {
     float vcaEaserVal;
     Waveform osc1wf = TRIANGLE;
     Waveform osc2wf = SQUARE;
+    Waveform osc3wf = SAWTOOTH;
     float lastSample = 0;
     u_int8_t keysPressed[8] = {0}; // 0 = no note
 
@@ -117,12 +110,21 @@ class Model : public SynthInterface {
     float osc1hz = 440.f;
     float osc1rangeFactor = 1.0f;
     float osc1detune = 0.0f;
+    float osc1vol = 0.5f;
     // osc2
     double osc2angle;
     double osc2idx;
     float osc2hz = 440.0f;
     float osc2detune = 0.0f;
     float osc2rangeFactor = 1.0f;
+    float osc2vol = 0.5f;
+    // osc2
+    double osc3angle;
+    double osc3idx;
+    float osc3hz = 440.0f;
+    float osc3detune = 0.0f;
+    float osc3rangeFactor = 1.0f;
+    float osc3vol = 0.5f;
 };
 
 } // namespace Synth::Monolith
