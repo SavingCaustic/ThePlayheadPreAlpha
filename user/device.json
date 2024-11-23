@@ -1,7 +1,7 @@
 {
     "audio_device":"ALC285 Analog",
     "44k1": false,
-    "buffer_size":128,
+    "buffer_size":64,
     "midi_device":1,
     "scroller_cc":84,
     "scroller_dials": [

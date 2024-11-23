@@ -3,6 +3,7 @@
 #include "Effect/Chorus2/Chorus2Model.h"
 #include "Effect/Delay/DelayModel.h"
 #include "Synth/Monolith/MonolithModel.h"
+#include "Synth/Sketch/SketchModel.h"
 #include "Synth/Subreal/SubrealModel.h"
 #include "core/player/ErrorWriter.h"
 //
@@ -140,6 +141,7 @@ class Rack {
     enum class SynthType {
         Monolith,
         Subreal,
+        Sketch,
         // Add other synth types here
         Unknown
     };
@@ -162,6 +164,9 @@ class Rack {
             break;
         case SynthType::Subreal:
             synth = std::make_unique<Synth::Subreal::Model>(audioBuffer.data(), audioBuffer.size());
+            break;
+        case SynthType::Sketch:
+            synth = std::make_unique<Synth::Sketch::Model>(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
         default:
@@ -215,6 +220,8 @@ class Rack {
             return SynthType::Monolith;
         if (synthName == "Subreal")
             return SynthType::Subreal;
+        if (synthName == "Sketch")
+            return SynthType::Sketch;
         // Add other synth type checks here
         return SynthType::Unknown;
     }

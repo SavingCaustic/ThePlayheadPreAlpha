@@ -1,4 +1,5 @@
 #include "Synth/Monolith/MonolithModel.h"
+#include "Synth/Sketch/SketchModel.h"
 #include "Synth/Subreal/SubrealModel.h"
 #include "Synth/SynthInterface.h"
 #include "core/utils/WavWriter.h"
@@ -26,8 +27,9 @@ void signal_handler(int signal) {
 int main() {
     float audioBuffer[64];
     const std::size_t bufferSize = 64;
-    Synth::Monolith::Model mySynth(audioBuffer, bufferSize);
-    // Synth::Subreal::Model mySynth(audioBuffer, bufferSize);
+    Synth::Sketch::Model mySynth(audioBuffer, bufferSize);
+    // Synth::Monolith::Model mySynth(audioBuffer, bufferSize);
+    //  Synth::Subreal::Model mySynth(audioBuffer, bufferSize);
     Utils::WavWriter writer("echo.wav", 48000, 64);
 
     // play some notes listening for cracks..

@@ -37,7 +37,7 @@ LUTosc::LUTosc(const LUT &theLut) : lutWave(theLut), lutIdx(0.0f), angle(0.0f) {
 float LUTosc::getNextSample(float offset) {
     int intOffset = (offset * LUT_SIZE);
     int intIdx = (intOffset + static_cast<int>(lutIdx)) & (LUT_SIZE - 1);
-    float y = lutWave.getSample(intIdx) * 0.5f;
+    float y = lutWave.getSample(intIdx);
 
     lutIdx += angle;
     if (lutIdx >= LUT_SIZE)

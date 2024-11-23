@@ -1,3 +1,4 @@
+#include "api/endpointsCrow.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
 #include "core/errors/AudioErrorBuffer.h"
@@ -16,7 +17,6 @@
 #include "drivers/AudioManager.h"
 #include "drivers/FileDriver.h"
 #include "drivers/MidiManager.h"
-#include "endpointsCrow.h"
 #include <atomic>
 #include <chrono>
 #include <filesystem>
@@ -77,7 +77,7 @@ int main() {
     //
     std::unordered_map<std::string, std::string> deviceSettings;
     // initialize
-    deviceSettings["buffer_size"] = "128";
+    deviceSettings["buffer_size"] = "64"; // set in three places now. here, device.json and where matters - constants.cpp
     deviceSettings["audio_sr"] = "48000";
     deviceSettings["audio_device"] = "1";
     deviceSettings["midi_device"] = "1";
@@ -113,7 +113,7 @@ int main() {
     sErrorHandler.start();
     sPlayerEngine.initializeRacks();
 
-    sPlayerEngine.setupRackWithSynth(0, "Subreal");
+    sPlayerEngine.setupRackWithSynth(0, "Sketch");
 
     // AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
     //

@@ -5,7 +5,8 @@ PlayerEngine::PlayerEngine()
     : noiseVolume(0.2f), // Other initializations
       isWritingMessage(false),
       hRotator(),
-      errorWriter_(*this) { // Initialize hRotator
+      errorWriter_(*this) {
+    this->loadAvg = 0.0f;
 }
 
 void PlayerEngine::reset() {
@@ -24,9 +25,7 @@ void PlayerEngine::doReset() {
 void PlayerEngine::initializeRacks() {
     for (int i = 0; i < TPH_RACK_COUNT; ++i) {
         racks[i].setPlayerEngine(*this);
-        std::cout << "couple from pe" << std::endl;
         racks[i].setErrorWriter(errorWriter_); // Pass the ErrorWriter reference
-        errorWriter_.logError(100, "apan i bur");
     }
 }
 
@@ -100,8 +99,9 @@ float PlayerEngine::getLoadAvg() {
 void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     // Get the current time in microseconds
     // Calculate time for next frame based on sample rate and numFrames
-    double frameDurationMicroSec = (numFrames * 1'000'000.0) * (1 / TPH_DSP_SR);
-    auto nextFrameTime = std::chrono::high_resolution_clock::now() + std::chrono::microseconds(static_cast<long long>(frameDurationMicroSec));
+    int64_t frameDurationMicroSec = static_cast<long>(numFrames * (1'000'000.0 / TPH_DSP_SR));
+    std::chrono::time_point nextFrameTime = std::chrono::high_resolution_clock::now() + std::chrono::microseconds(frameDurationMicroSec);
+
     //
     if (clockReset) {
         clockResetMethod(); // Reset the clock (requested by play- or stop-command)
@@ -113,19 +113,31 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
         sumToMaster(buffer, numFrames, outer);
     }
     //
-    auto endTime = std::chrono::high_resolution_clock::now();
-    auto timeLeftUs = std::chrono::duration_cast<std::chrono::microseconds>(nextFrameTime - endTime).count();
+    std::chrono::time_point endTime = std::chrono::high_resolution_clock::now();
+    int64_t timeLeftUs = std::chrono::duration_cast<std::chrono::microseconds>(nextFrameTime - endTime).count();
+
     // Time used for rendering in microseconds
-    auto timeUsedUs = frameDurationMicroSec - static_cast<double>(timeLeftUs);
+    int64_t timeUsedUs = frameDurationMicroSec - timeLeftUs;
+
     // Clamp the timeUsedUs to avoid negative values (if timeLeftUs is greater than frameDurationMicroSec)
-    timeUsedUs = std::max(0.0, timeUsedUs);
-    // Calculate raw load average as the ratio of time used to frame duration
-    double rawLoad = timeUsedUs / frameDurationMicroSec;
+    timeUsedUs = std::max<int64_t>(0, timeUsedUs); // Ensure no negative values
+
+    // Calculate raw load average as the ratio of time used to frame duration (as a float for precision)
+    double rawLoad = (100.0 * static_cast<double>(timeUsedUs)) / static_cast<double>(frameDurationMicroSec);
+
     // Smoothing with a factor (alpha), for example, alpha = 0.1 for smooth update
     constexpr double alpha = 0.1;
+
+    // Update loadAvg with smoothing
     this->loadAvg = (alpha * rawLoad) + ((1 - alpha) * this->loadAvg);
+
+    debugCnt++;
+    if ((debugCnt & (1024 - 1)) == 0) {
+        sendError(100, "Stat: " + std::to_string(this->loadAvg));
+        sendError(105, "TimeLeftUs: " + std::to_string(timeLeftUs));
+    }
     // this code not working so fake it..
-    if (true | timeLeftUs > 1500) {
+    if (timeLeftUs > 500) {
         // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
         auto optionalMessage = messageInBuffer->pop();
         if (optionalMessage) { // Check if a message was retrieved

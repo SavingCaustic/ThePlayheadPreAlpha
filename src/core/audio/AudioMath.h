@@ -9,8 +9,10 @@
 
 class AudioMath {
   public:
-    static float noteToHz(int note, int cent = 0);
-    static float noteToFloat(int note);
+    inline static float noteToHz(int note, int cent = 0) {
+        return masterTune * std::exp2((note - 69 + (cent * 0.01f)) * (1 / 12.0f));
+    }
+
     // static float fnoteToHz(float note);
     inline static float fnoteToHz(float note) {
         // implemented for portamento support. I guess.. Cent relates to bend + possibly PEG.
@@ -28,6 +30,8 @@ class AudioMath {
     static float clamp(float value, float min, float max);
     static float linScale(float value, float min, float max);
     static float logScale(float value, float minValue, float octaves);
+
+    static float noteToFloat(int note);
 
     static void generateLUT();
 

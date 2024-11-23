@@ -10,9 +10,6 @@ int AudioMath::noiseB = 1013904223;
 int AudioMath::noiseC = 1 << 24; // 2^24, replaced with constexpr.
 
 // Implement static methods
-float AudioMath::noteToHz(int note, int cent) {
-    return masterTune * std::exp2((note - 69 + (cent * 0.01f)) * (1 / 12.0f));
-}
 
 void AudioMath::setMasterTune(float newMasterTune) {
     masterTune = newMasterTune;
@@ -23,7 +20,7 @@ float AudioMath::getMasterTune() {
 }
 
 float AudioMath::noteToFloat(int note) {
-    // used for tracking
+    // used for tracking. no need to inline..
     return (note - 64.0f) / 64.0f;
 }
 

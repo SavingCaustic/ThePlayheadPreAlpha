@@ -75,4 +75,5 @@ class PlayerEngine {
     MidiManager *midiManager = nullptr;
 
     float loadAvg = 0;
+    int debugCnt = 0;
 };

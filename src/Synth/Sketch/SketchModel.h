@@ -15,7 +15,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace Synth::Subreal {
+namespace Synth::Sketch {
 
 class Voice;
 class Model : public SynthInterface {
@@ -177,4 +177,4 @@ class Voice {
     Model &modelRef; // Use reference to Model
 };
 
-} // namespace Synth::Subreal
+} // namespace Synth::Sketch

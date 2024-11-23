@@ -87,7 +87,8 @@ class AudioManager {
   private:
     void theGreatCallback(float *in, float *out, unsigned long frameCount) {
         if (callbackMode == Player) {
-            playerEngineRef.renderNextBlock(out, frameCount);
+            // yeah. we're taking over resposibility of frameCount.
+            playerEngineRef.renderNextBlock(out, frameCount); // TPH_AUDIO_BUFFER_SIZE
         } else if (callbackMode == Tuner) {
             // Tuner-specific processing
         }
