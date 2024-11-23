@@ -1,35 +1,16 @@
 TODO
 ====
-* Help from Adrian regarding build. Needs to create build-dirs now and return
-xecuting task: cmake -B /home/savingcaustic/cplus/mydaw2/build_release --build /home/savingcaustic/cplus/mydaw2/build_release 
-
-CMake Error: Unknown argument --build
-
-* snap. nästan. :)
-Vid ladda, finns inga patch-värden än. Ladda defaults från params.
-Dubbelkolla. Detune o semi ska bli 0.
-sen är snap klar!! :D
+* Kunna skicka disableRack så att vi kan göra operationer som ladda synth m.m.
 
 * Alright, let's remove stuff from SynthInterface that probably should be in SynthManager?
 * But is there a SynthManager?? It's always in a rack..
 * Where to put the json-stuff.. maybe ok to have the load/save-stuff in the interface?
-
-
-* ok fixa detta med parameters nu.
-* parameters är i class. + lambda.
-* paramVals är data av parameters.
-* stringVals är grejer som sätts av.
-* deltas kan användas av DSP. 
 
 * WavReader kan ha Intro + SideA + SideB. När läsning av sideB börjar ska sideA uppdateras, om inte då hela alltet ryms i
 intro + A + B. 32+32+32 = 96 kB. => mono 2 sek. Sedan behöver läsning ske varje sek.
 Denna är ju synkron. Bara en tråd.
 
 * Nåt med audioManager hotplugging som behver skruvas.
-
-* ugh.. Hur göra med allt detta med Rack, units. Untis som kanske används någon annanstans.
-Och hur göra med MidiCC som kan användas av både synth och effekt. Viktigt att mapping finns på rack.
-cc_mapping, tja har man params har man cc_mapping. Vet iofs inte om rack i sig har params, bara settings..
 
 * rensa i skapande av globala objekt.
 
@@ -42,17 +23,9 @@ klura på logik för att ha både synth- och rack-patches.
 
 * kunna ladda parametrar som patch.
 
-* snap på parametrar. Stöd för filter-typ i DummySynth.
-Då behöver vi väl jämföra nuv position med ny föreslagen, så vi inte kallar lambdan i onödan.
-Och då behöver vi veta om värdet vi är på väg att skriva är persistant eller temp (automation).
-Kan vänta med automation med förbreda för det. (på väg att skapa egen klass här..)
-
 * mjuka övergångar - delta för parametrar. Registreras vid compile-time.
 
-* skicka svar från parametrar med både 0-1 och värdet, ex "40L"
-gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS istället för hela vägen tillbaka..
 
-* Kunna skicka disableRack så att vi kan göra operationer som ladda synth m.m.
 
 * Flera egenskaper *rack* sätts från endpoint. Risk för race.
 
@@ -69,6 +42,29 @@ gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS ist�
 
 
 FIXAT:
+* ugh.. Hur göra med allt detta med Rack, units. Untis som kanske används någon annanstans.
+CC-mapping inte spec. relevant. kontrollerns knyts till thePlayhead. spec av scroller.
+Och hur göra med MidiCC som kan användas av både synth och effekt. Viktigt att mapping finns på rack.
+cc_mapping, tja har man params har man cc_mapping. Vet iofs inte om rack i sig har params, bara settings..
+
+* skicka svar från parametrar med både 0-1 och värdet, ex "40L"
+gången är ju FE=>WS=>PE=>rack=>module. Ev tänka DNS här, så module=>WS istället för hela vägen tillbaka..
+
+* snap på parametrar. Stöd för filter-typ i DummySynth.
+Då behöver vi väl jämföra nuv position med ny föreslagen, så vi inte kallar lambdan i onödan.
+Och då behöver vi veta om värdet vi är på väg att skriva är persistant eller temp (automation).
+Kan vänta med automation med förbreda för det. (på väg att skapa egen klass här..)
+
+* ok fixa detta med parameters nu.
+* parameters är i class. + lambda.
+* paramVals är data av parameters.
+* stringVals är grejer som sätts av.
+* deltas kan användas av DSP. 
+
+* snap. nästan. :)
+Vid ladda, finns inga patch-värden än. Ladda defaults från params.
+Dubbelkolla. Detune o semi ska bli 0.
+sen är snap klar!! :D
 
 * Audio in.. Kanske ska vi ha en AudioManager. Denna kan ha in-buffers (alltid 2st), så kopplar DSP upp sig till deessa.
   Och det är audioManager som slår av/på själva drivern..

@@ -143,11 +143,11 @@ void crowSetupEndpoints(
         playerEngine.ping();
         return crow::response(200, "Ping sent from PlayerEngine"); });
 
-    CROW_ROUTE(api, "/test/pe/rackSetup")
+    /*CROW_ROUTE(api, "/test/pe/rackSetup")
     ([&playerEngine]() {
         playerEngine.testRackSetup();
         return crow::response(200, "Test synth setup");
-    });
+    });*/
 
     CROW_ROUTE(api, "/rack/getFakeSynthParams")
     ([&playerEngine]() {

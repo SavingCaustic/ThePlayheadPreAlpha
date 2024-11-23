@@ -37,7 +37,6 @@ class PlayerEngine {
 
     void ping();
     float getLoadAvg();
-    void testRackSetup();
 
     std::string getSynthParams(int rackId);
 
