@@ -26,7 +26,7 @@
             "osc3_control",
             "osc3_filtereg",
             "mod_depth",
-            "mod_destination"
+            "mod_dest"
         ],
         [
             "osc1_vol",
@@ -51,10 +51,9 @@
             "vca_decay",
             "vca_systain",
             "vca_release",
-            "vcf_cutoff",
-            "vcf_resonance",
-            "vcf_depth"
+            "",
+            "",
+            ""
         ]
-        
     ]
 }

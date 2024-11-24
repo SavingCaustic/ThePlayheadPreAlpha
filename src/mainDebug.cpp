@@ -41,9 +41,9 @@ int main() {
 
     SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
 
-    Synth::Sketch::Model mySynth(audioBuffer, bufferSize);
-    // Synth::Monolith::Model mySynth(audioBuffer, bufferSize);
-    //  Synth::Subreal::Model mySynth(audioBuffer, bufferSize);
+    // Synth::Sketch::Model mySynth(audioBuffer, bufferSize);
+    Synth::Monolith::Model mySynth(audioBuffer, bufferSize);
+    // Synth::Subreal::Model mySynth(audioBuffer, bufferSize);
     Utils::WavWriter writer("echo.wav", 48000, 64);
 
     // play some notes listening for cracks..
