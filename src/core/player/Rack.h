@@ -7,7 +7,7 @@
 #include "Synth/Subreal/SubrealModel.h"
 #include "core/player/ErrorWriter.h"
 //
-// #include "../Synth/SynthInterface.h"
+#include "Synth/SynthInterface.h"
 #include "constants.h"
 // #include "ParamInterfaceBase.h"
 #include <array>

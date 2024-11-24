@@ -84,11 +84,6 @@ int main() {
     deviceSettings["http_port"] = "18080";
     deviceSettings["scroller_cc"] = "84";
     deviceSettings["scroller_dials"] = "1,2,3,4,5,6,7";
-    // so who's the reciever of the scroller dials? The rack? Could have different scrollpos for different racks so yeah..
-    // so playerEngine knows the scrollerDials. Rack knows its scroll-position. incoming cc checked with dials.
-    // if in dials, remap to scrolled name. (huh). If not in scroller, just?
-    // actually, this should possibly be in the synth-interface (base-class), no scroll in eventor/effect.
-    // possibly, a synth could be scroller-enabled or not. dunno..
 
     // Load settings from JSON and override default settings
 

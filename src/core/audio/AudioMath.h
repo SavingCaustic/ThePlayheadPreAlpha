@@ -18,6 +18,11 @@ class AudioMath {
         // implemented for portamento support. I guess.. Cent relates to bend + possibly PEG.
         return masterTune * std::exp2((note - 69.0f) * (1 / 12.0f));
     }
+
+    inline static void easeLog2(float in, float &out) {
+        out = in * 0.02f + out * 0.98f;
+    }
+
     static void setMasterTune(float newMasterTune);
     static float getMasterTune();
     static float noise();

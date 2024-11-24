@@ -2,6 +2,7 @@
 #include "Synth/Sketch/SketchModel.h"
 #include "Synth/Subreal/SubrealModel.h"
 #include "Synth/SynthInterface.h"
+#include "core/parameters/SettingsManager.h"
 #include "core/utils/WavWriter.h"
 #include <atomic>
 #include <iostream>
@@ -27,6 +28,19 @@ void signal_handler(int signal) {
 int main() {
     float audioBuffer[64];
     const std::size_t bufferSize = 64;
+
+    std::unordered_map<std::string, std::string> deviceSettings;
+    // initialize
+    deviceSettings["buffer_size"] = "64"; // set in three places now. here, device.json and where matters - constants.cpp
+    deviceSettings["audio_sr"] = "48000";
+    deviceSettings["audio_device"] = "1";
+    deviceSettings["midi_device"] = "1";
+    deviceSettings["http_port"] = "18080";
+    deviceSettings["scroller_cc"] = "84";
+    deviceSettings["scroller_dials"] = "1,2,3,4,5,6,7";
+
+    SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
+
     Synth::Sketch::Model mySynth(audioBuffer, bufferSize);
     // Synth::Monolith::Model mySynth(audioBuffer, bufferSize);
     //  Synth::Subreal::Model mySynth(audioBuffer, bufferSize);

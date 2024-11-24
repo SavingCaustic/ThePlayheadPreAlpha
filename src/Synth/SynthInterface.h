@@ -32,12 +32,16 @@ class SynthInterface {
     nlohmann::json getParamDefsAsJson();
 
     // abstract methods
+    int resolveUPenum(const std::string &name);
+
     void pushStrParam(const std::string &name, float val);
-    void initializeParameters();
+    void initParams();
+    void indexParams(const int upCount);
+
     void handleMidiCC(u_int8_t ccNumber, float value);
     bool pushMyParam(const std::string &name, float val);
 
-    void invokeLambda(const std::string &name, const ParamDefinition &paramDef);
+    void invokeLambda(const int name, const ParamDefinition &paramDef);
     void setupCCmapping(const std::string &synthName);
 
     void sendError(std::string error) {
@@ -47,8 +51,10 @@ class SynthInterface {
     }
 
     // Optionally, you can add methods to interact with parameters if needed
-    static std::unordered_map<std::string, ParamDefinition> paramDefs;
-    std::unordered_map<std::string, float> paramVals;
+    // HERE: This is great! Common stuff for multiple instances of the synth: static
+    static std::unordered_map<int, ParamDefinition> paramDefs;
+    static std::unordered_map<std::string, int> paramIndex;
+    std::unordered_map<int, float> paramVals;
 
   protected:
     // belonging to class, not instance

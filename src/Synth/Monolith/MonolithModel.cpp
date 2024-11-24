@@ -20,89 +20,92 @@ namespace Synth::Monolith {
 // Constructor to accept buffer and size
 Model::Model(float *audioBuffer, std::size_t bufferSize)
     : buffer(audioBuffer), bufferSize(bufferSize) {
-    setupParams(); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
-    SynthInterface::initializeParameters();
+    setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
+    SynthInterface::initParams();
+
     SynthInterface::setupCCmapping("Monolith");
     reset();
 }
 
-void Model::setupParams() {
+void Model::setupParams(int upCount) {
     if (SynthInterface::paramDefs.empty()) {
         SynthInterface::paramDefs = {
-            {"kbd_glide", {0.5f, 0, true, 1, 10, [this](float v) {
-                               portamentoAlpha = 1 - (1.0f / v);
-                               // trust the interface to resolve sendError
-                               logErr(105, "changing kbd_glide..");
+            {kbd_glide, {"kbd_glide", 0.5f, 0, true, 1, 10, [this](float v) {
+                             portamentoAlpha = 1 - (1.0f / v);
+                             // trust the interface to resolve sendError
+                             logErr(105, "changing kbd_glide..");
+                         }}},
+            {osc1_detune, {"osc1_detune", 0.5f, 0, false, -1, 1, [this](float v) {
+                               osc1detune = (v < 0) ? -pow(fabs(v * 2.0f), 1.5) : pow(v * 2.0f, 1.5);
                            }}},
-            {"osc1_detune", {0.5f, 0, false, -1, 1, [this](float v) {
-                                 osc1detune = (v < 0) ? -pow(fabs(v * 2.0f), 1.5) : pow(v * 2.0f, 1.5);
-                             }}},
-            {"osc1_range", {0.5f, 6, false, 0, 5, [this](float v) {
-                                osc1rangeFactor = std::exp2(round(v)) * 0.125f;
-                                // special case if lowest, go one extra down..
-                                if (v == 0)
-                                    osc1rangeFactor *= 0.5f;
-                            }}},
-            {"osc1_wf", {0.4f, 6, false, 0, 5, [this](float v) {
-                             logErr(100, "setting new waveform to " + std::to_string(v));
-                             osc1wf = static_cast<Waveform>(static_cast<int>(v));
-                         }}},
-            {"osc1_vol", {0.7f, 0, true, 10, 8, [this](float v) {
-                              // it's probably here that we should have the easer. meh...
-                              osc1vol = (v - 10) * (1.0f / 2550.0f);
+            {osc1_range, {"osc1_range", 0.5f, 6, false, 0, 5, [this](float v) {
+                              osc1rangeFactor = std::exp2(round(v)) * 0.125f;
+                              // special case if lowest, go one extra down..
+                              if (v == 0)
+                                  osc1rangeFactor *= 0.5f;
                           }}},
-            {"osc2_detune", {0.45f, 0, false, -1, 1, [this](float v) {
-                                 osc2detune = (v < 0) ? -pow(fabs(v * 3.7f), 1.5) : pow(v * 3.7f, 1.5);
-                             }}},
-            {"osc2_range", {0.5f, 6, false, 0, 5, [this](float v) {
-                                osc2rangeFactor = std::exp2(round(v)) * 0.125f;
-                                // special case if lowest, go one extra down..
-                                if (v == 0)
-                                    osc2rangeFactor *= 0.5f;
-                            }}},
-            {"osc2_wf", {0.0f, 6, false, 0, 5, [this](float v) {
-                             osc2wf = static_cast<Waveform>(static_cast<int>(v));
-                         }}},
-            {"osc2_vol", {0.7f, 0, true, 10, 8, [this](float v) {
-                              // it's probably here that we should have the easer. meh...
-                              osc2vol = (v - 10) * (1.0f / 2550.0f);
-                          }}},
-            {"osc3_detune", {0.52f, 0, false, -1, 1, [this](float v) {
-                                 osc3detune = (v < 0) ? -pow(fabs(v * 3.7f), 1.5) : pow(v * 3.7f, 1.5);
-                             }}},
-            {"osc3_range", {0.5f, 6, false, 0, 5, [this](float v) {
-                                osc3rangeFactor = std::exp2(round(v)) * 0.125f;
-                                // special case if lowest, go one extra down..
-                                if (v == 0)
-                                    osc3rangeFactor *= 0.5f;
-                            }}},
-            {"osc3_wf", {0.66f, 6, false, 0, 5, [this](float v) {
-                             osc3wf = static_cast<Waveform>(static_cast<int>(v));
-                             if (osc3wf == KNEANGLE)
-                                 osc3wf = TOOTHSAW;
-                         }}},
-            {"osc3_vol", {0.7f, 0, true, 10, 8, [this](float v) {
-                              // it's probably here that we should have the easer. meh...
-                              osc3vol = (v - 10) * (1.0f / 2550.0f);
-                          }}},
-            {"vca_attack", {0.0f, 0, true, 2, 11, [this](float v) { // 8192 max
-                                vcaAR.setTime(audio::envelope::ATTACK, v);
-                            }}},
-            {"vca_decay", {0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
-                               vcaAR.setTime(audio::envelope::DECAY, v);
+            {osc1_wf, {"osc1_wf", 0.4f, 6, false, 0, 5, [this](float v) {
+                           logErr(100, "setting new waveform to " + std::to_string(v));
+                           osc1wf = static_cast<Waveform>(static_cast<int>(v));
+                       }}},
+            {osc1_vol, {"osc1_vol", 0.7f, 0, true, 10, 8, [this](float v) {
+                            // it's probably here that we should have the easer. meh...
+                            osc1vol = (v - 10) * (1.0f / 2550.0f);
+                        }}},
+            {osc2_detune, {"osc2_detune", 0.45f, 0, false, -1, 1, [this](float v) {
+                               osc2detune = (v < 0) ? -pow(fabs(v * 3.7f), 1.5) : pow(v * 3.7f, 1.5);
                            }}},
-            {"vca_sustain", {0.7f, 0, false, 0, 1, [this](float v) {
-                                 vcaAR.setLevel(audio::envelope::SUSTAIN, v);
-                             }}},
-            {"vca_fade", {0.0f, 0, false, 0, 1, [this](float v) {
-                              vcaAR.setLeak(audio::envelope::FADE, v);
+            {osc2_range, {"osc2_range", 0.5f, 6, false, 0, 5, [this](float v) {
+                              osc2rangeFactor = std::exp2(round(v)) * 0.125f;
+                              // special case if lowest, go one extra down..
+                              if (v == 0)
+                                  osc2rangeFactor *= 0.5f;
                           }}},
-            {"vca_release", {0.1f, 0, true, 10, 8, [this](float v) {
-                                 vcaAR.setTime(audio::envelope::RELEASE, v);
-                             }}},
-            {"lfo1_speed", {0.0f, 0, true, 100, 9, [this](float v) {
-                                lfo1.setSpeed(v); // in mHz.
-                            }}}};
+            {osc2_wf, {"osc2_wf", 0.0f, 6, false, 0, 5, [this](float v) {
+                           osc2wf = static_cast<Waveform>(static_cast<int>(v));
+                       }}},
+            {osc2_vol, {"osc2_vol", 0.7f, 0, true, 10, 8, [this](float v) {
+                            // it's probably here that we should have the easer. meh...
+                            osc2vol = (v - 10) * (1.0f / 2550.0f);
+                        }}},
+            {osc3_detune, {"osc3_detune", 0.52f, 0, false, -1, 1, [this](float v) {
+                               osc3detune = (v < 0) ? -pow(fabs(v * 3.7f), 1.5) : pow(v * 3.7f, 1.5);
+                           }}},
+            {osc3_range, {"osc3_range", 0.5f, 6, false, 0, 5, [this](float v) {
+                              osc3rangeFactor = std::exp2(round(v)) * 0.125f;
+                              // special case if lowest, go one extra down..
+                              if (v == 0)
+                                  osc3rangeFactor *= 0.5f;
+                          }}},
+            {osc3_wf, {"osc3_wf", 0.66f, 6, false, 0, 5, [this](float v) {
+                           osc3wf = static_cast<Waveform>(static_cast<int>(v));
+                           if (osc3wf == KNEANGLE)
+                               osc3wf = TOOTHSAW;
+                       }}},
+            {osc3_vol, {"osc3_vol", 0.7f, 0, true, 10, 8, [this](float v) {
+                            // it's probably here that we should have the easer. meh...
+                            osc3vol = (v - 10) * (1.0f / 2550.0f);
+                        }}},
+            {vca_attack, {"vca_attack", 0.0f, 0, true, 2, 11, [this](float v) { // 8192 max
+                              vcaAR.setTime(audio::envelope::ATTACK, v);
+                          }}},
+            {vca_decay, {"vca_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
+                             vcaAR.setTime(audio::envelope::DECAY, v);
+                         }}},
+            {vca_sustain, {"vca_sustain", 0.7f, 0, false, 0, 1, [this](float v) {
+                               vcaAR.setLevel(audio::envelope::SUSTAIN, v);
+                           }}},
+            {vca_fade, {"vca_fade", 0.0f, 0, false, 0, 1, [this](float v) {
+                            vcaAR.setLeak(audio::envelope::FADE, v);
+                        }}},
+            {vca_release, {"vca_release", 0.1f, 0, true, 10, 8, [this](float v) {
+                               vcaAR.setTime(audio::envelope::RELEASE, v);
+                           }}},
+            {lfo1_speed, {"lfo1_speed", 0.0f, 0, true, 100, 9, [this](float v) {
+                              lfo1.setSpeed(v); // in mHz.
+                          }}}};
+        // important stuff..
+        SynthInterface::indexParams(upCount);
     }
 }
 

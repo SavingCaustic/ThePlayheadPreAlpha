@@ -17,6 +17,26 @@
 
 namespace Synth::Sketch {
 
+enum UP {
+    osc1_fmsens,
+    osc1_senstrack,
+    osc2_semi,
+    osc2_oct,
+    osc_mix,
+    vca_attack,
+    vca_decay,
+    vca_sustain,
+    vca_fade,
+    vca_release,
+    vcf_type,
+    vcf_cutoff,
+    vcf_resonance,
+    lfo1_depth,
+    lfo1_vca,
+    lfo1_speed,
+    up_count
+};
+
 class Voice;
 class Model : public SynthInterface {
 
@@ -78,7 +98,7 @@ class Model : public SynthInterface {
     // Handle incoming MIDI CC messages
     void handleMidiCC(uint8_t ccNumber, float value);
     //
-    void setupParams();
+    void setupParams(int upCount);
     int debugCount = 0;
     float lfo1Depth = 0.5;
     float lfo1vca = 0.0f;
@@ -109,7 +129,7 @@ class Voice {
         // requested from voiceAllocate. maybe refactor..
         notePlaying = midiNote;
         noteVelocity = velocity;
-        tracking = fmax(0, (1.0f + modelRef.senseTracking * AudioMath::noteToFloat(notePlaying) * 5));
+        tracking = fmax(0, (2.0f + modelRef.senseTracking * AudioMath::noteToFloat(notePlaying) * 7));
         modelRef.vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_ON);
     }
 
@@ -135,7 +155,7 @@ class Voice {
         constexpr int chunkSize = 16; // Could be adapted to SIMD-capability..
         float oscMix = modelRef.getOscMix();
         modelRef.vcaAR.updateDelta(vcaARslope);
-        float fmAmplitude = tracking * modelRef.fmSens * 2.0f * noteVelocity;
+        float fmAmplitude = tracking * modelRef.fmSens * noteVelocity;
         float mixAmplitude = noteVelocity * 0.6f;
         if (vcaARslope.state != audio::envelope::OFF) {
             osc2hz = AudioMath::noteToHz(notePlaying + modelRef.semitone + modelRef.osc2octave * 12, modelRef.bendCents);
@@ -143,12 +163,13 @@ class Voice {
             osc1hz = AudioMath::noteToHz(notePlaying, modelRef.bendCents);
             osc1.setAngle(osc1hz);
             vcaEaser.setTarget(vcaARslope.currVal + vcaARslope.gap);
+            AudioMath::easeLog2(oscMix, oscMixEaseOut);
             for (std::size_t i = 0; i < bufferSize; i += chunkSize) {
                 for (std::size_t j = 0; j < chunkSize; j++) {
                     float y2 = osc2.getNextSample(0);
                     vcaEaserVal = vcaEaser.getValue();
                     float y1 = osc1.getNextSample(y2 * fmAmplitude * (vcaEaserVal + 0.3f));
-                    modelRef.addToSample(i + j, ((y1 * (1 - oscMix) + y2 * oscMix)) * vcaEaserVal * mixAmplitude);
+                    modelRef.addToSample(i + j, ((y1 * (1 - oscMixEaseOut) + y2 * oscMixEaseOut)) * vcaEaserVal * mixAmplitude);
                 }
             }
             modelRef.vcaAR.commit(vcaARslope);
@@ -175,6 +196,7 @@ class Voice {
 
   private:
     Model &modelRef; // Use reference to Model
+    float oscMixEaseOut = 0;
 };
 
 } // namespace Synth::Sketch

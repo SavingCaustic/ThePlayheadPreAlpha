@@ -6,7 +6,8 @@
 #include <iostream>
 
 // Initialize the static unordered_map
-std::unordered_map<std::string, ParamDefinition> SynthInterface::paramDefs;
+std::unordered_map<int, ParamDefinition> SynthInterface::paramDefs;
+std::unordered_map<std::string, int> SynthInterface::paramIndex;
 
 void SynthInterface::logErr(int code, const std::string &message) {
     if (errorWriter_) {
@@ -16,7 +17,7 @@ void SynthInterface::logErr(int code, const std::string &message) {
     }
 }
 
-void SynthInterface::initializeParameters() {
+void SynthInterface::initParams() {
     float valToLambda;
     for (const auto &[key, def] : paramDefs) {
         paramVals[key] = def.defaultValue;
@@ -24,19 +25,14 @@ void SynthInterface::initializeParameters() {
     }
 }
 
-// Struct for parameter definitions
-/*
-struct ParamDefinition {
-    float defaultValue;                       // Default value (e.g., 0-1 for continuous values)
-    int snapSteps;                            // Snap-steps (e.g., semitone or octave selection)
-    bool logCurve;                            // Logarithmic curve if true, linear if false
-    int minValue;                             // Minimum value
-    int rangeFactor;                          // Factor for scaling (based on log or linear curve)
-    std::function<void(float)> transformFunc; // Lambda for handling parameter changes
-};
-*/
+void SynthInterface::indexParams(const int upCount) {
+    paramIndex.reserve(upCount);
+    for (const auto &[key, value] : SynthInterface::paramDefs) {
+        paramIndex[value.name] = static_cast<int>(key);
+    }
+}
 
-void SynthInterface::invokeLambda(const std::string &name, const ParamDefinition &paramDef) {
+void SynthInterface::invokeLambda(const int name, const ParamDefinition &paramDef) {
     float valToLambda;
     float val;
     val = paramVals[name];
@@ -59,9 +55,19 @@ void SynthInterface::invokeLambda(const std::string &name, const ParamDefinition
     }
 }
 
+int SynthInterface::resolveUPenum(const std::string &name) {
+    auto it = paramIndex.find(name); // Try to find the key
+    if (it != paramIndex.end()) {
+        return it->second; // Key found, return the value
+    } else {
+        return -1; // Return -1 if the key is not found
+    }
+}
+
 void SynthInterface::pushStrParam(const std::string &name, float val) {
-    auto it = paramDefs.find(name); // Look for the parameter in the definitions
-    if (it != paramDefs.end()) {
+    int upEnum = resolveUPenum(name);
+    if (upEnum != -1) {
+        auto it = paramDefs.find(upEnum);             // Look for the parameter in the definitions
         const ParamDefinition &paramDef = it->second; // Get the parameter definition
 
         float snappedVal = val; // Keep original value for non-snapped parameters
@@ -69,19 +75,19 @@ void SynthInterface::pushStrParam(const std::string &name, float val) {
             // Snap value to discrete steps
             snappedVal = round(val * (paramDef.snapSteps - 1.0f)) / (paramDef.snapSteps - 1.0f);
             // std::cout << "snapSteps:" << paramDef.snapSteps << ", snappedVal:" << snappedVal << " paramVal: " << paramVals[name] << std::endl;
-            if (std::abs(snappedVal - paramVals[name]) < (0.9f / paramDef.snapSteps)) {
+            if (std::abs(snappedVal - paramVals[it->first]) < (0.9f / paramDef.snapSteps)) {
                 return;
             }
         }
         // Save the normalized (0-1) value to paramVals
         // maybe omit if automation, but at same time, dsp may read these?
         if (paramDef.snapSteps > 0) {
-            paramVals[name] = snappedVal;
+            paramVals[it->first] = snappedVal;
         } else {
-            paramVals[name] = val;
+            paramVals[it->first] = val;
         }
         // now affect the dsp.
-        invokeLambda(name, paramDef);
+        invokeLambda(it->first, paramDef);
 
     } else {
         std::cerr << "Parameter not found: " << name << "\n";

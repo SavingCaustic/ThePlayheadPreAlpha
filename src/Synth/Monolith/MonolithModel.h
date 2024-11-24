@@ -17,6 +17,31 @@
 namespace Synth::Monolith {
 constexpr int maxKeys = 8; // Maximum number of keys that can be stored in the array to resolve on key-release
 
+enum UP {
+    // think again about the router.. we want the scroller position to be synth-aware, right..
+    // maybe an object makes more sense than a class. Easier to reference..
+    kbd_glide,
+    osc1_detune,
+    osc1_range,
+    osc1_wf,
+    osc1_vol,
+    osc2_detune,
+    osc2_range,
+    osc2_wf,
+    osc2_vol,
+    osc3_detune,
+    osc3_range,
+    osc3_wf,
+    osc3_vol,
+    vca_attack,
+    vca_decay,
+    vca_sustain,
+    vca_fade,
+    vca_release,
+    lfo1_speed,
+    up_count
+};
+
 enum KeyAction {
     NO_ACTION,
     NEW_NOTE,
@@ -40,6 +65,7 @@ class Model : public SynthInterface {
     Model(float *audioBuffer, std::size_t bufferSize);
     // Public methods. These should match interface right (contract)
     void reset() override;
+    void setupParams(int upCount);
 
     // Method to parse MIDI commands
     void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) override;

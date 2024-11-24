@@ -25,6 +25,7 @@ std::string FileDriver::readUserFile(const std::string &filename) {
 
     std::stringstream buffer;
     buffer << file.rdbuf();
+    // std::cout << buffer.str() << std::endl;
     return buffer.str();
 }
 

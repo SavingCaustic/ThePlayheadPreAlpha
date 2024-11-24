@@ -7,82 +7,85 @@
 // ok fancy. we can use this to play with SIMDe
 
 namespace Synth::Sketch {
-constexpr int VOICE_COUNT = 8;
+constexpr int VOICE_COUNT = 16;
 
 // Constructor to accept buffer and size
 Model::Model(float *audioBuffer, std::size_t bufferSize)
     : buffer(audioBuffer), bufferSize(bufferSize) {
-    setupParams(); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
-    SynthInterface::initializeParameters();
+    setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
+    SynthInterface::initParams();
     SynthInterface::setupCCmapping("Sketch");
-    reset();           // setup luts. Must come before voice allocation.
-    voices.reserve(8); // Preallocate memory for 8 voices
+    reset();                     // setup luts. Must come before voice allocation.
+    voices.reserve(VOICE_COUNT); // Preallocate memory for 8 voices
     for (int i = 0; i < VOICE_COUNT; ++i) {
         voices.emplace_back(*this); // Pass reference to Model
     }
 }
 
-void Model::setupParams() {
+void Model::setupParams(int upCount) {
     if (SynthInterface::paramDefs.empty()) {
+        // after declaration, indexation requested, see below..
         SynthInterface::paramDefs = {
-            {"osc1_fmsens", {0.0f, 0, false, 0, 1, [this](float v) {
-                                 fmSens = v;
+            {UP::osc1_fmsens, {"osc1_fmsens", 0.0f, 0, false, 0, 1, [this](float v) {
+                                   fmSens = v;
+                               }}},
+            {UP::osc1_senstrack, {"osc1_senstrack", 0.5f, 0, false, -1, 1, [this](float v) {
+                                      senseTracking = v;
+                                  }}},
+            {UP::osc2_semi, {"osc2_semi", 0.5f, 13, false, -6, 6, [this](float v) {
+                                 semitone = round(v);
                              }}},
-            {"osc1_senstrack", {0.5f, 0, false, -1, 1, [this](float v) {
-                                    senseTracking = v;
-                                }}},
-            {"osc2_semi", {0.5f, 13, false, -6, 6, [this](float v) {
-                               semitone = round(v);
-                           }}},
-            {"osc2_oct", {0.5f, 7, false, -3, 3, [this](float v) {
-                              osc2octave = round(v);
-                          }}},
-            {"osc_mix", {0.5f, 0, false, 0, 1, [this](float v) {
-                             // easer should be at model. skipping easer for now
-                             oscMix = v;
-                         }}},
-            {"vca_attack", {0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
-                                vcaAR.setTime(audio::envelope::ATTACK, v);
-                                std::cout << "setting attack to " << v << " ms" << std::endl;
+            {UP::osc2_oct, {"osc2_oct", 0.5f, 7, false, -3, 3, [this](float v) {
+                                osc2octave = round(v);
                             }}},
-            {"vca_decay", {0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
-                               vcaAR.setTime(audio::envelope::DECAY, v);
-                               std::cout << "setting decay to " << v << " ms" << std::endl;
+            {UP::osc_mix, {"osc_mix", 0.5f, 0, false, 0, 1, [this](float v) {
+                               // easer should be at model. skipping easer for now
+                               oscMix = v;
                            }}},
-            {"vca_sustain", {0.0f, 0, false, 0, 1, [this](float v) {
-                                 vcaAR.setLevel(audio::envelope::SUSTAIN, v);
-                                 std::cout << "setting sustain to " << v << std::endl;
+            {UP::vca_attack, {"vca_attack", 0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
+                                  vcaAR.setTime(audio::envelope::ATTACK, v);
+                                  std::cout << "setting attack to " << v << " ms" << std::endl;
+                              }}},
+            {UP::vca_decay, {"vca_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
+                                 vcaAR.setTime(audio::envelope::DECAY, v);
+                                 std::cout << "setting decay to " << v << " ms" << std::endl;
                              }}},
-            {"vca_fade", {0.0f, 0, false, 0, 1, [this](float v) {
-                              vcaAR.setLeak(audio::envelope::FADE, v);
-                              std::cout << "setting fade to " << v << std::endl;
-                          }}},
-            {"vca_release", {0.3f, 0, true, 10, 8, [this](float v) {
-                                 vcaAR.setTime(audio::envelope::RELEASE, v);
-                                 std::cout << "setting release to " << v << " ms" << std::endl;
-                             }}},
-            {"vcf_type", {0.0f, 3, false, 0, 2, [this](float v) {
-                              // not totally safe but compact:
-                              filter.setFilterType(static_cast<audio::filter::FilterType>(static_cast<int>(v)));
-                              filter.initFilter();
-                          }}},
-            {"vcf_cutoff", {0.5f, 0, true, 50, 8, [this](float v) {
-                                filter.setCutoff(v);
+            {UP::vca_sustain, {"vca_sustain", 0.0f, 0, false, 0, 1, [this](float v) {
+                                   vcaAR.setLevel(audio::envelope::SUSTAIN, v);
+                                   std::cout << "setting sustain to " << v << std::endl;
+                               }}},
+            {UP::vca_fade, {"vca_fade", 0.0f, 0, false, 0, 1, [this](float v) {
+                                vcaAR.setLeak(audio::envelope::FADE, v);
+                                std::cout << "setting fade to " << v << std::endl;
+                            }}},
+            {UP::vca_release, {"vca_release", 0.3f, 0, true, 10, 8, [this](float v) {
+                                   vcaAR.setTime(audio::envelope::RELEASE, v);
+                                   std::cout << "setting release to " << v << " ms" << std::endl;
+                               }}},
+            {UP::vcf_type, {"vcf_type", 0.0f, 3, false, 0, 2, [this](float v) {
+                                // not totally safe but compact:
+                                filter.setFilterType(static_cast<audio::filter::FilterType>(static_cast<int>(v)));
                                 filter.initFilter();
                             }}},
-            {"vcf_resonance", {0.0f, 0, false, 0, 1, [this](float v) {
-                                   filter.setResonance(v);
-                                   filter.initFilter();
-                               }}},
-            {"lfo1_depth", {0.0f, 0, false, 0, 1, [this](float v) {
-                                lfo1Depth = v;
+            {UP::vcf_cutoff, {"vcf_cutoff", 0.5f, 0, true, 50, 8, [this](float v) {
+                                  filter.setCutoff(v);
+                                  filter.initFilter();
+                              }}},
+            {UP::vcf_resonance, {"vcf_resonance", 0.0f, 0, false, 0, 1, [this](float v) {
+                                     filter.setResonance(v);
+                                     filter.initFilter();
+                                 }}},
+            {UP::lfo1_depth, {"lfo1_depth", 0.0f, 0, false, 0, 1, [this](float v) {
+                                  lfo1Depth = v;
+                              }}},
+            {UP::lfo1_vca, {"lfo1_vca", 0.0f, 0, false, 0, 1, [this](float v) {
+                                lfo1vca = v;
                             }}},
-            {"lfo1_vca", {0.0f, 0, false, 0, 1, [this](float v) {
-                              lfo1vca = v;
-                          }}},
-            {"lfo1_speed", {0.0f, 0, true, 100, 9, [this](float v) {
-                                lfo1.setSpeed(v); // in mHz.
-                            }}}};
+            {UP::lfo1_speed, {"lfo1_speed", 0.0f, 0, true, 100, 9, [this](float v) {
+                                  lfo1.setSpeed(v); // in mHz.
+                              }}}};
+        // now reqeuest interface to reverse index.
+        SynthInterface::indexParams(upCount);
     }
 }
 
