@@ -1,6 +1,6 @@
 #pragma once
-
 #include "Synth/SynthInterface.h"
+#include "Synth/SynthParamManager.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
 #include "core/audio/envelope/ADSFR.h"
@@ -38,13 +38,21 @@ enum UP {
 };
 
 class Voice;
-class Model : public SynthInterface {
+class Model : public SynthParamManager, public SynthInterface {
 
   public:
     // Constructor
     Model(float *audioBuffer, std::size_t bufferSize);
     // Public methods. These should match interface right (contract)
     void reset() override;
+
+    nlohmann::json getParamDefsAsJSON() override {
+        return SynthParamManager::getParamDefsAsJson();
+    }
+
+    void pushStrParam(const std::string &name, float val) override {
+        return SynthParamManager::pushStrParam(name, val);
+    }
 
     // Method to parse MIDI commands
     void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) override;
@@ -155,7 +163,7 @@ class Voice {
         constexpr int chunkSize = 16; // Could be adapted to SIMD-capability..
         float oscMix = modelRef.getOscMix();
         modelRef.vcaAR.updateDelta(vcaARslope);
-        float fmAmplitude = tracking * modelRef.fmSens * noteVelocity;
+        float fmAmp = tracking * modelRef.fmSens * noteVelocity;
         float mixAmplitude = noteVelocity * 0.6f;
         if (vcaARslope.state != audio::envelope::OFF) {
             osc2hz = AudioMath::noteToHz(notePlaying + modelRef.semitone + modelRef.osc2octave * 12, modelRef.bendCents);
@@ -164,11 +172,12 @@ class Voice {
             osc1.setAngle(osc1hz);
             vcaEaser.setTarget(vcaARslope.currVal + vcaARslope.gap);
             AudioMath::easeLog2(oscMix, oscMixEaseOut);
+            AudioMath::easeLog2(fmAmp, fmAmpEaseOut);
             for (std::size_t i = 0; i < bufferSize; i += chunkSize) {
                 for (std::size_t j = 0; j < chunkSize; j++) {
                     float y2 = osc2.getNextSample(0);
                     vcaEaserVal = vcaEaser.getValue();
-                    float y1 = osc1.getNextSample(y2 * fmAmplitude * (vcaEaserVal + 0.3f));
+                    float y1 = osc1.getNextSample(y2 * fmAmpEaseOut * (vcaEaserVal + 0.3f));
                     modelRef.addToSample(i + j, ((y1 * (1 - oscMixEaseOut) + y2 * oscMixEaseOut)) * vcaEaserVal * mixAmplitude);
                 }
             }
@@ -197,6 +206,7 @@ class Voice {
   private:
     Model &modelRef; // Use reference to Model
     float oscMixEaseOut = 0;
+    float fmAmpEaseOut = 0;
 };
 
 } // namespace Synth::Subreal

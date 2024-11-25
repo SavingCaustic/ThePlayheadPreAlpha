@@ -126,7 +126,7 @@ class Rack {
     }
 
     std::string getSynthParams() {
-        return synth->getParamDefsAsJson();
+        return synth->getParamDefsAsJSON();
     }
 
     // props

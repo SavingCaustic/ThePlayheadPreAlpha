@@ -11,19 +11,19 @@ constexpr int VOICE_COUNT = 16;
 Model::Model(float *audioBuffer, std::size_t bufferSize)
     : buffer(audioBuffer), bufferSize(bufferSize) {
     setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
-    SynthInterface::initParams();
+    SynthParamManager::initParams();
     SynthInterface::setupCCmapping("Sketch");
     reset();                     // setup luts. Must come before voice allocation.
-    voices.reserve(VOICE_COUNT); // Preallocate memory for 8 voices
+    voices.reserve(VOICE_COUNT); // Preallocate memory for voices
     for (int i = 0; i < VOICE_COUNT; ++i) {
         voices.emplace_back(*this); // Pass reference to Model
     }
 }
 
 void Model::setupParams(int upCount) {
-    if (SynthInterface::paramDefs.empty()) {
+    if (SynthParamManager::paramDefs.empty()) {
         // after declaration, indexation requested, see below..
-        SynthInterface::paramDefs = {
+        SynthParamManager::paramDefs = {
             {UP::osc1_fmsens, {"osc1_fmsens", 0.0f, 0, false, 0, 1, [this](float v) {
                                    fmSens = v;
                                }}},
@@ -83,7 +83,7 @@ void Model::setupParams(int upCount) {
                                   lfo1.setSpeed(v); // in mHz.
                               }}}};
         // now reqeuest interface to reverse index.
-        SynthInterface::indexParams(upCount);
+        SynthParamManager::indexParams(upCount);
     }
 }
 

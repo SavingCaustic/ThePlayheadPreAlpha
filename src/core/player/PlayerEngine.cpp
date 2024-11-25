@@ -155,7 +155,7 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
 
 std::string PlayerEngine::getSynthParams(int rackId) {
     // this shoud really require rack to be non-playing..
-    return this->racks[rackId].synth->getParamDefsAsJson();
+    return this->racks[rackId].synth->getParamDefsAsJSON();
 }
 
 void PlayerEngine::sumToMaster(float *buffer, unsigned long numFrames, int outer) {
@@ -184,6 +184,7 @@ void PlayerEngine::clockResetMethod() {
 }
 
 bool PlayerEngine::pollMidiIn() {
+    int channel; // a hack for multitimbrality..
     MidiMessage newMessage;
     if (this->rackReceivingMidi >= 0) {
         while (midiManager->getNextMessage(newMessage)) {
@@ -191,8 +192,10 @@ bool PlayerEngine::pollMidiIn() {
             if (newMessage.cmd & 0xf0 == 0x90 && newMessage.param2 == 0) {
                 newMessage.cmd -= 0x10;
             }
+            channel = static_cast<int>(newMessage.cmd) & 0x0f;
+            // racks[channel].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
             racks[this->rackReceivingMidi].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
-            // this->sendError(200, "midi recieved");
+            //  this->sendError(200, "midi recieved");
             if (newMessage.cmd == 0x90)
                 sendMessage(1, "synth", newMessage.param1, "note on", "see this? :)");
         }

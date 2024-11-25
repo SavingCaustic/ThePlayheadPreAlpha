@@ -54,6 +54,7 @@ int main() {
             float v = t;
             v = t / 50.0f;
             mySynth.pushStrParam("osc1_wf", v);
+            mySynth.handleMidiCC(74, 0.8);
         }
         u_int8_t note = 40 + ((t * 5) % 26);
         mySynth.parseMidi(0x90, note, 0x70);

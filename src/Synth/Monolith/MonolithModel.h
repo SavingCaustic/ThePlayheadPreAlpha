@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Synth/SynthInterface.h"
+#include "Synth/SynthParamManager.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
 #include "core/audio/envelope/ADSFR.h"
@@ -33,6 +34,7 @@ enum UP {
     osc3_range,
     osc3_wf,
     osc3_vol,
+    osc3_tracking,
     vca_attack,
     vca_decay,
     vca_sustain,
@@ -59,7 +61,7 @@ enum Waveform {
     TOOTHSAW // special for osc3 - replacing kneangle
 };
 
-class Model : public SynthInterface {
+class Model : public SynthParamManager, public SynthInterface {
   public:
     // Constructor
     Model(float *audioBuffer, std::size_t bufferSize);
@@ -67,9 +69,19 @@ class Model : public SynthInterface {
     void reset() override;
     void setupParams(int upCount);
 
+    static std::unordered_map<int, ParamDefinition> SparamDefs;
+    static std::unordered_map<std::string, int> SparamIndex;
+
+    nlohmann::json getParamDefsAsJSON() override {
+        return SynthParamManager::getParamDefsAsJson();
+    }
+
+    void pushStrParam(const std::string &name, float val) override {
+        return SynthParamManager::pushStrParam(name, val);
+    }
+
     // Method to parse MIDI commands
     void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) override;
-    bool pushMyParam(const std::string &name, float val);
 
     // Method to render the next block of audio
     bool renderNextBlock() override;
@@ -100,19 +112,19 @@ class Model : public SynthInterface {
     float lastSample = 0;
     u_int8_t keysPressed[8] = {0}; // 0 = no note
 
-    void initFilter();
+    // void initFilter();
 
-    void applyFilter(float &sample);
+    // void applyFilter(float &sample);
 
-    void applySine(float multiple, float amplitude);
+    // void applySine(float multiple, float amplitude);
 
     // void renderVoice();
 
     void motherboardActions();
 
-    void initializeParameters();
-    // Handle incoming MIDI CC messages
-    void handleMidiCC(uint8_t ccNumber, float value);
+    // void initializeParameters();
+    //  Handle incoming MIDI CC messages
+    // void handleMidiCC(uint8_t ccNumber, float value);
     //
     std::unordered_map<Waveform, std::vector<float>> lutTables[LUT_SIZE];
 
@@ -134,7 +146,7 @@ class Model : public SynthInterface {
     double osc1angle;
     double osc1idx;
     float osc1hz = 440.f;
-    float osc1rangeFactor = 1.0f;
+    int osc1rangeFactor = 1;
     float osc1detune = 0.0f;
     float osc1vol = 0.5f;
     // osc2
@@ -142,15 +154,16 @@ class Model : public SynthInterface {
     double osc2idx;
     float osc2hz = 440.0f;
     float osc2detune = 0.0f;
-    float osc2rangeFactor = 1.0f;
+    int osc2rangeFactor = 1;
     float osc2vol = 0.5f;
     // osc2
     double osc3angle;
     double osc3idx;
     float osc3hz = 440.0f;
     float osc3detune = 0.0f;
-    float osc3rangeFactor = 1.0f;
+    int osc3rangeFactor = 1;
     float osc3vol = 0.5f;
+    float osc3tracking = 1.0f;
 };
 
 } // namespace Synth::Monolith

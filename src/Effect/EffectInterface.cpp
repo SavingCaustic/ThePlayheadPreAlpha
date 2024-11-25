@@ -53,13 +53,6 @@ void EffectInterface::pushStrParam(const std::string &name, float val) {
     }
 }
 
-bool EffectInterface::pushMyParam(const std::string &name, float val) {
-    // when called?
-    std::cout << "i got here" << std::endl;
-    EffectInterface::pushStrParam(name, val);
-    return 0;
-}
-
 // present parameters as json, since there is no file for this in assets..
 nlohmann::json EffectInterface::getParamDefsAsJson() {
     nlohmann::json jsonOutput;

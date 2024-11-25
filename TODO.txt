@@ -1,5 +1,10 @@
 TODO
 ====
+* kunna spara parametrar som patch.
+> och antagligen också settings?
+
+* kunna ladda parametrar som patch.
+
 * Kunna skicka disableRack så att vi kan göra operationer som ladda synth m.m.
 
 * Alright, let's remove stuff from SynthInterface that probably should be in SynthManager?
@@ -18,12 +23,6 @@ Denna är ju synkron. Bara en tråd.
 Så rent generellt, en json fil innehåller "settings" som blir en unsorted_map i ett objekt.
 Vart går settings i device? Globalt objekt.
 
-* kunna spara parametrar som patch.
-klura på logik för att ha både synth- och rack-patches.
-
-* kunna ladda parametrar som patch.
-
-* mjuka övergångar - delta för parametrar. Registreras vid compile-time.
 
 
 
@@ -42,6 +41,8 @@ klura på logik för att ha både synth- och rack-patches.
 
 
 FIXAT:
+* mjuka övergångar - delta för parametrar. Registreras vid compile-time.
+
 * ugh.. Hur göra med allt detta med Rack, units. Untis som kanske används någon annanstans.
 CC-mapping inte spec. relevant. kontrollerns knyts till thePlayhead. spec av scroller.
 Och hur göra med MidiCC som kan användas av både synth och effekt. Viktigt att mapping finns på rack.

@@ -25,7 +25,6 @@ class Model : public EffectInterface {
 
     // Method to parse MIDI commands
     void parseMidi(char cmd, char param1, char param2) override;
-    bool pushMyParam(const std::string &name, float val);
 
     // Method to render the next block of audio
     bool renderNextBlock() override;

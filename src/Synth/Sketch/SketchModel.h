@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Synth/SynthInterface.h"
+#include "Synth/SynthParamManager.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
 #include "core/audio/envelope/ADSFR.h"
@@ -38,13 +39,21 @@ enum UP {
 };
 
 class Voice;
-class Model : public SynthInterface {
+class Model : public SynthParamManager, public SynthInterface {
 
   public:
     // Constructor
     Model(float *audioBuffer, std::size_t bufferSize);
     // Public methods. These should match interface right (contract)
     void reset() override;
+
+    nlohmann::json getParamDefsAsJSON() override {
+        return SynthParamManager::getParamDefsAsJson();
+    }
+
+    void pushStrParam(const std::string &name, float val) override {
+        return SynthParamManager::pushStrParam(name, val);
+    }
 
     // Method to parse MIDI commands
     void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) override;
@@ -112,80 +121,30 @@ class Voice {
     // pass reference to model so we can use AR there. The voice has the ARslope.
   public:
     // Constructor initializes modelRef and LUTs for oscillators
-    Voice(Model &model)
-        : modelRef(model),
-          osc1(model.getLUT1()), // Initialize osc1 with LUT from model
-          osc2(model.getLUT2())  // Initialize osc2 with LUT from model
-    {
-        reset();
-    }
+    Voice(Model &model);
 
-    void reset() {
-        // Called on setup
-        notePlaying = 255; // unsigned byte. best like this..
-    }
+    void reset();
 
-    void noteOn(uint8_t midiNote, float velocity) {
-        // requested from voiceAllocate. maybe refactor..
-        notePlaying = midiNote;
-        noteVelocity = velocity;
-        tracking = fmax(0, (2.0f + modelRef.senseTracking * AudioMath::noteToFloat(notePlaying) * 7));
-        modelRef.vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_ON);
-    }
+    void noteOn(uint8_t midiNote, float velocity);
 
-    void noteOff() {
-        // enter release state in all envelopes.
-        modelRef.vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_OFF);
-    }
+    void noteOff();
 
     audio::envelope::ADSFRState getVCAstate() {
         return vcaARslope.state;
     }
 
-    float getVCALevel() {
-        return vcaARslope.currVal;
-    }
+    float getVCALevel();
 
-    bool checkVoiceActive() {
-        return vcaARslope.state != audio::envelope::ADSFRState::OFF;
-    }
+    bool checkVoiceActive();
 
-    bool renderNextVoiceBlock(std::size_t bufferSize) {
-        float osc1hz, osc2hz;
-        constexpr int chunkSize = 16; // Could be adapted to SIMD-capability..
-        float oscMix = modelRef.getOscMix();
-        modelRef.vcaAR.updateDelta(vcaARslope);
-        float fmAmplitude = tracking * modelRef.fmSens * noteVelocity;
-        float mixAmplitude = noteVelocity * 0.6f;
-        if (vcaARslope.state != audio::envelope::OFF) {
-            osc2hz = AudioMath::noteToHz(notePlaying + modelRef.semitone + modelRef.osc2octave * 12, modelRef.bendCents);
-            osc2.setAngle(osc2hz);
-            osc1hz = AudioMath::noteToHz(notePlaying, modelRef.bendCents);
-            osc1.setAngle(osc1hz);
-            vcaEaser.setTarget(vcaARslope.currVal + vcaARslope.gap);
-            AudioMath::easeLog2(oscMix, oscMixEaseOut);
-            for (std::size_t i = 0; i < bufferSize; i += chunkSize) {
-                for (std::size_t j = 0; j < chunkSize; j++) {
-                    float y2 = osc2.getNextSample(0);
-                    vcaEaserVal = vcaEaser.getValue();
-                    float y1 = osc1.getNextSample(y2 * fmAmplitude * (vcaEaserVal + 0.3f));
-                    modelRef.addToSample(i + j, ((y1 * (1 - oscMixEaseOut) + y2 * oscMixEaseOut)) * vcaEaserVal * mixAmplitude);
-                }
-            }
-            modelRef.vcaAR.commit(vcaARslope);
-        } else {
-            // Remove voice from playing
-            // maybe use return-type
-        }
-        return true;
-    }
+    bool renderNextVoiceBlock(std::size_t bufferSize);
 
     uint8_t notePlaying;
+    audio::envelope::Slope vcaARslope;
 
   protected:
     audio::osc::LUTosc osc1;
     audio::osc::LUTosc osc2;
-    audio::envelope::Slope vcaARslope;
     audio::misc::Easer oscMixEaser;
     audio::misc::Easer vcaEaser;
     float noteVelocity;
@@ -197,6 +156,7 @@ class Voice {
   private:
     Model &modelRef; // Use reference to Model
     float oscMixEaseOut = 0;
+    float fmAmpEaseOut = 0;
 };
 
 } // namespace Synth::Sketch
