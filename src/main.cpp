@@ -79,18 +79,18 @@ int main() {
     // initialize
     deviceSettings["buffer_size"] = "64"; // set in three places now. here, device.json and where matters - constants.cpp
     deviceSettings["audio_sr"] = "48000";
-    deviceSettings["audio_device"] = "1";
+    deviceSettings["audio_device"] = "default";
     deviceSettings["midi_device"] = "1";
     deviceSettings["http_port"] = "18080";
     deviceSettings["scroller_cc"] = "84";
     deviceSettings["scroller_dials"] = "1,2,3,4,5,6,7";
 
-    // Load settings from JSON and override default settings
+    SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
 
     // Kickstart the StudioRunner (low-priority job scheduler)
+    sStudioRunner.updateSetting("audio_device", deviceSettings["audio_device"]);
     sStudioRunner.start();
 
-    SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
     // this could be and endpoint..
     //  now what playerEngine is initiated, setup the callback.
     unsigned long framesPerBuffer = static_cast<unsigned long>(std::stoi(deviceSettings["buffer_size"]));

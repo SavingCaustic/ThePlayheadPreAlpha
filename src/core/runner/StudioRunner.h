@@ -12,7 +12,17 @@ class StudioRunner {
   public:
     StudioRunner(MidiManager &midiManagerRef, AudioManager &audioManagerRef)
         : running(false), runnerThread(nullptr), runnerCounter(0),
-          midiManager(midiManagerRef), audioManager(audioManagerRef) {}
+          midiManager(midiManagerRef), audioManager(audioManagerRef) {
+        reset();
+    }
+
+    void reset() {
+        settings["audio_device"] = "default";
+    }
+
+    void updateSetting(std::string key, std::string val) {
+        settings[key] = val;
+    }
 
     // Starts the thread
     void start() {
@@ -41,6 +51,7 @@ class StudioRunner {
     int runnerCounter;
     MidiManager &midiManager; // Store MidiManager by reference
     AudioManager &audioManager;
+    std::unordered_map<std::string, std::string> settings;
 
     // Assisting thread function that performs preparations and housekeeping
     void run() {
@@ -99,13 +110,22 @@ class StudioRunner {
 
     int audioHotPlugScan() {
         // Get list of available device IDs and names
-        std::string preferredDeviceName = "jack"; // This is the name we look for, we should get this from device.json really
+        // hey, i'm the StudioRunner. I need some knowledge about settings. Who feeds me?
+        std::string preferredDeviceName = settings["audio_device"]; // This is the name we look for, we should get this from device.json really
         std::vector<AudioDeviceInfo> availableDevices = audioManager.getAvailableDevices();
         int mountedDeviceID = audioManager.getMountedDeviceID();
-
-        // There's something not working all the way with the audio hotplugging but i need to move on now.
-
-        // Find the ID of the preferred device by name
+        // debug stuff here..
+        /*
+        std::cout << "prefered device is " << preferredDeviceName << std::endl;
+        std::cout << "mountedDeviceID is " << mountedDeviceID << std::endl;
+        std::cout << "list of available devices:" << std::endl;
+        // Use a range-based for loop
+        for (const AudioDeviceInfo &dr : availableDevices) {
+            std::cout << dr.name << std::endl; // Assuming AudioDeviceInfo has a 'first' member
+        }
+        */
+        // TOFIX: maybe something here left to look at..
+        //  Find the ID of the preferred device by name
         int preferredDeviceID = -1;
         for (const auto &device : availableDevices) {
             if (device.name == preferredDeviceName) {
