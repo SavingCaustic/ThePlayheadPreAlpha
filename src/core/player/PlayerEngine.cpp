@@ -2,10 +2,8 @@
 #include "ErrorWriter.h"
 
 PlayerEngine::PlayerEngine()
-    : noiseVolume(0.2f), // Other initializations
-      isWritingMessage(false),
-      hRotator(),
-      errorWriter_(*this) {
+    : noiseVolume(0.2f), isWritingMessage(false), hRotator(), errorWriter_(*this) {
+    this->rackReceivingMidi = 0;
     this->loadAvg = 0.0f;
 }
 
@@ -81,13 +79,12 @@ void PlayerEngine::sendError(int code, const std::string &message) {
 
 bool PlayerEngine::loadSynth(SynthBase *synth, int rackID) {
     // Delegate synth setup to the rack
-    this->rackReceivingMidi = 0;
     return racks[rackID].setSynth(synth);
 }
 
 bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) {
     // Check if the rack already exists
-    racks[rackId].setSynth(synthName);
+    racks[rackId].setSynthFromStr(synthName);
     sendError(200, "real audio error hello");
     //   Now, setup the synth for the rack
     // racks[rackId].setEffect("Delay"); // Chorus
@@ -192,17 +189,18 @@ void PlayerEngine::clockResetMethod() {
 bool PlayerEngine::pollMidiIn() {
     int channel; // a hack for multitimbrality..
     MidiMessage newMessage;
+    this->rackReceivingMidi = 0;
     if (this->rackReceivingMidi >= 0) {
         while (midiManager->getNextMessage(newMessage)) {
             // here, recover note-on with vel 0 to note off.
             if (newMessage.cmd & 0xf0 == 0x90 && newMessage.param2 == 0) {
                 newMessage.cmd -= 0x10;
             }
-            std::cout << "ok, note on" << std::endl;
+            // std::cout << "ok, note on" << std::endl;
             channel = static_cast<int>(newMessage.cmd) & 0x0f;
             // racks[channel].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
             racks[this->rackReceivingMidi].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
-            //  this->sendError(200, "midi recieved");
+            //    this->sendError(200, "midi recieved");
             if (newMessage.cmd == 0x90)
                 sendMessage(1, "synth", newMessage.param1, "note on", "see this? :)");
         }

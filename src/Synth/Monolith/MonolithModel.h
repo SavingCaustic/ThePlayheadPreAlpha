@@ -15,6 +15,8 @@
 #include <string>
 #include <unordered_map>
 
+using json = nlohmann::json;
+
 namespace Synth::Monolith {
 constexpr int maxKeys = 8; // Maximum number of keys that can be stored in the array to resolve on key-release
 
@@ -73,7 +75,7 @@ class Model : public SynthBase {
     static std::unordered_map<int, ParamDefinition> SparamDefs;
     static std::unordered_map<std::string, int> SparamIndex;
 
-    nlohmann::json getParamDefsAsJSON() override {
+    json getParamDefsAsJSON() override {
         return SynthBase::getParamDefsAsJson();
     }
 

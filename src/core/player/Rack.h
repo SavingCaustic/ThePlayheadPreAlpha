@@ -4,7 +4,7 @@
 #include "Effect/Delay/DelayModel.h"
 #include "Synth/Monolith/MonolithModel.h"
 // #include "Synth/Sketch/SketchModel.h"
-// #include "Synth/Subreal/SubrealModel.h"
+#include "Synth/Subreal/SubrealModel.h"
 #include "core/player/ErrorWriter.h"
 //
 #include "Synth/SynthBase.h"
@@ -185,7 +185,7 @@ class Rack {
         return synth != nullptr;
     }
 
-    bool setSynth(const std::string &synthName) {
+    bool setSynthFromStr(const std::string &synthName) {
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
         bool loadOK = true;
@@ -199,7 +199,8 @@ class Rack {
             synth->bindBuffers(audioBuffer.data(), audioBuffer.size());
             break;
         case SynthType::Subreal:
-            // synth = new Synth::Subreal::Model(audioBuffer.data(), audioBuffer.size());
+            synth = new Synth::Subreal::Model();
+            synth->bindBuffers(audioBuffer.data(), audioBuffer.size());
             break;
         case SynthType::Sketch:
             // synth = new Synth::Sketch::Model(audioBuffer.data(), audioBuffer.size());

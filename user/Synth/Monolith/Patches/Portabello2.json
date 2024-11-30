@@ -1,0 +1,20 @@
+{
+    "params": {
+        "lfo1_depth": 0.0,
+        "lfo1_speed": 0.0,
+        "lfo1_vca": 0.0,
+        "osc1_fmsens": 0.0,
+        "osc1_senstrack": 0.5,
+        "osc2_oct": 0.5,
+        "osc2_semi": 0.5,
+        "osc_mix": 0.5,
+        "vca_attack": 0.10000000149011612,
+        "vca_decay": 0.5,
+        "vca_fade": 0.0,
+        "vca_release": 0.30000001192092896,
+        "vca_sustain": 0.0,
+        "vcf_cutoff": 0.5,
+        "vcf_resonance": 0.0,
+        "vcf_type": 0.0
+    }
+}

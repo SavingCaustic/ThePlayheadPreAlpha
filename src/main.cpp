@@ -116,10 +116,16 @@ int main() {
         sPlayerEngine.setupRackWithSynth(0, "Monolith");
     } else {
         SynthBase *synth = nullptr;
-        SynthFactory::setupSynth(synth, "Monolith");
-        SynthFactory::patchLoad(synth, "Portabello");
+        SynthFactory::setupSynth(synth, "Subreal");
         sPlayerEngine.loadSynth(synth, 0);
-        // synth->parseMidi(0x90, 0x40, 0x70);
+        // synth->parseMidi(0x90, 0x40, 0x050);
+        //  set up another synth..
+        /*        SynthBase *synth2 = nullptr;
+                SynthFactory::setupSynth(synth2, "Monolith");
+                SynthFactory::patchLoad(synth2, "Portabello");
+                sPlayerEngine.loadSynth(synth2, 1); */
+        // synth2->parseMidi(0x90, 0x44, 0x050);
+        //   set up another synth..
     }
     sStudioRunner.start();
     //

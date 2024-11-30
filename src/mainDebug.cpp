@@ -115,14 +115,22 @@ int main() {
     sPlayerEngine.initializeRacks();
 
     // this should go, but debugging now..
-    sPlayerEngine.setupRackWithSynth(0, "Monolith");
+    // sPlayerEngine.setupRackWithSynth(0, "Monolith");
 
     // faking setting up synth here. Queue to be added later.
     SynthBase *synth = nullptr;
-    SynthFactory::setupSynth(synth, "Monolith");
-    SynthFactory::patchLoad(synth, "Portabello");
-    // now crash
-    sPlayerEngine.loadSynth(synth, 1);
+    // SynthFactory::setupSynth(synth, "Monolith");
+    // SynthFactory::patchLoad(synth, "Portabello");
+    SynthFactory::setupSynth(synth, "Subreal");
+    sPlayerEngine.loadSynth(synth, 0);
+    // set up another synth..
+    // SynthFactory::setupSynth(synth, "Monolith");
+    /*SynthBase *synth2 = nullptr;
+    SynthFactory::setupSynth(synth2, "Monolith");
+    SynthFactory::patchLoad(synth2, "Portabello");
+    sPlayerEngine.loadSynth(synth2, 1); */
+    // some testing....
+    SynthFactory::patchSave(synth, "Portabello2");
 
     sPlayerEngine.renderNextBlock(audioBuffer, bufferSize);
 

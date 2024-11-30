@@ -1,6 +1,8 @@
 #include <./MonolithModel.h>
 #include <Synth/SynthAdminUtility.h>
 
+// meh.. maybe this should be called MonolithFactory.
+
 namespace Synth::Monolith {
 class MonolithAdmin : public SynthAdminUtility {
   public:
@@ -20,4 +22,4 @@ class MonolithAdmin : public SynthAdminUtility {
         return "Monolith-specific parameter string";
     }
 };
-}
+} // namespace Synth::Monolith

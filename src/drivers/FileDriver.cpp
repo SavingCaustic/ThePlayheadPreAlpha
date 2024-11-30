@@ -1,5 +1,6 @@
 #include "FileDriver.h"
 #include "constants.h" // Include path constants
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -30,19 +31,34 @@ std::string FileDriver::readUserFile(const std::string &filename) {
 }
 
 bool FileDriver::writeUserFile(const std::string &filename, const std::string &content) {
-    std::ofstream file(std::string(USER_DIRECTORY) + "/" + filename);
-    if (!file.is_open()) {
-        std::cerr << "Error opening file for writing: " << filename << " in /user directory." << std::endl;
+    try {
+        // Step 1: Construct the full path to the file
+        std::string fullPath = std::string(USER_DIRECTORY) + "/" + filename;
+
+        // Step 2: Extract the directory path
+        std::filesystem::path filePath(fullPath);
+        std::filesystem::path dirPath = filePath.parent_path();
+
+        // Step 3: Create the directories if they don't exist
+        if (!std::filesystem::exists(dirPath)) {
+            std::filesystem::create_directories(dirPath);
+        }
+
+        // Step 4: Open the file and write the content
+        std::ofstream file(fullPath);
+        if (!file.is_open()) {
+            std::cerr << "Error opening file for writing: " << filename << " in /user directory." << std::endl;
+            return false;
+        }
+
+        file << content;
+        file.close();
+        return true;
+
+    } catch (const std::exception &e) {
+        std::cerr << "Error: Exception occurred while writing file. Exception: " << e.what() << std::endl;
         return false;
     }
-
-    file << content;
-    if (!file) {
-        std::cerr << "Error writing to file: " << filename << std::endl;
-        return false;
-    }
-
-    return true;
 }
 
 // these was in main..

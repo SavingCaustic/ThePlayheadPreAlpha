@@ -19,6 +19,7 @@ class SynthBase : public SynthInterface {
     void invokeLambda(const int name, const ParamDefinition &paramDef);
 
     int resolveUPenum(const std::string &name);
+    std::string resolveUPname(const int paramID);
 
     // this could be private.. ehh? called from rack
     void bindBuffers(float *audioBuffer, std::size_t bufferSize);

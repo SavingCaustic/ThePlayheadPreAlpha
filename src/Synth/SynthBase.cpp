@@ -66,6 +66,18 @@ int SynthBase::resolveUPenum(const std::string &name) {
     }
 }
 
+std::string SynthBase::resolveUPname(const int paramID) {
+    // Check if the parameter ID exists in paramDefs
+    auto it = paramDefs.find(paramID);
+    if (it != paramDefs.end()) {
+        // Return the name field of the parameter definition
+        return it->second.name;
+    }
+
+    // If not found, return an empty string
+    return "";
+}
+
 void SynthBase::pushStrParam(const std::string &name, float val) {
     int upEnum = resolveUPenum(name);
     if (upEnum != -1) {

@@ -1,6 +1,6 @@
 #pragma once
+#include "Synth/SynthBase.h"
 #include "Synth/SynthInterface.h"
-#include "Synth/SynthParamManager.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
 #include "core/audio/envelope/ADSFR.h"
@@ -14,6 +14,8 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+
+using json = nlohmann::json;
 
 namespace Synth::Subreal {
 
@@ -38,7 +40,7 @@ enum UP {
 };
 
 class Voice;
-class Model : public SynthParamManager, public SynthInterface {
+class Model : public SynthBase {
 
   public:
     // Constructor
@@ -47,12 +49,12 @@ class Model : public SynthParamManager, public SynthInterface {
     void reset() override;
     void bindBuffers(float *audioBuffer, std::size_t bufferSize);
 
-    nlohmann::json getParamDefsAsJSON() override {
-        return SynthParamManager::getParamDefsAsJson();
+    json getParamDefsAsJSON() override {
+        return SynthBase::getParamDefsAsJson();
     }
 
     void pushStrParam(const std::string &name, float val) override {
-        return SynthParamManager::pushStrParam(name, val);
+        return SynthBase::pushStrParam(name, val);
     }
 
     // Method to parse MIDI commands

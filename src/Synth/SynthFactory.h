@@ -1,10 +1,10 @@
 #pragma once
 #include "Synth/Monolith/MonolithModel.h"
+#include "Synth/Subreal/SubrealModel.h"
 #include <Synth/SynthBase.h>
 #include <drivers/FileDriver.h>
 #include <nlohmann/json.hpp> // Include the JSON library
 // #include "Synth/Sketch/SketchModel.h"
-// #include "Synth/Subreal/SubrealModel.h"
 
 using json = nlohmann::json;
 
@@ -46,7 +46,7 @@ class SynthFactory {
             newSynth = new Synth::Monolith::Model(); // audioBuffer.data(), audioBuffer.size());
             break;
         case SynthType::Subreal:
-            // synth = new Synth::Subreal::Model(audioBuffer.data(), audioBuffer.size());
+            newSynth = new Synth::Subreal::Model(); // audioBuffer.data(), audioBuffer.size());
             break;
         case SynthType::Sketch:
             // synth = new Synth::Sketch::Model(audioBuffer.data(), audioBuffer.size());
@@ -114,6 +114,48 @@ class SynthFactory {
 
         } catch (const std::exception &e) {
             std::cerr << "Error: Failed to parse patch file. Exception: " << e.what() << std::endl;
+            return false;
+        }
+    }
+
+    static bool patchSave(SynthBase *synth, const std::string &patchName) {
+        try {
+            // Step 1: Create a JSON object
+            json patchData;
+
+            // Step 2: Add the "params" object
+            json paramsJson;
+
+            for (size_t i = 0; i < synth->paramVals.size(); ++i) {
+                // Step 2.1: Resolve the parameter enum to its name
+                std::string paramName = synth->resolveUPname(i);
+                if (paramName.empty()) {
+                    std::cerr << "Warning: Parameter ID " << i << " has no associated name. Skipping." << std::endl;
+                    continue;
+                }
+
+                // Step 2.2: Add the parameter to the JSON object
+                paramsJson[paramName] = synth->paramVals[i];
+            }
+
+            // Step 3: Add paramsJson to patchData
+            patchData["params"] = paramsJson;
+
+            // Step 4: Convert the JSON object to a string
+            std::string jsonString = patchData.dump(4); // 4 spaces for pretty printing
+
+            // Step 5: Write the JSON string to a file
+            std::string filename = "/Synth/Monolith/Patches/" + patchName + ".json";
+            if (!FileDriver::writeUserFile(filename, jsonString)) {
+                std::cerr << "Error: Failed to write patch file to " << filename << std::endl;
+                return false;
+            }
+
+            std::cout << "Patch saved successfully to " << filename << std::endl;
+            return true;
+
+        } catch (const std::exception &e) {
+            std::cerr << "Error: Exception occurred while saving patch. Exception: " << e.what() << std::endl;
             return false;
         }
     }
