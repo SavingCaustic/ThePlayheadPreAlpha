@@ -16,6 +16,7 @@ class SynthInterface {
     virtual bool renderNextBlock() = 0;                                      // Process the next audio block
     virtual void pushStrParam(const std::string &name, float val) = 0;
     virtual nlohmann::json getParamDefsAsJSON() = 0;
+    virtual void bindBuffers(float *audioBuffer, std::size_t bufferSize) = 0;
 
     // non virtual (Base methods)
     void setupCCmapping(const std::string &synthName);
@@ -34,7 +35,7 @@ class SynthInterface {
     // belonging to class, not instance
     // belonging to instance, because they may be overridden by patch settings.
     std::unordered_map<int, std::string> ccMappings; // MIDI CC -> parameter name mappings
-
-  private:
     ErrorWriter *errorWriter_ = nullptr;
+    float *buffer;          // Pointer to audio buffer
+    std::size_t bufferSize; // Size of the audio buffer
 };

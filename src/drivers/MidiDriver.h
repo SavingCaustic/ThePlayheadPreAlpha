@@ -91,7 +91,6 @@ class MidiDriver {
         if (next_write == bufferReadIndex.load(std::memory_order_acquire)) {
             return false; // Buffer is full
         }
-
         buffer[current_write] = message;
         bufferWriteIndex.store(next_write, std::memory_order_release);
         return true;

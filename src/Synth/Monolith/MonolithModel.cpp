@@ -20,15 +20,15 @@ namespace Synth::Monolith {
 // Constructor to accept buffer and size
 Model::Model() {
     setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
-    SynthInstance::initParams();
+    SynthBase::initParams();
 
     SynthInterface::setupCCmapping("Monolith");
     reset();
 }
 
 void Model::setupParams(int upCount) {
-    if (SynthInstance::paramDefs.empty()) {
-        SynthInstance::paramDefs = {
+    if (SynthBase::paramDefs.empty()) {
+        SynthBase::paramDefs = {
             {kbd_glide, {"kbd_glide", 0.5f, 0, true, 1, 10, [this](float v) {
                              portamentoAlpha = 1 - (1.0f / v);
                              // trust the interface to resolve sendError
@@ -86,6 +86,7 @@ void Model::setupParams(int upCount) {
                             osc3vol = (v - 10) * (1.0f / 2550.0f);
                         }}},
             {vca_attack, {"vca_attack", 0.0f, 0, true, 2, 11, [this](float v) { // 8192 max
+                              logErr(100, "setting attack to " + std::to_string(v));
                               vcaAR.setTime(audio::envelope::ATTACK, v);
                           }}},
             {vca_decay, {"vca_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
@@ -104,7 +105,7 @@ void Model::setupParams(int upCount) {
                               lfo1.setSpeed(v); // in mHz.
                           }}}};
         // important stuff..
-        SynthInstance::indexParams(upCount);
+        SynthBase::indexParams(upCount);
     }
 }
 
@@ -300,7 +301,12 @@ bool Model::renderNextBlock() {
             buffer[i] = 0;
         }
     }
-
+    // debugging
+    if (false) {
+        for (std::size_t i = 0; i < bufferSize; i++) {
+            buffer[i] += static_cast<float>(i / 64.0f) * 0.02f - 0.01f;
+        }
+    }
     motherboardActions();
     return false; // mono
 }

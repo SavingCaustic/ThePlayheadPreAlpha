@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Synth/SynthInstance.h"
+#include "Synth/SynthBase.h"
+#include "Synth/SynthInterface.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
 #include "core/audio/envelope/ADSFR.h"
@@ -60,10 +61,11 @@ enum Waveform {
     TOOTHSAW // special for osc3 - replacing kneangle
 };
 
-class Model : public SynthInstance {
+class Model : public SynthBase {
   public:
     // Constructor
     Model();
+
     // Public methods. These should match interface right (contract)
     void reset() override;
     void setupParams(int upCount);
@@ -72,11 +74,11 @@ class Model : public SynthInstance {
     static std::unordered_map<std::string, int> SparamIndex;
 
     nlohmann::json getParamDefsAsJSON() override {
-        return SynthInstance::getParamDefsAsJson();
+        return SynthBase::getParamDefsAsJson();
     }
 
     void pushStrParam(const std::string &name, float val) override {
-        return SynthInstance::pushStrParam(name, val);
+        return SynthBase::pushStrParam(name, val);
     }
 
     // Method to parse MIDI commands

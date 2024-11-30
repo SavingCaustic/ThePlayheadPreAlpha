@@ -1,3 +1,5 @@
+#include "Synth/SynthBase.h"
+#include "Synth/SynthFactory.h"
 #include "api/endpointsCrow.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
@@ -89,7 +91,8 @@ int main() {
 
     // Kickstart the StudioRunner (low-priority job scheduler)
     sStudioRunner.updateSetting("audio_device", deviceSettings["audio_device"]);
-    sStudioRunner.start();
+    // postpone this so we wait with the audio-thread..
+    // sStudioRunner.start();
 
     // this could be and endpoint..
     //  now what playerEngine is initiated, setup the callback.
@@ -108,10 +111,17 @@ int main() {
     sErrorHandler.start();
     sPlayerEngine.initializeRacks();
 
-    sPlayerEngine.setupRackWithSynth(0, "Monolith");
-    // sPlayerEngine.setupRackWithSynth(1, "Monolith");
-
-    // AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
+    // this should go, but debugging now..
+    if (false) {
+        sPlayerEngine.setupRackWithSynth(0, "Monolith");
+    } else {
+        SynthBase *synth = nullptr;
+        SynthFactory::setupSynth(synth, "Monolith");
+        SynthFactory::patchLoad(synth, "Portabello");
+        sPlayerEngine.loadSynth(synth, 0);
+        // synth->parseMidi(0x90, 0x40, 0x70);
+    }
+    sStudioRunner.start();
     //
     crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
     int httpPort = std::stoi(deviceSettings["http_port"]);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Synth/SynthBase.h"
 #include "core/errors/AudioErrorBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutBuffer.h"
@@ -39,6 +40,8 @@ class PlayerEngine {
     float getLoadAvg();
 
     std::string getSynthParams(int rackId);
+
+    bool loadSynth(SynthBase *synth, int rackID);
 
     bool setupRackWithSynth(int rackId, const std::string &synthName);
     // R    bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);

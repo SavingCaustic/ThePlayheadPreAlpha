@@ -1,4 +1,4 @@
-#include "SynthInstance.h"
+#include "SynthBase.h"
 #include "core/audio/AudioMath.h"
 
 // Define the static members - shared across instances
@@ -6,12 +6,7 @@
 // std::unordered_map<int, ParamDefinition> SynthInstance::paramDefs;
 // std::unordered_map<std::string, int> SynthInstance::paramIndex;
 
-void SynthInstance::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
-    this->buffer = audioBuffer;
-    this->bufferSize = bufferSize;
-}
-
-void SynthInstance::initParams() {
+void SynthBase::initParams() {
     float valToLambda;
     for (const auto &[key, def] : paramDefs) {
         paramVals[key] = def.defaultValue;
@@ -19,14 +14,27 @@ void SynthInstance::initParams() {
     }
 }
 
-void SynthInstance::indexParams(const int upCount) {
+void SynthBase::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
+    this->buffer = audioBuffer;
+    this->bufferSize = bufferSize;
+}
+
+void SynthBase::pushAllParams() {
+    float valToLambda;
+    for (const auto &[key, def] : paramDefs) {
+        // paramVals[key] = def.defaultValue;
+        invokeLambda(key, def);
+    }
+}
+
+void SynthBase::indexParams(const int upCount) {
     paramIndex.reserve(upCount);
-    for (const auto &[key, value] : SynthInstance::paramDefs) {
+    for (const auto &[key, value] : SynthBase::paramDefs) {
         paramIndex[value.name] = static_cast<int>(key);
     }
 }
 
-void SynthInstance::invokeLambda(const int name, const ParamDefinition &paramDef) {
+void SynthBase::invokeLambda(const int name, const ParamDefinition &paramDef) {
     float valToLambda;
     float val;
     val = paramVals[name];
@@ -49,7 +57,7 @@ void SynthInstance::invokeLambda(const int name, const ParamDefinition &paramDef
     }
 }
 
-int SynthInstance::resolveUPenum(const std::string &name) {
+int SynthBase::resolveUPenum(const std::string &name) {
     auto it = paramIndex.find(name); // Try to find the key
     if (it != paramIndex.end()) {
         return it->second; // Key found, return the value
@@ -58,7 +66,7 @@ int SynthInstance::resolveUPenum(const std::string &name) {
     }
 }
 
-void SynthInstance::pushStrParam(const std::string &name, float val) {
+void SynthBase::pushStrParam(const std::string &name, float val) {
     int upEnum = resolveUPenum(name);
     if (upEnum != -1) {
         auto it = paramDefs.find(upEnum);             // Look for the parameter in the definitions
@@ -90,7 +98,7 @@ void SynthInstance::pushStrParam(const std::string &name, float val) {
 
 // present parameters as json, since there is no file for this in assets..
 // why? Because frontend would like it.. endpoint in test.
-nlohmann::json SynthInstance::getParamDefsAsJson() {
+nlohmann::json SynthBase::getParamDefsAsJson() {
     nlohmann::json jsonOutput;
     // Iterate over parameterDefinitions and create a JSON object
     for (const auto &[paramName, paramDef] : paramDefs) {

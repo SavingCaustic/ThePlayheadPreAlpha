@@ -1,10 +1,12 @@
 #pragma once
-#include <Synth/SynthInstance.h>
-#include <drivers/FileDriver.h>
-
 #include "Synth/Monolith/MonolithModel.h"
+#include <Synth/SynthBase.h>
+#include <drivers/FileDriver.h>
+#include <nlohmann/json.hpp> // Include the JSON library
 // #include "Synth/Sketch/SketchModel.h"
 // #include "Synth/Subreal/SubrealModel.h"
+
+using json = nlohmann::json;
 
 enum class SynthType {
     Monolith,
@@ -28,11 +30,11 @@ class SynthFactory {
         return SynthType::Unknown;
     }
 
-    static bool setupSynth(SynthInstance *&newSynth, const std::string &synthName) {
+    static bool setupSynth(SynthBase *&newSynth, const std::string &synthName) {
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
 
-        // Clean up old synth if any
+        // Clean up old synth if any, should probably not be done here..
         if (newSynth) {
             delete newSynth;
             newSynth = nullptr;
@@ -63,15 +65,56 @@ class SynthFactory {
         return (loadOK);*/
     }
 
-    static bool patchLoad(SynthInstance *&synth, std::string patchName) {
-        // get the file from file system..
+    static bool patchLoad(SynthBase *&synth, std::string patchName) {
+        // step 0: start out with default values:
+        synth->initParams();
+
+        // Step 1: Get the file from the file system
         std::string s = FileDriver::readAssetFile("/Synth/Monolith/Patches/" + patchName + ".json");
-        std::cout << s << std::endl;
-        // load the params and settings
+        if (s.empty()) {
+            std::cerr << "Error: Patch file not found or empty." << std::endl;
+            return false;
+        }
 
-        // first run settings?
+        try {
+            // Step 2: Parse the JSON string
+            json patchData = json::parse(s);
 
-        // run init for params.
-        return true;
+            // Step 3: Check if "params" exists and is an object
+            if (!patchData.contains("params") || !patchData["params"].is_object()) {
+                std::cerr << "Error: Invalid patch format (missing 'params')." << std::endl;
+                return false;
+            }
+
+            // Step 4: Iterate over the key-value pairs in "params"
+            for (const auto &[key, value] : patchData["params"].items()) {
+                // Ensure value is a number (or convert if necessary)
+                if (!value.is_number()) {
+                    std::cerr << "Warning: Parameter " << key << " has a non-numeric value. Skipping." << std::endl;
+                    continue;
+                }
+
+                float paramValue = value.get<float>();
+
+                // Step 5: Resolve the parameter name to its enum/int value
+                int paramEnum = synth->resolveUPenum(key);
+                if (paramEnum == -1) {
+                    std::cerr << "Warning: Parameter " << key << " not recognized. Skipping." << std::endl;
+                    continue;
+                }
+
+                // Step 6: Update the parameter value in paramVals
+                synth->paramVals[paramEnum] = paramValue;
+            }
+            // now push all params to dsp.
+            synth->pushAllParams();
+
+            std::cout << "Patch loaded successfully." << std::endl;
+            return true;
+
+        } catch (const std::exception &e) {
+            std::cerr << "Error: Failed to parse patch file. Exception: " << e.what() << std::endl;
+            return false;
+        }
     }
 };

@@ -79,6 +79,12 @@ void PlayerEngine::sendError(int code, const std::string &message) {
     audioErrorBuffer->addAudioError(code, message);
 }
 
+bool PlayerEngine::loadSynth(SynthBase *synth, int rackID) {
+    // Delegate synth setup to the rack
+    this->rackReceivingMidi = 0;
+    return racks[rackID].setSynth(synth);
+}
+
 bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) {
     // Check if the rack already exists
     racks[rackId].setSynth(synthName);
@@ -192,6 +198,7 @@ bool PlayerEngine::pollMidiIn() {
             if (newMessage.cmd & 0xf0 == 0x90 && newMessage.param2 == 0) {
                 newMessage.cmd -= 0x10;
             }
+            std::cout << "ok, note on" << std::endl;
             channel = static_cast<int>(newMessage.cmd) & 0x0f;
             // racks[channel].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
             racks[this->rackReceivingMidi].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);

@@ -7,6 +7,7 @@
 // #include "Synth/Subreal/SubrealModel.h"
 #include "core/player/ErrorWriter.h"
 //
+#include "Synth/SynthBase.h"
 #include "Synth/SynthInterface.h"
 #include "constants.h"
 // #include "ParamInterfaceBase.h"
@@ -166,6 +167,24 @@ class Rack {
         Unknown
     };
 
+    bool setSynth(SynthBase *newSynth) {
+        if (synth) {
+            delete synth; // Clean up the old synth
+            synth = nullptr;
+        }
+
+        synth = newSynth;
+        if (synth) {
+            std::cout << "Binding buffers for synth in rack" << std::endl;
+            synth->bindBuffers(audioBuffer.data(), audioBuffer.size()); // Bind the buffer here
+            this->enabled = true;                                       // Mark the rack as enabled
+        } else {
+            this->enabled = false; // Disable the rack if no synth
+        }
+
+        return synth != nullptr;
+    }
+
     bool setSynth(const std::string &synthName) {
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
@@ -177,7 +196,7 @@ class Rack {
         switch (type) {
         case SynthType::Monolith:
             synth = new Synth::Monolith::Model();
-            // synth.bind.. audioBuffer.data(), audioBuffer.size());
+            synth->bindBuffers(audioBuffer.data(), audioBuffer.size());
             break;
         case SynthType::Subreal:
             // synth = new Synth::Subreal::Model(audioBuffer.data(), audioBuffer.size());
@@ -197,8 +216,7 @@ class Rack {
         return (loadOK);
     }
 
-    bool
-    setEffect(const std::string &effectName, int effectSlot = 1) {
+    bool setEffect(const std::string &effectName, int effectSlot = 1) {
         std::cout << "we're setting up effect: " << effectName << std::endl;
         EffectType type = getEffectType(effectName);
         EffectInterface **effectTarget = nullptr;

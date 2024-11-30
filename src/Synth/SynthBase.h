@@ -9,11 +9,9 @@
 
 // maybe this class should be renamed to SynthInstance or something..
 
-class SynthInstance : public SynthInterface {
+class SynthBase : public SynthInterface {
   public:
-    virtual ~SynthInstance() = default;
-    // this could be private.. ehh? called from rack
-    void bindBuffers(float *audioBuffer, std::size_t bufferSize);
+    virtual ~SynthBase() = default;
 
     nlohmann::json getParamDefsAsJson();
 
@@ -22,10 +20,12 @@ class SynthInstance : public SynthInterface {
 
     int resolveUPenum(const std::string &name);
 
-    // uhm. This is called from idunno, playerEngine probably.
+    // this could be private.. ehh? called from rack
+    void bindBuffers(float *audioBuffer, std::size_t bufferSize);
 
     void pushStrParam(const std::string &name, float val);
     void initParams();
+    void pushAllParams();
     void indexParams(const int upCount);
 
   public:
@@ -35,8 +35,4 @@ class SynthInstance : public SynthInterface {
     std::unordered_map<std::string, int> paramIndex;
     std::unordered_map<int, float> paramVals;
     std::unordered_map<std::string, std::string> settingVals;
-
-  protected:
-    float *buffer;          // Pointer to audio buffer
-    std::size_t bufferSize; // Size of the audio buffer
 };
