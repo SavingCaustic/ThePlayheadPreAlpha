@@ -8,8 +8,7 @@ namespace Synth::Subreal {
 constexpr int VOICE_COUNT = 16;
 
 // Constructor to accept buffer and size
-Model::Model(float *audioBuffer, std::size_t bufferSize)
-    : buffer(audioBuffer), bufferSize(bufferSize) {
+Model::Model() {
     setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
     SynthParamManager::initParams();
     SynthInterface::setupCCmapping("Sketch");
@@ -18,6 +17,11 @@ Model::Model(float *audioBuffer, std::size_t bufferSize)
     for (int i = 0; i < VOICE_COUNT; ++i) {
         voices.emplace_back(*this); // Pass reference to Model
     }
+}
+
+void Model::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
+    this->buffer = audioBuffer;
+    this->bufferSize = bufferSize;
 }
 
 void Model::setupParams(int upCount) {

@@ -3,8 +3,8 @@
 #include "Effect/Chorus2/Chorus2Model.h"
 #include "Effect/Delay/DelayModel.h"
 #include "Synth/Monolith/MonolithModel.h"
-#include "Synth/Sketch/SketchModel.h"
-#include "Synth/Subreal/SubrealModel.h"
+// #include "Synth/Sketch/SketchModel.h"
+// #include "Synth/Subreal/SubrealModel.h"
 #include "core/player/ErrorWriter.h"
 //
 #include "Synth/SynthInterface.h"
@@ -21,6 +21,15 @@ class PlayerEngine; // Forward declaration (??!!)
 class Rack {
   public:
     // Method to set PlayerEngine after construction
+
+    Rack() {}
+
+    ~Rack() {
+        delete synth;
+        delete effect1;
+        delete effect2;
+    }
+
     void setPlayerEngine(PlayerEngine &engine) {
         playerEngine = &engine;
     }
@@ -131,9 +140,12 @@ class Rack {
 
     // props
     bool enabled = false;
-    std::unique_ptr<SynthInterface> synth;
-    std::unique_ptr<EffectInterface> effect1;
-    std::unique_ptr<EffectInterface> effect2;
+    // std::unique_ptr<SynthInterface> synth;
+    // std::unique_ptr<EffectInterface> effect1;
+    // std::unique_ptr<EffectInterface> effect2;
+    SynthInterface *synth = nullptr;
+    EffectInterface *effect1 = nullptr;
+    EffectInterface *effect2 = nullptr;
 
     // I really don't think these methods should be here in Rack, since an effect
     // could be loaded somewhere else. Possibly also a synth..
@@ -158,15 +170,20 @@ class Rack {
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
         bool loadOK = true;
+        if (synth) {
+            delete synth;
+            synth = nullptr; // Avoid dangling pointer
+        }
         switch (type) {
         case SynthType::Monolith:
-            synth = std::make_unique<Synth::Monolith::Model>(audioBuffer.data(), audioBuffer.size());
+            synth = new Synth::Monolith::Model();
+            // synth.bind.. audioBuffer.data(), audioBuffer.size());
             break;
         case SynthType::Subreal:
-            synth = std::make_unique<Synth::Subreal::Model>(audioBuffer.data(), audioBuffer.size());
+            // synth = new Synth::Subreal::Model(audioBuffer.data(), audioBuffer.size());
             break;
         case SynthType::Sketch:
-            synth = std::make_unique<Synth::Sketch::Model>(audioBuffer.data(), audioBuffer.size());
+            // synth = new Synth::Sketch::Model(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
         default:
@@ -180,27 +197,36 @@ class Rack {
         return (loadOK);
     }
 
-    bool setEffect(const std::string &effectName, int effectSlot = 1) {
+    bool
+    setEffect(const std::string &effectName, int effectSlot = 1) {
         std::cout << "we're setting up effect: " << effectName << std::endl;
         EffectType type = getEffectType(effectName);
-        std::unique_ptr<EffectInterface> *effectTarget = nullptr;
+        EffectInterface **effectTarget = nullptr;
         if (effectSlot == 1) {
             effectTarget = &effect1;
         } else {
             // a bit sloppy handling..
             effectTarget = &effect2;
         }
+
+        // Delete the existing effect in the slot, if any
+        // and here, the old effect should be enqued for destruction by studio runner.
+        if (*effectTarget) {
+            delete *effectTarget;
+            *effectTarget = nullptr; // Avoid dangling pointer
+        }
+
         bool loadOK = true;
         switch (type) {
         case EffectType::Delay:
-            *effectTarget = std::make_unique<Effect::Delay::Model>(audioBuffer.data(), audioBuffer.size());
+            *effectTarget = new Effect::Delay::Model(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
         case EffectType::Chorus:
-            *effectTarget = std::make_unique<Effect::Chorus::Model>(audioBuffer.data(), audioBuffer.size());
+            *effectTarget = new Effect::Chorus::Model(audioBuffer.data(), audioBuffer.size());
             break;
         case EffectType::Chorus2:
-            *effectTarget = std::make_unique<Effect::Chorus2::Model>(audioBuffer.data(), audioBuffer.size());
+            *effectTarget = new Effect::Chorus2::Model(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
         default:

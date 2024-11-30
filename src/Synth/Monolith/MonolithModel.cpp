@@ -18,18 +18,17 @@ namespace Synth::Monolith {
 //
 
 // Constructor to accept buffer and size
-Model::Model(float *audioBuffer, std::size_t bufferSize)
-    : buffer(audioBuffer), bufferSize(bufferSize) {
+Model::Model() {
     setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
-    SynthParamManager::initParams();
+    SynthInstance::initParams();
 
     SynthInterface::setupCCmapping("Monolith");
     reset();
 }
 
 void Model::setupParams(int upCount) {
-    if (SynthParamManager::paramDefs.empty()) {
-        SynthParamManager::paramDefs = {
+    if (SynthInstance::paramDefs.empty()) {
+        SynthInstance::paramDefs = {
             {kbd_glide, {"kbd_glide", 0.5f, 0, true, 1, 10, [this](float v) {
                              portamentoAlpha = 1 - (1.0f / v);
                              // trust the interface to resolve sendError
@@ -105,7 +104,7 @@ void Model::setupParams(int upCount) {
                               lfo1.setSpeed(v); // in mHz.
                           }}}};
         // important stuff..
-        SynthParamManager::indexParams(upCount);
+        SynthInstance::indexParams(upCount);
     }
 }
 

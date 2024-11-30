@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Synth/SynthInterface.h"
-#include "Synth/SynthParamManager.h"
+#include "Synth/SynthInstance.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
 #include "core/audio/envelope/ADSFR.h"
@@ -61,10 +60,10 @@ enum Waveform {
     TOOTHSAW // special for osc3 - replacing kneangle
 };
 
-class Model : public SynthParamManager, public SynthInterface {
+class Model : public SynthInstance {
   public:
     // Constructor
-    Model(float *audioBuffer, std::size_t bufferSize);
+    Model();
     // Public methods. These should match interface right (contract)
     void reset() override;
     void setupParams(int upCount);
@@ -73,11 +72,11 @@ class Model : public SynthParamManager, public SynthInterface {
     static std::unordered_map<std::string, int> SparamIndex;
 
     nlohmann::json getParamDefsAsJSON() override {
-        return SynthParamManager::getParamDefsAsJson();
+        return SynthInstance::getParamDefsAsJson();
     }
 
     void pushStrParam(const std::string &name, float val) override {
-        return SynthParamManager::pushStrParam(name, val);
+        return SynthInstance::pushStrParam(name, val);
     }
 
     // Method to parse MIDI commands
@@ -94,9 +93,6 @@ class Model : public SynthParamManager, public SynthInterface {
     Waveform osc2type;
 
   protected:
-    float *buffer;          // Pointer to audio buffer
-    std::size_t bufferSize; // Size of the audio buffer
-
     audio::filter::MultiFilter filter;
     audio::envelope::ADSFR vcaAR;
     audio::envelope::Slope vcaARslope;

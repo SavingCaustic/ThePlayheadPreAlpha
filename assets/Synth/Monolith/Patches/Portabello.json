@@ -1,0 +1,6 @@
+{
+    "params": {
+        "vca_attack": "0.1",
+        "vca_release": "0.5"
+    }
+}

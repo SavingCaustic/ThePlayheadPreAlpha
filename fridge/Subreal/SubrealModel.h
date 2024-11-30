@@ -42,9 +42,10 @@ class Model : public SynthParamManager, public SynthInterface {
 
   public:
     // Constructor
-    Model(float *audioBuffer, std::size_t bufferSize);
+    Model();
     // Public methods. These should match interface right (contract)
     void reset() override;
+    void bindBuffers(float *audioBuffer, std::size_t bufferSize);
 
     nlohmann::json getParamDefsAsJSON() override {
         return SynthParamManager::getParamDefsAsJson();
@@ -104,7 +105,7 @@ class Model : public SynthParamManager, public SynthInterface {
 
     void initializeParameters();
     // Handle incoming MIDI CC messages
-    void handleMidiCC(uint8_t ccNumber, float value);
+    // void handleMidiCC(uint8_t ccNumber, float value);
     //
     void setupParams(int upCount);
     int debugCount = 0;
