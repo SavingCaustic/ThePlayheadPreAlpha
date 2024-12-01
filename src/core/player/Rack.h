@@ -169,6 +169,7 @@ class Rack {
 
     bool setSynth(SynthBase *newSynth) {
         if (synth) {
+            std::cout << "destroying synth (inside audio-thread)" << std::endl;
             delete synth; // Clean up the old synth
             synth = nullptr;
         }

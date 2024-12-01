@@ -23,6 +23,22 @@ class AudioMath {
         out = in * 0.02f + out * 0.98f;
     }
 
+    inline static void easeLog5(float in, float &out) {
+        out = in * 0.05f + out * 0.95f;
+    }
+
+    inline static void easeLog10(float in, float &out) {
+        out = in * 0.1f + out * 0.9f;
+    }
+
+    inline static void easeLog20(float in, float &out) {
+        out = in * 0.2f + out * 0.8f;
+    }
+
+    inline static void easeLog50(float in, float &out) {
+        out = in * 0.5f + out * 0.5f;
+    }
+
     static void setMasterTune(float newMasterTune);
     static float getMasterTune();
     static float noise();

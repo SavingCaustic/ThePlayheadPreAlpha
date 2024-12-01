@@ -304,7 +304,7 @@ bool Model::renderNextBlock() {
     // debugging
     if (false) {
         for (std::size_t i = 0; i < bufferSize; i++) {
-            buffer[i] += static_cast<float>(i / 64.0f) * 0.02f - 0.01f;
+            buffer[i] += static_cast<float>(i / 64.0f) * 0.01f - 0.005f;
         }
     }
     motherboardActions();

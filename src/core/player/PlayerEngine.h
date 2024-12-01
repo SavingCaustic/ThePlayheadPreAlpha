@@ -41,7 +41,7 @@ class PlayerEngine {
 
     std::string getSynthParams(int rackId);
 
-    bool loadSynth(SynthBase *synth, int rackID);
+    bool loadSynth(SynthBase *&synth, int rackID);
 
     bool setupRackWithSynth(int rackId, const std::string &synthName);
     // R    bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
@@ -49,6 +49,10 @@ class PlayerEngine {
     void renderNextBlock(float *buffer, unsigned long numFrames);
     // may be private
     void sendError(int code, const std::string &message);
+
+    void updateMidiSettings(const std::string &strScrollerCC, const std::string &strScrollerDials);
+
+    u_int8_t remapCC(u_int8_t originalCC, u_int8_t param2);
 
   private:
     Rack racks[TPH_RACK_COUNT]; // Array of Rack objects
@@ -76,6 +80,9 @@ class PlayerEngine {
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
     AudioErrorBuffer *audioErrorBuffer = nullptr;
     MidiManager *midiManager = nullptr;
+    u_int8_t scrollerCC = 0;
+    u_int8_t ccScrollerDials[7];
+    u_int8_t ccScrollerPosition = 0; // Current scroller position
 
     float loadAvg = 0;
     int debugCnt = 0;

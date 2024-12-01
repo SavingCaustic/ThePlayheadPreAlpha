@@ -205,6 +205,13 @@ bool Model::renderNextBlock() {
         dist = dist * dist; // skip polarity..
         buffer[i] = synthBuffer[i] * (5 - dist) * 0.1f;
     }
+    // debugging
+    if (false) {
+        for (std::size_t i = 0; i < bufferSize; i++) {
+            buffer[i] += AudioMath::noise() * 0.01f - 0.005f;
+        }
+    }
+
     // not always stereo for now..
     return false;
 }

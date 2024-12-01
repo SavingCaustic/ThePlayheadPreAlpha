@@ -3,6 +3,6 @@
     "44k1": "0",
     "buffer_size":"256",
     "midi_device":"1",
-    "scroller_cc":"84",
+    "scroller_cc":"10",
     "scroller_dials": "74,71,5,84,78,76,77"
 }

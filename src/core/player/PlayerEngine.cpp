@@ -3,7 +3,7 @@
 
 PlayerEngine::PlayerEngine()
     : noiseVolume(0.2f), isWritingMessage(false), hRotator(), errorWriter_(*this) {
-    this->rackReceivingMidi = 0;
+    this->rackReceivingMidi = 0; // meh
     this->loadAvg = 0.0f;
 }
 
@@ -77,9 +77,12 @@ void PlayerEngine::sendError(int code, const std::string &message) {
     audioErrorBuffer->addAudioError(code, message);
 }
 
-bool PlayerEngine::loadSynth(SynthBase *synth, int rackID) {
+bool PlayerEngine::loadSynth(SynthBase *&synth, int rackID) {
     // Delegate synth setup to the rack
-    return racks[rackID].setSynth(synth);
+    bool result = racks[rackID].setSynth(synth);
+    // Reset the caller's pointer to avoid accidental reuse
+    synth = nullptr;
+    return result;
 }
 
 bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) {
@@ -163,12 +166,16 @@ std::string PlayerEngine::getSynthParams(int rackId) {
 
 void PlayerEngine::sumToMaster(float *buffer, unsigned long numFrames, int outer) {
     int offset = outer * 2 * TPH_RACK_RENDER_SIZE; // Offset in the master buffer
+    for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE * 2; sample += 2) {
+        *(buffer + sample) = 0;
+        *(buffer + sample + 1) = 0;
+    }
 
     for (std::size_t i = 0; i < TPH_RACK_COUNT; ++i) {
         if (racks[i].enabled) {
             for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE * 2; sample += 2) {
-                *(buffer + offset + sample) = racks[i].audioBuffer[sample];
-                *(buffer + offset + sample + 1) = racks[i].audioBuffer[sample + 1];
+                *(buffer + offset + sample) += racks[i].audioBuffer[sample];
+                *(buffer + offset + sample + 1) += racks[i].audioBuffer[sample + 1];
             }
         }
     }
@@ -186,26 +193,73 @@ void PlayerEngine::clockResetMethod() {
     clockReset = false; // Reset the clockReset flag
 }
 
+void PlayerEngine::updateMidiSettings(const std::string &strScrollerCC, const std::string &strScrollerDials) {
+    this->scrollerCC = std::stoi(strScrollerCC);
+    std::cout << "setting scrolerCC to " << this->scrollerCC << std::endl;
+    // Initialize the scroller dials to zero
+    std::fill(std::begin(ccScrollerDials), std::end(ccScrollerDials), 0);
+
+    // Parse the comma-separated scroller dial values
+    size_t start = 0, end = 0;
+    int index = 0;
+
+    while ((end = strScrollerDials.find(',', start)) != std::string::npos && index < 7) {
+        ccScrollerDials[index++] = std::stoi(strScrollerDials.substr(start, end - start));
+        start = end + 1;
+    }
+
+    // Add the last value (or only value if no commas were found)
+    if (index < 7 && start < strScrollerDials.size()) {
+        ccScrollerDials[index++] = std::stoi(strScrollerDials.substr(start));
+    }
+}
+
 bool PlayerEngine::pollMidiIn() {
-    int channel; // a hack for multitimbrality..
     MidiMessage newMessage;
-    this->rackReceivingMidi = 0;
+    this->rackReceivingMidi = 1;
     if (this->rackReceivingMidi >= 0) {
         while (midiManager->getNextMessage(newMessage)) {
             // here, recover note-on with vel 0 to note off.
-            if (newMessage.cmd & 0xf0 == 0x90 && newMessage.param2 == 0) {
+            if ((newMessage.cmd & 0xf0) == 0x90 && newMessage.param2 == 0) {
                 newMessage.cmd -= 0x10;
             }
-            // std::cout << "ok, note on" << std::endl;
-            channel = static_cast<int>(newMessage.cmd) & 0x0f;
-            // racks[channel].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
-            racks[this->rackReceivingMidi].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
-            //    this->sendError(200, "midi recieved");
+            const u_int8_t channel = static_cast<u_int8_t>(newMessage.cmd) & 0x03; // 0x03 for prototype - 4 racks..
+            if (racks[channel].enabled) {
+                // if cc-cmd, see if it should be re-routed.
+                if ((newMessage.cmd & 0xf0) == 0xb0) { // note parenthesis!!
+                    newMessage.param1 = remapCC(newMessage.param1, newMessage.param2);
+                }
+                if (newMessage.param1 != 255) {
+                    racks[channel].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
+                }
+            }
+            // racks[this->rackReceivingMidi].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
+            //      this->sendError(200, "midi recieved");
             if (newMessage.cmd == 0x90)
                 sendMessage(1, "synth", newMessage.param1, "note on", "see this? :)");
         }
     }
     return true; // means nothing.. Return the result of getMessage
+}
+
+u_int8_t PlayerEngine::remapCC(u_int8_t originalCC, u_int8_t param2) {
+    // Check if the CC corresponds to a pot
+    std::cout << "orgCC is" << static_cast<int>(originalCC) << " and ccSP is " << static_cast<int>(scrollerCC) << std::endl;
+    if (originalCC == scrollerCC) {
+        ccScrollerPosition = round(param2 * (5.0f / 127.0f));
+        std::cout << "scroller pos is " << static_cast<int>(ccScrollerPosition) << std::endl;
+        return 255; // surpress later processing
+    }
+    for (int i = 0; i < 7; i++) {
+        if (originalCC == ccScrollerDials[i]) {
+            // Remap based on scroller position
+            // what if we hard-code it, big time.. 32->
+            uint8_t newCC = 32 + ccScrollerPosition * 7 + i;
+            std::cout << "routed CC:" << newCC << std::endl;
+            return newCC;
+        }
+    }
+    return originalCC; // No remapping needed
 }
 
 void PlayerEngine::turnRackAndRender() {

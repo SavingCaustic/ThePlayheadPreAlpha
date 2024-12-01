@@ -84,13 +84,15 @@ int main() {
     deviceSettings["audio_device"] = "default";
     deviceSettings["midi_device"] = "1";
     deviceSettings["http_port"] = "18080";
-    deviceSettings["scroller_cc"] = "84";
-    deviceSettings["scroller_dials"] = "1,2,3,4,5,6,7";
+    deviceSettings["scroller_cc"] = "10";
+    deviceSettings["scroller_dials"] = "74,71,5,84,78,76,77";
 
     SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
 
     // Kickstart the StudioRunner (low-priority job scheduler)
     sStudioRunner.updateSetting("audio_device", deviceSettings["audio_device"]);
+    // meh - almost factory here..
+    sPlayerEngine.updateMidiSettings(deviceSettings["scroller_cc"], deviceSettings["scroller_dials"]);
     // postpone this so we wait with the audio-thread..
     // sStudioRunner.start();
 
@@ -117,13 +119,13 @@ int main() {
     } else {
         SynthBase *synth = nullptr;
         SynthFactory::setupSynth(synth, "Subreal");
-        sPlayerEngine.loadSynth(synth, 0);
+        sPlayerEngine.loadSynth(synth, 0); // maybe return an nullptr from loadSynth?
         // synth->parseMidi(0x90, 0x40, 0x050);
         //  set up another synth..
-        /*        SynthBase *synth2 = nullptr;
-                SynthFactory::setupSynth(synth2, "Monolith");
-                SynthFactory::patchLoad(synth2, "Portabello");
-                sPlayerEngine.loadSynth(synth2, 1); */
+        SynthBase *synth2 = nullptr;
+        SynthFactory::setupSynth(synth2, "Monolith");
+        SynthFactory::patchLoad(synth2, "Portabello");
+        sPlayerEngine.loadSynth(synth2, 1);
         // synth2->parseMidi(0x90, 0x44, 0x050);
         //   set up another synth..
     }

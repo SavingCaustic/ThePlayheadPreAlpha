@@ -174,13 +174,13 @@ class Voice {
             osc1hz = AudioMath::noteToHz(notePlaying, modelRef.bendCents);
             osc1.setAngle(osc1hz);
             vcaEaser.setTarget(vcaARslope.currVal + vcaARslope.gap);
-            AudioMath::easeLog2(oscMix, oscMixEaseOut);
-            AudioMath::easeLog2(fmAmp, fmAmpEaseOut);
+            AudioMath::easeLog5(oscMix, oscMixEaseOut);
+            AudioMath::easeLog5(fmAmp, fmAmpEaseOut);
             for (std::size_t i = 0; i < bufferSize; i += chunkSize) {
                 for (std::size_t j = 0; j < chunkSize; j++) {
                     float y2 = osc2.getNextSample(0);
                     vcaEaserVal = vcaEaser.getValue();
-                    float y1 = osc1.getNextSample(y2 * fmAmpEaseOut * (vcaEaserVal + 0.3f));
+                    float y1 = osc1.getNextSample(y2 * fmAmp * (vcaEaserVal + 0.3f)); // disable ease. bad math.
                     modelRef.addToSample(i + j, ((y1 * (1 - oscMixEaseOut) + y2 * oscMixEaseOut)) * vcaEaserVal * mixAmplitude);
                 }
             }

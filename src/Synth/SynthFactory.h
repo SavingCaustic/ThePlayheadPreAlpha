@@ -34,12 +34,7 @@ class SynthFactory {
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
 
-        // Clean up old synth if any, should probably not be done here..
-        if (newSynth) {
-            delete newSynth;
-            newSynth = nullptr;
-        }
-
+        // overwrite any existing synthPointer, ownership of prev pointer is now in rack
         bool loadOK = true;
         switch (type) {
         case SynthType::Monolith:

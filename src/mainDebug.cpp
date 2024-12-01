@@ -121,24 +121,21 @@ int main() {
     SynthBase *synth = nullptr;
     // SynthFactory::setupSynth(synth, "Monolith");
     // SynthFactory::patchLoad(synth, "Portabello");
+    SynthBase *synth = nullptr;
     SynthFactory::setupSynth(synth, "Subreal");
-    sPlayerEngine.loadSynth(synth, 0);
-    // set up another synth..
-    // SynthFactory::setupSynth(synth, "Monolith");
-    /*SynthBase *synth2 = nullptr;
+    sPlayerEngine.loadSynth(synth, 0); // maybe return an nullptr from loadSynth?
+    // synth->parseMidi(0x90, 0x40, 0x050);
+    //  set up another synth..
+    SynthBase *synth2 = nullptr;
     SynthFactory::setupSynth(synth2, "Monolith");
     SynthFactory::patchLoad(synth2, "Portabello");
-    sPlayerEngine.loadSynth(synth2, 1); */
+    sPlayerEngine.loadSynth(synth2, 1);
     // some testing....
     SynthFactory::patchSave(synth, "Portabello2");
 
     sPlayerEngine.renderNextBlock(audioBuffer, bufferSize);
 
     // sStudioRunner.start();
-    //  sPlayerEngine.setupRackWithSynth(0, "Monolith");
-    //   sPlayerEngine.setupRackWithSynth(1, "Monolith");
-
-    // AudioMath::generateLUT(); // sets up a sine lookup table of 1024 elements.
     //
     crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
     int httpPort = std::stoi(deviceSettings["http_port"]);
