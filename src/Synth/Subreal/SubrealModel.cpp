@@ -11,7 +11,7 @@ constexpr int VOICE_COUNT = 16;
 Model::Model() {
     setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
     SynthBase::initParams();
-    SynthInterface::setupCCmapping("Sketch");
+    SynthInterface::setupCCmapping("Subreal");
     reset();                     // setup luts. Must come before voice allocation.
     voices.reserve(VOICE_COUNT); // Preallocate memory for voices
     for (int i = 0; i < VOICE_COUNT; ++i) {
@@ -44,6 +44,10 @@ void Model::setupParams(int upCount) {
                                // easer should be at model. skipping easer for now
                                oscMix = v;
                            }}},
+            {UP::osc_detune, {"osc_detune", 0.5f, 0, false, -25, 25, [this](float v) {
+                                  // easer should be at model. skipping easer for now
+                                  oscDetune = v;
+                              }}},
             {UP::vca_attack, {"vca_attack", 0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
                                   vcaAR.setTime(audio::envelope::ATTACK, v);
                                   std::cout << "setting attack to " << v << " ms" << std::endl;

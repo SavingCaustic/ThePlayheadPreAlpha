@@ -1,12 +1,15 @@
 {
     "1": "lfo1_vca",
-    "7": "osc_mix",
-    "74": "vca_attack",
-    "71": "vca_decay",
-    "5": "vca_sustain",
-    "84": "vca_release",
-    "78": "osc1_fmsens",
-    "76": "osc1_senstrack",
-    "77": "osc2_oct",
-    "10": "osc2_semi"    
+    "32": "osc_mix",
+    "33": "osc_detune",
+    "34": "osc1_fmsens",
+    "35": "osc1_senstrack",
+    "36": "",
+    "37": "osc2_oct",
+    "38": "osc2_semi",    
+    "39": "vca_attack",
+    "40": "vca_decay",
+    "41": "vca_sustain",
+    "42": "vca_release",
+    "43": "vca_fade"
 }

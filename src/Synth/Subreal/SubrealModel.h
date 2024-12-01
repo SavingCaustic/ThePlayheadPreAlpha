@@ -25,6 +25,7 @@ enum UP {
     osc2_semi,
     osc2_oct,
     osc_mix,
+    osc_detune,
     vca_attack,
     vca_decay,
     vca_sustain,
@@ -69,7 +70,8 @@ class Model : public SynthBase {
     const audio::osc::LUT &getLUT1() const;
     const audio::osc::LUT &getLUT2() const;
 
-    float oscMix = 0.5;
+    float oscMix = 0.5f;
+    float oscDetune = 0.0f;
     int semitone = 0;
     int osc2octave = 0;
     float bendCents = 0;
@@ -169,9 +171,9 @@ class Voice {
         float fmAmp = tracking * modelRef.fmSens * noteVelocity;
         float mixAmplitude = noteVelocity * 0.6f;
         if (vcaARslope.state != audio::envelope::OFF) {
-            osc2hz = AudioMath::noteToHz(notePlaying + modelRef.semitone + modelRef.osc2octave * 12, modelRef.bendCents);
+            osc2hz = AudioMath::noteToHz(notePlaying + modelRef.semitone + modelRef.osc2octave * 12, modelRef.bendCents + modelRef.oscDetune);
             osc2.setAngle(osc2hz);
-            osc1hz = AudioMath::noteToHz(notePlaying, modelRef.bendCents);
+            osc1hz = AudioMath::noteToHz(notePlaying, modelRef.bendCents - modelRef.oscDetune);
             osc1.setAngle(osc1hz);
             vcaEaser.setTarget(vcaARslope.currVal + vcaARslope.gap);
             AudioMath::easeLog5(oscMix, oscMixEaseOut);
