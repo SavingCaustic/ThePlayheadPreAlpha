@@ -34,10 +34,35 @@ enum UP {
     vcf_type,
     vcf_cutoff,
     vcf_resonance,
-    lfo1_depth,
-    lfo1_vca,
+    lfo1_shape,
     lfo1_speed,
+    lfo1_routing,
+    lfo1_depth,
+    lfo2_shape,
+    lfo2_speed,
+    lfo2_routing,
+    lfo2_depth,
     up_count
+};
+
+enum class LFO1Routing {
+    off,
+    osc1,
+    osc2,
+    osc12,
+    vcf,
+    vca,
+    _count
+};
+
+enum class LFO2Routing {
+    off,
+    osc2,
+    vcf,
+    vca,
+    fmSens,
+    amSens,
+    _count
 };
 
 class Voice;
@@ -80,15 +105,19 @@ class Model : public SynthBase {
     float *buffer; // Pointer to audio buffer, minimize write so:
     float synthBuffer[TPH_RACK_BUFFER_SIZE];
     float fmSens = 0.0f;
+    LFO1Routing lfo1Routing;
+    LFO2Routing lfo2Routing;
     audio::osc::LUT lut1;
     audio::osc::LUT lut2;
     std::size_t bufferSize; // Size of the audio buffer
+    float lfo1depth = 0.5;
+    float lfo2depth = 0.5;
+    audio::lfo::Standard lfo1; // change to ramp. duh. no, it's in voice..
+    audio::lfo::Standard lfo2;
+    audio::filter::MultiFilter filter;
 
   protected:
     std::vector<Voice> voices; // Vector to hold Voice objects
-    audio::filter::MultiFilter filter;
-    audio::lfo::RampLfo lfo1;
-    audio::lfo::SimpleLfo lfo2;
 
     // float vcaEaser,
     // vcaEaserStep;
@@ -113,8 +142,6 @@ class Model : public SynthBase {
     //
     void setupParams(int upCount);
     int debugCount = 0;
-    float lfo1Depth = 0.5;
-    float lfo1vca = 0.0f;
 };
 
 // ---------------------------------------
@@ -166,16 +193,29 @@ class Voice {
     bool renderNextVoiceBlock(std::size_t bufferSize) {
         float osc1hz, osc2hz;
         constexpr int chunkSize = 16; // Could be adapted to SIMD-capability..
-        float oscMix = modelRef.getOscMix();
-        modelRef.vcaAR.updateDelta(vcaARslope);
-        float fmAmp = tracking * modelRef.fmSens * noteVelocity;
-        float mixAmplitude = noteVelocity * 0.6f;
         if (vcaARslope.state != audio::envelope::OFF) {
-            osc2hz = AudioMath::noteToHz(notePlaying + modelRef.semitone + modelRef.osc2octave * 12, modelRef.bendCents + modelRef.oscDetune);
+            float oscMix = modelRef.getOscMix();
+            modelRef.vcaAR.updateDelta(vcaARslope);
+            float fmAmp = tracking * modelRef.fmSens * noteVelocity;
+            float mixAmplitude = noteVelocity * 0.6f;
+            int osc2note = notePlaying + modelRef.semitone + modelRef.osc2octave * 12;
+            float osc2cents = modelRef.bendCents + modelRef.oscDetune;
+            if (modelRef.lfo1Routing == LFO1Routing::osc12 || modelRef.lfo1Routing == LFO1Routing::osc2) {
+                osc2cents += modelRef.lfo1.getLFOval() * modelRef.lfo1depth * 1200.0f;
+            }
+            osc2hz = AudioMath::noteToHz(osc2note, osc2cents);
             osc2.setAngle(osc2hz);
             osc1hz = AudioMath::noteToHz(notePlaying, modelRef.bendCents - modelRef.oscDetune);
             osc1.setAngle(osc1hz);
-            vcaEaser.setTarget(vcaARslope.currVal + vcaARslope.gap);
+            float vcaTarget = vcaARslope.currVal + vcaARslope.gap;
+            if (modelRef.lfo1Routing == LFO1Routing::vca) {
+                vcaTarget *= (modelRef.lfo1.getLFOval() * modelRef.lfo1depth) + 1.0f;
+            }
+            if (modelRef.lfo2Routing == LFO2Routing::vca) {
+                vcaTarget *= (modelRef.lfo2.getLFOval() * modelRef.lfo2depth) + 1.0f;
+            }
+            vcaEaser.setTarget(vcaTarget);
+
             AudioMath::easeLog5(oscMix, oscMixEaseOut);
             AudioMath::easeLog5(fmAmp, fmAmpEaseOut);
             for (std::size_t i = 0; i < bufferSize; i += chunkSize) {

@@ -100,10 +100,7 @@ void Model::setupParams(int upCount) {
                         }}},
             {vca_release, {"vca_release", 0.1f, 0, true, 10, 8, [this](float v) {
                                vcaAR.setTime(audio::envelope::RELEASE, v);
-                           }}},
-            {lfo1_speed, {"lfo1_speed", 0.0f, 0, true, 100, 9, [this](float v) {
-                              lfo1.setSpeed(v); // in mHz.
-                          }}}};
+                           }}}};
         // important stuff..
         SynthBase::indexParams(upCount);
     }

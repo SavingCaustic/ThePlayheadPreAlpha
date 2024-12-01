@@ -9,6 +9,9 @@
 
 class AudioMath {
   public:
+    static void initialize(); // setup lut. Could be done with constexpr. but for now..
+                              // called by.. PlayerEngine..
+
     inline static float noteToHz(int note, int cent = 0) {
         return masterTune * std::exp2((note - 69 + (cent * 0.01f)) * (1 / 12.0f));
     }
@@ -53,10 +56,6 @@ class AudioMath {
     static float logScale(float value, float minValue, float octaves);
 
     static float noteToFloat(int note);
-
-    static void generateLUT();
-
-    static void normalizeLUT(float *lut, unsigned int lutSize);
 
   private:
     static constexpr size_t sineLutSize = 256; // Can stay here

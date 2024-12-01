@@ -100,8 +100,8 @@ class Model : public SynthBase {
     audio::filter::MultiFilter filter;
     audio::envelope::ADSFR vcaAR;
     audio::envelope::Slope vcaARslope;
-    audio::lfo::RampLfo lfo1;
-    audio::lfo::SimpleLfo lfo2;
+    audio::lfo::Standard lfo1;
+    audio::lfo::Standard lfo2;
     audio::misc::Easer oscMixEaser;
     audio::misc::Easer vcaEaser;
     float velocityLast = 0; // super-easy easer

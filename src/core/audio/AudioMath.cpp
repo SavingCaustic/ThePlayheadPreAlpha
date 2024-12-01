@@ -10,6 +10,12 @@ int AudioMath::noiseB = 1013904223;
 int AudioMath::noiseC = 1 << 24; // 2^24, replaced with constexpr.
 
 // Implement static methods
+void AudioMath::initialize() {
+    float k = 2.0f * M_PI / sineLutSize;
+    for (int i = 0; i < sineLutSize; i++) {
+        sineLut[i] = std::sin(i * k);
+    }
+}
 
 void AudioMath::setMasterTune(float newMasterTune) {
     masterTune = newMasterTune;

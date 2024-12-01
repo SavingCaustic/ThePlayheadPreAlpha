@@ -8,9 +8,12 @@ namespace audio::lfo {
 enum LFOShape { SIN,
                 SQR,
                 SAW,
+                WAS,
                 TRI,
-                RND };
+                RND,
+                _count };
 
+// dunno if this should be here, rather an evenlope thing really..
 enum RampState { OFF,
                  ATTACK,
                  ON,
@@ -21,81 +24,53 @@ struct Ramp {
     float currVal = 0;
 };
 
-class RampLfo {
-  public:
-    // a struct holding the ramp and the lfo itself.
-    void setSpeed(float mhz) {
-        angle = mhz * 0.001 * TPH_RACK_RENDER_SIZE / (1 / TPH_DSP_SR);
-    }
-
-    float getLFOval() {
-        float r;
-        lfoShape = TRI;
-        switch (lfoShape) {
-        case SIN:
-            // pick val from shared LUT, TBA
-            r = 0.5;
-            break;
-        case SQR:
-            // pick val from shared LUT
-            r = (phase > 0.5f) ? 1.0f : -1.0f;
-            break;
-        case SAW:
-            r = phase * 2.0f - 1.0f;
-            break;
-        case TRI:
-            r = (phase > 0.5f) ? phase : 1.0f - phase;
-            r = r * 2.0f - 1.0f;
-            break;
-        case RND: // really SNH so hold until?
-            // hmm.. we can't pick a noise value for each request. will become funny..
-            // r = AudioMath::noise();
-            break;
-        }
-        return r;
-    }
-
-    void updatePhase() {
-        phase += angle;
-        if (phase >= 1)
-            phase = phase - 1;
-    }
-
-  private:
-    float phase = 0;
-    float angle = 0;
-    audio::lfo::LFOShape lfoShape;
-    // we could gain from the common big sine-lut, but not luts for every wave..
+enum SNHstate {
+    LOADED,
+    FIRED
 };
 
-class SimpleLfo {
+class Standard {
   public:
     // a struct holding the ramp and the lfo itself.
-    void setSpeed(float hz) {
-        angle = hz * TPH_RACK_RENDER_SIZE / (1 / TPH_DSP_SR);
+    void setShape(LFOShape newShape) {
+        lfoShape = newShape;
+    }
+
+    void setSpeed(float mhz) {
+        angle = mhz * 0.001f * TPH_RACK_RENDER_SIZE * (1.0f / TPH_DSP_SR);
     }
 
     float getLFOval() {
         float r;
         switch (lfoShape) {
-        case SIN:
+        case LFOShape::SIN:
             // pick val from shared LUT, TBA
-            r = 0.5;
+            r = AudioMath::csin(phase);
             break;
-        case SQR:
+        case LFOShape::SQR:
             // pick val from shared LUT
             r = (phase > 0.5f) ? 1.0f : -1.0f;
             break;
-        case SAW:
+        case LFOShape::SAW:
             r = phase * 2.0f - 1.0f;
             break;
-        case TRI:
+        case LFOShape::WAS:
+            r = (2.0 - phase * 2.0f) - 1.0f;
+            break;
+        case LFOShape::TRI:
             r = (phase > 0.5f) ? phase : 1.0f - phase;
             r = r * 2.0f - 1.0f;
             break;
-        case RND: // really SNH so hold until?
-            // hmm.. we can't pick a noise value for each request. will become funny..
-            // r = AudioMath::noise();
+        case LFOShape::RND:
+            // on, <0.5 => load, on >0.5 => fire
+            if (phase < 0.5f && stateSNH == FIRED) {
+                stateSNH = LOADED;
+            }
+            if (phase >= 0.5f && stateSNH == LOADED) {
+                lastSNH = AudioMath::noise();
+                stateSNH = FIRED;
+            }
+            r = lastSNH;
             break;
         }
         return r;
@@ -108,10 +83,10 @@ class SimpleLfo {
     }
 
   private:
-    float phase = 0;
-    float angle = 0;
-    LFOShape lfoShape;
-    // we could gain from the common big sine-lut, but not luts for every wave..
+    double phase = 0;
+    double angle = 0;
+    SNHstate stateSNH;
+    float lastSNH;
+    LFOShape lfoShape = LFOShape::SIN;
 };
 } // namespace audio::lfo
-// namespace audio::lfo

@@ -79,6 +79,7 @@ int main() {
     //
     std::unordered_map<std::string, std::string> deviceSettings;
     // initialize
+    AudioMath::initialize();
     deviceSettings["buffer_size"] = "64"; // set in three places now. here, device.json and where matters - constants.cpp
     deviceSettings["audio_sr"] = "48000";
     deviceSettings["audio_device"] = "default";

@@ -244,18 +244,18 @@ bool PlayerEngine::pollMidiIn() {
 
 u_int8_t PlayerEngine::remapCC(u_int8_t originalCC, u_int8_t param2) {
     // Check if the CC corresponds to a pot
-    std::cout << "orgCC is" << static_cast<int>(originalCC) << " and ccSP is " << static_cast<int>(scrollerCC) << std::endl;
+    // std::cout << "orgCC is" << static_cast<int>(originalCC) << " and ccSP is " << static_cast<int>(scrollerCC) << std::endl;
     if (originalCC == scrollerCC) {
         ccScrollerPosition = round(param2 * (5.0f / 127.0f));
-        std::cout << "scroller pos is " << static_cast<int>(ccScrollerPosition) << std::endl;
+        // std::cout << "scroller pos is " << static_cast<int>(ccScrollerPosition) << std::endl;
         return 255; // surpress later processing
     }
     for (int i = 0; i < 7; i++) {
         if (originalCC == ccScrollerDials[i]) {
             // Remap based on scroller position
             // what if we hard-code it, big time.. 32->
-            uint8_t newCC = 32 + ccScrollerPosition * 7 + i;
-            std::cout << "routed CC:" << newCC << std::endl;
+            uint8_t newCC = 20 + ccScrollerPosition * 10 + i;
+            std::cout << "routed CC:" << static_cast<int>(newCC) << std::endl;
             return newCC;
         }
     }

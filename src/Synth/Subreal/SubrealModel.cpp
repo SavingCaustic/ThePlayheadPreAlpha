@@ -28,7 +28,7 @@ void Model::setupParams(int upCount) {
     if (SynthBase::paramDefs.empty()) {
         // after declaration, indexation requested, see below..
         SynthBase::paramDefs = {
-            {UP::osc1_fmsens, {"osc1_fmsens", 0.0f, 0, false, 0, 1, [this](float v) {
+            {UP::osc1_fmsens, {"osc1_fmsens", 0.2f, 0, false, 0, 1, [this](float v) {
                                    fmSens = v;
                                }}},
             {UP::osc1_senstrack, {"osc1_senstrack", 0.5f, 0, false, -1, 1, [this](float v) {
@@ -56,15 +56,15 @@ void Model::setupParams(int upCount) {
                                  vcaAR.setTime(audio::envelope::DECAY, v);
                                  std::cout << "setting decay to " << v << " ms" << std::endl;
                              }}},
-            {UP::vca_sustain, {"vca_sustain", 0.0f, 0, false, 0, 1, [this](float v) {
+            {UP::vca_sustain, {"vca_sustain", 0.8f, 0, false, 0, 1, [this](float v) {
                                    vcaAR.setLevel(audio::envelope::SUSTAIN, v);
                                    std::cout << "setting sustain to " << v << std::endl;
                                }}},
-            {UP::vca_fade, {"vca_fade", 0.0f, 0, false, 0, 1, [this](float v) {
+            {UP::vca_fade, {"vca_fade", 0.3f, 0, false, 0, 1, [this](float v) {
                                 vcaAR.setLeak(audio::envelope::FADE, v);
                                 std::cout << "setting fade to " << v << std::endl;
                             }}},
-            {UP::vca_release, {"vca_release", 0.3f, 0, true, 10, 8, [this](float v) {
+            {UP::vca_release, {"vca_release", 0.2f, 0, true, 10, 8, [this](float v) {
                                    vcaAR.setTime(audio::envelope::RELEASE, v);
                                    std::cout << "setting release to " << v << " ms" << std::endl;
                                }}},
@@ -81,14 +81,38 @@ void Model::setupParams(int upCount) {
                                      filter.setResonance(v);
                                      filter.initFilter();
                                  }}},
-            {UP::lfo1_depth, {"lfo1_depth", 0.0f, 0, false, 0, 1, [this](float v) {
-                                  lfo1Depth = v;
+            {UP::lfo1_shape, {"lfo1_shape", 0.0f, audio::lfo::LFOShape::_count, false, 0, audio::lfo::LFOShape::_count - 1, [this](float v) {
+                                  // of what really..
+                                  std::cout << "setting lfo1-shape to " << v << std::endl;
+                                  lfo1.setShape(static_cast<audio::lfo::LFOShape>(static_cast<int>(v)));
                               }}},
-            {UP::lfo1_vca, {"lfo1_vca", 0.0f, 0, false, 0, 1, [this](float v) {
-                                lfo1vca = v;
-                            }}},
-            {UP::lfo1_speed, {"lfo1_speed", 0.0f, 0, true, 100, 9, [this](float v) {
+            {UP::lfo1_speed, {"lfo1_speed", 0.5f, 0, true, 100, 9, [this](float v) {
+                                  std::cout << "setting lfo1-speed (mHz) to " << v << std::endl;
                                   lfo1.setSpeed(v); // in mHz.
+                              }}},
+            {UP::lfo1_routing, {"lfo1_routing", 0.3f, 6, false, 0, 5, [this](float v) {
+                                    lfo1Routing = static_cast<LFO1Routing>(static_cast<int>(v));
+                                    std::cout << "setting lfo1-routing to " << v << std::endl;
+                                }}},
+            {UP::lfo1_depth, {"lfo1_depth", 0.5f, 0, false, 0, 1, [this](float v) {
+                                  // of what really..
+                                  std::cout << "setting lfo1-depth to " << v << std::endl;
+                                  lfo1depth = v;
+                              }}},
+            {UP::lfo2_shape, {"lfo2_shape", 0.0f, audio::lfo::LFOShape::_count, false, 0, audio::lfo::LFOShape::_count - 1, [this](float v) {
+                                  // of what really..
+                                  lfo2.setShape(static_cast<audio::lfo::LFOShape>(static_cast<int>(v)));
+                              }}},
+            {UP::lfo2_speed, {"lfo2_speed", 0.5f, 0, true, 100, 9, [this](float v) {
+                                  std::cout << "setting lfo1-speed (mHz) to " << v << std::endl;
+                                  lfo2.setSpeed(v); // in mHz.
+                              }}},
+            {UP::lfo2_routing, {"lfo2_routing", 0.3f, 6, false, 0, 5, [this](float v) {
+                                    lfo2Routing = static_cast<LFO2Routing>(static_cast<int>(v));
+                                }}},
+            {UP::lfo2_depth, {"lfo2_depth", 0.5f, 0, false, 0, 1, [this](float v) {
+                                  // of what really..
+                                  lfo2depth = v;
                               }}}};
         // now reqeuest interface to reverse index.
         SynthBase::indexParams(upCount);
@@ -209,6 +233,10 @@ bool Model::renderNextBlock() {
         dist = dist * dist; // skip polarity..
         buffer[i] = synthBuffer[i] * (5 - dist) * 0.1f;
     }
+    // motherboard-stuff..
+    lfo1.updatePhase();
+    lfo2.updatePhase();
+
     // debugging
     if (false) {
         for (std::size_t i = 0; i < bufferSize; i++) {

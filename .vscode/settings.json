@@ -77,6 +77,7 @@
         "unordered_set": "cpp",
         "ranges": "cpp",
         "valarray": "cpp",
-        "hash_map": "cpp"
+        "hash_map": "cpp",
+        "*.old": "cpp"
     }
 }
