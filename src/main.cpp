@@ -78,20 +78,12 @@ int main() {
     signal(SIGINT, signal_handler);
     //
     std::unordered_map<std::string, std::string> deviceSettings;
+    SettingsManager::jsonRead(deviceSettings, "device.json");
     // initialize
     AudioMath::initialize();
-    deviceSettings["buffer_size"] = "64"; // set in three places now. here, device.json and where matters - constants.cpp
-    deviceSettings["audio_sr"] = "48000";
-    deviceSettings["audio_device"] = "default";
-    deviceSettings["midi_device"] = "1";
-    deviceSettings["http_port"] = "18080";
-    deviceSettings["scroller_cc"] = "10";
-    deviceSettings["scroller_dials"] = "74,71,5,84,78,76,77";
-
-    SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
-
     // Kickstart the StudioRunner (low-priority job scheduler)
-    sStudioRunner.updateSetting("audio_device", deviceSettings["audio_device"]);
+    sStudioRunner.reset();
+
     // meh - almost factory here..
     sPlayerEngine.updateMidiSettings(deviceSettings["scroller_cc"], deviceSettings["scroller_dials"]);
     // postpone this so we wait with the audio-thread..
@@ -100,12 +92,7 @@ int main() {
     // this could be and endpoint..
     //  now what playerEngine is initiated, setup the callback.
     unsigned long framesPerBuffer = static_cast<unsigned long>(std::stoi(deviceSettings["buffer_size"]));
-    /*sAudioManager.registerCallback([framesPerBuffer](float *buffer, unsigned long) {
-        // Call the static renderNextBlock method from sPlayerEngine
-        sPlayerEngine.renderNextBlock(buffer, framesPerBuffer);
-    });*/
-    // Start the audio driver
-    // sAudioDriver.start();
+
     //
     sPlayerEngine.bindMessageInBuffer(sMessageInBuffer);
     sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
@@ -130,6 +117,8 @@ int main() {
         // synth2->parseMidi(0x90, 0x44, 0x050);
         //   set up another synth..
     }
+    // Start the audio driver
+    sAudioManager.mountPreferedOrDefault(deviceSettings["audio_device"]);
     sStudioRunner.start();
     //
     crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);

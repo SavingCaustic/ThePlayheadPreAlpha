@@ -3,6 +3,7 @@
 #include "core/errors/ErrorBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutReader.h"
+#include "core/parameters/SettingsManager.h"
 #include "core/player/PlayerEngine.h" // Include your relevant headers
 #include "crow/json.h"
 #include "drivers/AudioManager.h"
@@ -94,6 +95,9 @@ void crowSetupEndpoints(
     // Endpoint to start audio generation
     CROW_ROUTE(api, "/device/audio/doStart")
     ([&audioManager]() {
+        std::unordered_map<std::string, std::string> deviceSettings;
+        SettingsManager::jsonRead(deviceSettings, "device.json");
+        audioManager.mountPreferedOrDefault(deviceSettings["audio_device"]);
         if (true) { //audioDriver.start()) {
             return crow::response(200, "Audio started successfully");
         } else {
@@ -103,6 +107,7 @@ void crowSetupEndpoints(
     // Endpoint to stop audio generation
     CROW_ROUTE(api, "/device/audio/doStop")
     ([&audioManager]() {
+        audioManager.unmountDevice();
         //audioManager.stop(); //ok, maybe signal to audio-manager, stop everything. We're closing down.
         return crow::response(200, "Audio stopped successfully"); });
 

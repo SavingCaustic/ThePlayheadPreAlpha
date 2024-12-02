@@ -80,6 +80,57 @@ class AudioManager {
         return mountedDeviceID;
     }
 
+    int mountPreferedOrDefault(const std::string preferredDeviceName) {
+        std::vector<AudioDeviceInfo> availableDevices = getAvailableDevices();
+        int mountedDeviceID = getMountedDeviceID();
+        //  Find the ID of the preferred device by name
+        int preferredDeviceID = -1;
+        for (const auto &device : availableDevices) {
+            if (device.name == preferredDeviceName) {
+                preferredDeviceID = device.id;
+                break;
+            }
+        }
+        // ok, now if prefered device was found, preferredDeviceID is set.
+        // as backup, use 'default' as preferredDeviceID
+        if (preferredDeviceID == -1) {
+            // go find default..
+            for (const auto &device : availableDevices) {
+                if (device.name == "default") {
+                    preferredDeviceID = device.id;
+                    break;
+                }
+            }
+        }
+
+        // Check if the preferred device is already mounted
+        if (mountedDeviceID == preferredDeviceID) {
+            // If the preferred device is mounted, check if it's still connected
+            bool preferredDeviceConnected = std::any_of(
+                availableDevices.begin(), availableDevices.end(),
+                [preferredDeviceID](const AudioDeviceInfo &dev) { return dev.id == preferredDeviceID; });
+            // if all good, early exit (above), if not, re-route..
+
+            if (!preferredDeviceConnected) {
+                // Preferred device lost - revert to default
+                std::cout << "Preferred device lost, reverting to default.\n";
+                unmountDevice();
+                mountDevice(-1); // -1 for default device
+                return 1;        // Indicates a switch to default
+            }
+        } else {
+            // If the preferred device is not mounted, check if it has connected
+            if (preferredDeviceID != -1) {
+                // Preferred device found - switch to it
+                std::cout << "Preferred device found, switching to preferred device.\n";
+                unmountDevice();
+                mountDevice(preferredDeviceID);
+                return 2; // Indicates a switch to preferred device
+            }
+        }
+        return 0;
+    }
+
     void setCallbackMode(CallbackMode mode) {
         callbackMode = mode;
     }

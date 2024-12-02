@@ -17,11 +17,7 @@ class StudioRunner {
     }
 
     void reset() {
-        settings["audio_device"] = "default";
-    }
-
-    void updateSetting(std::string key, std::string val) {
-        settings[key] = val;
+        SettingsManager::jsonRead(settings, "device.json");
     }
 
     // Starts the thread
@@ -72,7 +68,8 @@ class StudioRunner {
             midiHotPlugScan();
             break;
         case 1:
-            audioHotPlugScan();
+            // hotplugging not supported on running connection so skip it
+            // audioHotPlugScan();
             break;
         case 2:
             errOutput();
@@ -108,10 +105,23 @@ class StudioRunner {
         return 0;
     }
 
+    void discoverDevices() {
+        // try hard - getting portaudio to discover newly connected devices..
+        Pa_Initialize();
+        int numDevices = Pa_GetDeviceCount();
+        for (int i = 0; i < numDevices; ++i) {
+            const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
+            std::cout << "Device ID " << i << ": " << deviceInfo->name << std::endl;
+        }
+        Pa_Terminate();
+    }
+
     int audioHotPlugScan() {
-        // Get list of available device IDs and names
+        // disabled - to be removed..
+        //  Get list of available device IDs and names
+        discoverDevices();
         // hey, i'm the StudioRunner. I need some knowledge about settings. Who feeds me?
-        std::string preferredDeviceName = settings["audio_device"]; // This is the name we look for, we should get this from device.json really
+        std::string preferredDeviceName = settings["audio_device"];
         std::vector<AudioDeviceInfo> availableDevices = audioManager.getAvailableDevices();
         int mountedDeviceID = audioManager.getMountedDeviceID();
         // debug stuff here..
