@@ -246,8 +246,15 @@ u_int8_t PlayerEngine::remapCC(u_int8_t originalCC, u_int8_t param2) {
     // Check if the CC corresponds to a pot
     // std::cout << "orgCC is" << static_cast<int>(originalCC) << " and ccSP is " << static_cast<int>(scrollerCC) << std::endl;
     if (originalCC == scrollerCC) {
-        ccScrollerPosition = round(param2 * (5.0f / 127.0f));
-        // std::cout << "scroller pos is " << static_cast<int>(ccScrollerPosition) << std::endl;
+        u_int8_t testScroller = round(param2 * (8.0f / 127.0f));
+        if ((testScroller & 0x01) == 0x00) {
+            // at value (not threshold), now shift.
+            testScroller = testScroller >> 1;
+            if (ccScrollerPosition != testScroller) {
+                std::cout << "setting pager to " << static_cast<int>(testScroller) << std::endl;
+                ccScrollerPosition = testScroller;
+            }
+        }
         return 255; // surpress later processing
     }
     for (int i = 0; i < 7; i++) {
