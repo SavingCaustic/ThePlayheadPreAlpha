@@ -12,7 +12,7 @@ class EffectInterface {
     // Pure virtual methods that need to be implemented by derived classes
     virtual void reset() = 0;                                       // Reset the synth to its default state
     virtual void parseMidi(char cmd, char param1, char param2) = 0; // Handle MIDI input
-    virtual bool renderNextBlock() = 0;                             // Process the next audio block
+    virtual bool renderNextBlock(bool isStereo) = 0;                // Process the next audio block
     // experimenting with moving push to synth..
     // virtual void pushStrParam(const std::string &name, float val) = 0;
 

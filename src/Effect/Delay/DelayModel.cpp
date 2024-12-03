@@ -47,7 +47,7 @@ void Model::parseMidi(char cmd, char param1, char param2) {
     }
 }
 
-bool Model::renderNextBlock() {
+bool Model::renderNextBlock(bool isSterero) {
     // 1) get the delayOut-signal
     // 2) get the audioIn-signal
     // 3) write the delayIn signal based on feedback

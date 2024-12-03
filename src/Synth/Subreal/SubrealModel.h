@@ -21,6 +21,7 @@ namespace Synth::Subreal {
 
 enum UP {
     osc1_fmsens,
+    osc1_amsens,
     osc1_senstrack,
     osc2_semi,
     osc2_oct,
@@ -31,6 +32,7 @@ enum UP {
     vca_sustain,
     vca_fade,
     vca_release,
+    vca_spatial,
     vcf_type,
     vcf_cutoff,
     vcf_resonance,
@@ -115,6 +117,8 @@ class Model : public SynthBase {
     audio::lfo::Standard lfo1; // change to ramp. duh. no, it's in voice..
     audio::lfo::Standard lfo2;
     audio::filter::MultiFilter filter;
+    float vcaSpatial;
+    float amSens;
 
   protected:
     std::vector<Voice> voices; // Vector to hold Voice objects
@@ -166,8 +170,9 @@ class Voice {
     }
 
     void noteOn(uint8_t midiNote, float velocity) {
-        // requested from voiceAllocate. maybe refactor..
         notePlaying = midiNote;
+        leftAtt = fmin(1, fmax(0, (notePlaying - 60) * 0.04f * modelRef.vcaSpatial));
+        rightAtt = fmin(1, fmax(0, (60 - notePlaying) * 0.04f * modelRef.vcaSpatial));
         noteVelocity = velocity;
         tracking = fmax(0, (2.0f + modelRef.senseTracking * AudioMath::noteToFloat(notePlaying) * 7));
         modelRef.vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_ON);
@@ -192,12 +197,15 @@ class Voice {
 
     bool renderNextVoiceBlock(std::size_t bufferSize) {
         float osc1hz, osc2hz;
-        constexpr int chunkSize = 16; // Could be adapted to SIMD-capability..
+        // Chunk could be set to SIMD-capability.
+        constexpr int chunkSize = 16;
         if (vcaARslope.state != audio::envelope::OFF) {
-            float oscMix = modelRef.getOscMix();
+            // we're getting a new delta. ok..
             modelRef.vcaAR.updateDelta(vcaARslope);
             float fmAmp = tracking * modelRef.fmSens * noteVelocity;
+            AudioMath::easeLog50(fmAmp, fmAmpEaseOut);
             float mixAmplitude = noteVelocity * 0.6f;
+            AudioMath::easeLog5(modelRef.oscMix, oscMixEaseOut);
             int osc2note = notePlaying + modelRef.semitone + modelRef.osc2octave * 12;
             float osc2cents = modelRef.bendCents + modelRef.oscDetune;
             if (modelRef.lfo1Routing == LFO1Routing::osc12 || modelRef.lfo1Routing == LFO1Routing::osc2) {
@@ -216,14 +224,15 @@ class Voice {
             }
             vcaEaser.setTarget(vcaTarget);
 
-            AudioMath::easeLog5(oscMix, oscMixEaseOut);
-            AudioMath::easeLog5(fmAmp, fmAmpEaseOut);
             for (std::size_t i = 0; i < bufferSize; i += chunkSize) {
-                for (std::size_t j = 0; j < chunkSize; j++) {
+                for (std::size_t j = 0; j < chunkSize; j = j + 2) {
                     float y2 = osc2.getNextSample(0);
                     vcaEaserVal = vcaEaser.getValue();
-                    float y1 = osc1.getNextSample(y2 * fmAmp * (vcaEaserVal + 0.3f)); // disable ease. bad math.
-                    modelRef.addToSample(i + j, ((y1 * (1 - oscMixEaseOut) + y2 * oscMixEaseOut)) * vcaEaserVal * mixAmplitude);
+                    float y1 = osc1.getNextSample(y2 * fmAmp * (vcaEaserVal + 0.3f)) * (1.0f + modelRef.amSens * y2);
+                    // now weight sample to channel based on noteval.
+                    float voiceOut = ((y1 * (1 - oscMixEaseOut) + y2 * oscMixEaseOut)) * vcaEaserVal * mixAmplitude;
+                    modelRef.addToSample(i + j, voiceOut * (1 - leftAtt));
+                    modelRef.addToSample(i + j + 1, voiceOut * (1 - rightAtt));
                 }
             }
             modelRef.vcaAR.commit(vcaARslope);
@@ -242,11 +251,12 @@ class Voice {
     audio::envelope::Slope vcaARslope;
     audio::misc::Easer oscMixEaser;
     audio::misc::Easer vcaEaser;
+    float leftAtt;
+    float rightAtt;
     float noteVelocity;
     float velocityLast = 0;
     float vcaEaserVal;
     float tracking;
-    // float voiceBuffer[TPH_RACK_RENDER_SIZE];
 
   private:
     Model &modelRef; // Use reference to Model

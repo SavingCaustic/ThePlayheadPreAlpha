@@ -7,7 +7,7 @@ namespace Utils {
 
 class WavWriter {
   public:
-    WavWriter(const std::string &filename, int sample_rate, int dataSize);
+    WavWriter(const std::string &filename, int sample_rate, int num_channels, int dataSize);
     ~WavWriter();
 
     bool isOpen() const;

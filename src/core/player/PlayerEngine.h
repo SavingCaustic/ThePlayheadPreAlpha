@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Synth/SynthBase.h"
+#include "chrono"
 #include "core/errors/AudioErrorBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutBuffer.h"
@@ -47,6 +48,8 @@ class PlayerEngine {
     // R    bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
     // R    Rack *getRack(std::size_t position) const;
     void renderNextBlock(float *buffer, unsigned long numFrames);
+    int64_t sendLoadStats(std::chrono::time_point<std::chrono::high_resolution_clock> nextFrameCount, int64_t frameDurationMicroSec);
+
     // may be private
     void sendError(int code, const std::string &message);
 

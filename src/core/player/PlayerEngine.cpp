@@ -1,5 +1,6 @@
-#include "PlayerEngine.h"
+#include "./PlayerEngine.h"
 #include "ErrorWriter.h"
+#include "chrono"
 
 PlayerEngine::PlayerEngine()
     : noiseVolume(0.2f), isWritingMessage(false), hRotator(), errorWriter_(*this) {
@@ -118,6 +119,26 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
         turnRackAndRender();
         sumToMaster(buffer, numFrames, outer);
     }
+    int64_t timeLeftUs = sendLoadStats(nextFrameTime, frameDurationMicroSec);
+
+    // this code not working so fake it..
+    if (timeLeftUs > 500) {
+        // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
+        auto optionalMessage = messageInBuffer->pop();
+        if (optionalMessage) { // Check if a message was retrieved
+            newMessage = *optionalMessage;
+            std::cout << "New message received," << newMessage.paramName << "value:" << newMessage.paramValue << std::endl;
+            // this->sendError(404, "duh message recieved");
+            racks[newMessage.rackId].passParamToUnit(
+                Rack::stringToUnitType(newMessage.target),
+                newMessage.paramName,
+                newMessage.paramValue);
+            sendMessage(1, "synth", newMessage.paramValue, newMessage.paramName, "yaba daba");
+        }
+    }
+}
+
+int64_t PlayerEngine::sendLoadStats(std::chrono::time_point<std::chrono::high_resolution_clock> nextFrameTime, int64_t frameDurationMicroSec) {
     //
     std::chrono::time_point endTime = std::chrono::high_resolution_clock::now();
     int64_t timeLeftUs = std::chrono::duration_cast<std::chrono::microseconds>(nextFrameTime - endTime).count();
@@ -142,21 +163,7 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
         sendError(100, "Stat: " + std::to_string(this->loadAvg));
         sendError(105, "TimeLeftUs: " + std::to_string(timeLeftUs));
     }
-    // this code not working so fake it..
-    if (timeLeftUs > 500) {
-        // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
-        auto optionalMessage = messageInBuffer->pop();
-        if (optionalMessage) { // Check if a message was retrieved
-            newMessage = *optionalMessage;
-            std::cout << "New message received," << newMessage.paramName << "value:" << newMessage.paramValue << std::endl;
-            // this->sendError(404, "duh message recieved");
-            racks[newMessage.rackId].passParamToUnit(
-                Rack::stringToUnitType(newMessage.target),
-                newMessage.paramName,
-                newMessage.paramValue);
-            sendMessage(1, "synth", newMessage.paramValue, newMessage.paramName, "yaba daba");
-        }
-    }
+    return timeLeftUs;
 }
 
 std::string PlayerEngine::getSynthParams(int rackId) {
@@ -167,15 +174,15 @@ std::string PlayerEngine::getSynthParams(int rackId) {
 void PlayerEngine::sumToMaster(float *buffer, unsigned long numFrames, int outer) {
     int offset = outer * 2 * TPH_RACK_RENDER_SIZE; // Offset in the master buffer
     for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE * 2; sample += 2) {
-        *(buffer + sample) = 0;
-        *(buffer + sample + 1) = 0;
+        *(buffer + sample) = 0;     // L
+        *(buffer + sample + 1) = 0; // R
     }
 
     for (std::size_t i = 0; i < TPH_RACK_COUNT; ++i) {
         if (racks[i].enabled) {
             for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE * 2; sample += 2) {
-                *(buffer + offset + sample) += racks[i].audioBuffer[sample];
-                *(buffer + offset + sample + 1) += racks[i].audioBuffer[sample + 1];
+                *(buffer + offset + sample) += racks[i].audioBuffer[sample];         // L
+                *(buffer + offset + sample + 1) += racks[i].audioBuffer[sample + 1]; // R
             }
         }
     }

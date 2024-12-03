@@ -1,4 +1,5 @@
 #pragma once
+#include "./RackEmittor.h"
 #include "Effect/Chorus/ChorusModel.h"
 #include "Effect/Chorus2/Chorus2Model.h"
 #include "Effect/Delay/DelayModel.h"
@@ -23,7 +24,12 @@ class Rack {
   public:
     // Method to set PlayerEngine after construction
 
-    Rack() {}
+    alignas(32) std::array<float, TPH_RACK_BUFFER_SIZE> audioBuffer;
+    bool audioIsStereo;
+    RackEmittor emittor;
+
+    Rack() : audioIsStereo(false),
+             emittor(audioBuffer.data(), TPH_RACK_BUFFER_SIZE) {}
 
     ~Rack() {
         delete synth;
@@ -36,21 +42,18 @@ class Rack {
     }
 
     void setErrorWriter(ErrorWriter &errorWriter) {
-        std::cout << "couple recieved " << std::endl;
         errorWriter_ = &errorWriter;
     }
-
-    alignas(32) std::array<float, TPH_RACK_BUFFER_SIZE> audioBuffer;
 
     // Define the enum for unit types
     enum class UnitType {
         Synth,
-        Emittor,
         Eventor1,
         Eventor2,
         Effect1,
         Effect2,
-        Unknown // Handle cases where the unit type is invalid
+        Emittor,
+        _unknown // Handle cases where the unit type is invalid
     };
 
     // Getter method returns a reference to the array
@@ -58,17 +61,27 @@ class Rack {
         return audioBuffer;
     }
 
+    /* -------------------
+    | TIMING LOGIC START |
+    ------------------- */
+
     void clockReset() {}
 
     void probeNewClock(float pulse) {}
 
     void probeNewTick(float pulse) {}
 
+    /* ----------------------
+    | AUDIO RENDERING START |
+    ---------------------- */
+
     void render(int num) {
         // Rendering logic here
+        bool isStereo;
         if (synth) {
-            synth->renderNextBlock();
+            isStereo = synth->renderNextBlock();
         } else {
+            isStereo = false;
             float *ptr = audioBuffer.data();
             for (int i = 0; i < TPH_RACK_BUFFER_SIZE; ++i) {
                 *ptr++ = 0.05 * (((float)rand() / RAND_MAX) * 2.0f - 1.0f); // Noise
@@ -76,13 +89,20 @@ class Rack {
         }
         if (effect1) {
             // hey we should have a return argument here - telling if its stereo..
-            effect1->renderNextBlock();
+            isStereo = effect1->renderNextBlock(isStereo);
         }
         if (effect2) {
             // hey we should have a return argument here - telling if its stereo..
-            effect2->renderNextBlock();
+            isStereo = effect2->renderNextBlock(isStereo);
         }
+        isStereo = emittor.process(isStereo);
+        //  uhm - maybe always stereo when rack is done..
+        this->audioIsStereo = isStereo;
     }
+
+    /* -------------------
+    | MIDI LOGIC START |
+    ------------------- */
 
     void parseMidi(uint8_t cmd, uint8_t param1 = 0x00, uint8_t param2 = 0x00) {
         if (!(this->hEventor1)) {
@@ -107,7 +127,7 @@ class Rack {
         } else if (std::strcmp(unit, "effect2") == 0) {
             return UnitType::Effect2;
         }
-        return UnitType::Unknown;
+        return UnitType::_unknown;
     }
 
     // passParamToUnit now takes the enum type instead of a string

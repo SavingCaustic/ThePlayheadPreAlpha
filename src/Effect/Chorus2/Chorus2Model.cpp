@@ -44,7 +44,7 @@ void Model::parseMidi(char cmd, char param1, char param2) {
 
 // maybe let this be a mono chorus with a shared delay line..
 
-bool Model::renderNextBlock() {
+bool Model::renderNextBlock(bool isSterero) {
     double delayOutL, delayOutR;
     float audioInL, audioInR;
     for (std::size_t i = 0; i < bufferSize; i += 2) {

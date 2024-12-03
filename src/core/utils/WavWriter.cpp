@@ -3,8 +3,8 @@
 #include <cmath>
 #include <cstring>
 namespace Utils {
-WavWriter::WavWriter(const std::string &filename, int sample_rate, int dataSize)
-    : file(nullptr), samples_written(0), dataSize(dataSize) { // Store dataSize as member variable
+WavWriter::WavWriter(const std::string &filename, int sample_rate, int num_channels, int dataSize)
+    : file(nullptr), samples_written(0), dataSize(dataSize) {
     int bits_per_sample = 16;
 
     std::strncpy(header.riff_tag, "RIFF", 4);
@@ -15,11 +15,13 @@ WavWriter::WavWriter(const std::string &filename, int sample_rate, int dataSize)
     header.riff_length = 0;
     header.fmt_length = 16;
     header.audio_format = 1;
-    header.num_channels = 1;
+    header.num_channels = num_channels; // Use the parameter for channels
     header.sample_rate = sample_rate;
-    header.byte_rate = sample_rate * (bits_per_sample / 8);
-    header.block_align = bits_per_sample / 8;
     header.bits_per_sample = bits_per_sample;
+
+    // Calculate byte_rate and block_align correctly
+    header.byte_rate = sample_rate * num_channels * (bits_per_sample / 8);
+    header.block_align = num_channels * (bits_per_sample / 8);
     header.data_length = 0;
 
     file = std::fopen(filename.c_str(), "wb+");

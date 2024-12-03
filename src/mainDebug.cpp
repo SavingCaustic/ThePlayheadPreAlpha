@@ -3,6 +3,7 @@
 #include "Synth/SynthInterface.h"
 #include "core/audio/AudioMath.h"
 #include "core/parameters/SettingsManager.h"
+#include "core/player/Rack.h"
 #include "core/utils/WavWriter.h"
 #include <atomic>
 #include <iostream>
@@ -26,41 +27,16 @@ void signal_handler(int signal) {
 }
 
 int main() {
-    float audioBuffer[64];
-    const std::size_t bufferSize = 64;
-    AudioMath::initialize();
-
     std::unordered_map<std::string, std::string> deviceSettings;
-    // initialize
-    deviceSettings["buffer_size"] = "64"; // set in three places now. here, device.json and where matters - constants.cpp
-    deviceSettings["audio_sr"] = "48000";
-    deviceSettings["audio_device"] = "1";
-    deviceSettings["midi_device"] = "1";
-    deviceSettings["http_port"] = "18080";
-    deviceSettings["scroller_cc"] = "10";
-    deviceSettings["scroller_dials"] = "74,71,5,84,78,76,77";
-
     SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
 
-    // Synth::Sketch::Model mySynth(audioBuffer, bufferSize);
-    // Synth::Monolith::Model mySynth(audioBuffer, bufferSize);
-    Synth::Subreal::Model mySynth;
-    mySynth.bindBuffers(audioBuffer, bufferSize);
+    AudioMath::initialize();
+    Rack myRack = Rack();
+    myRack.setSynthFromStr("Subreal");
 
-    Utils::WavWriter writer("echo.wav", 48000, 64);
-
-    // play some notes listening for cracks..
-    // uhm, i'm not sure the synths themself should parse midi..
-    // given noteOn with vel 0 is note off etc..
-    /*
-    mySynth.pushStrParam("vca_attack", 0.0f);
-    mySynth.pushStrParam("osc_mix", 0.5f);
-    mySynth.pushStrParam("vca_decay", 0.2f);
-    mySynth.pushStrParam("vca_sustain", 0.7f);
-    mySynth.pushStrParam("vca_release", 0.2f);
-    mySynth.pushStrParam("osc1_fmsens", 0.4f);
-    */
-    for (int t = 0; t < 50; t++) {
+    int blockSize = 128; // rack-render-size always 64 samples, so in stereo = 128
+    Utils::WavWriter writer("echo.wav", 48000, 2, blockSize);
+    for (int t = 0; t < 20; t++) {
         if (t % 10 == 0) {
             float v = t;
             v = t / 50.0f;
@@ -68,20 +44,20 @@ int main() {
             // mySynth.handleMidiCC(74, 0.8);
         }
         u_int8_t note = 40 + ((t * 5) % 26);
-        note = 60;
-        mySynth.parseMidi(0x90, note, 0x70);
-        mySynth.parseMidi(0x90, note + 3, 0x70);
-        mySynth.parseMidi(0x90, note + 7, 0x70);
+        // note = 60;
+        myRack.parseMidi(0x90, note, 0x70);
+        // myRack.parseMidi(0x90, note + 3, 0x70);
+        // myRack.parseMidi(0x90, note + 7, 0x70);
         for (int i = 0; i < 65; i++) {
-            mySynth.renderNextBlock();
-            writer.write(audioBuffer);
+            myRack.render(blockSize);
+            writer.write(myRack.audioBuffer.data());
         }
-        mySynth.parseMidi(0x80, note + 7, 0x00);
-        mySynth.parseMidi(0x80, note + 3, 0x00);
-        mySynth.parseMidi(0x80, note, 0x00);
-        for (int i = 0; i < 25; i++) {
-            mySynth.renderNextBlock();
-            writer.write(audioBuffer);
+        // myRack.parseMidi(0x80, note + 7, 0x00);
+        // myRack.parseMidi(0x80, note + 3, 0x00);
+        myRack.parseMidi(0x80, note, 0x00);
+        for (int i = 0; i < 50; i++) {
+            myRack.render(blockSize);
+            writer.write(myRack.audioBuffer.data());
         }
     }
     writer.close();

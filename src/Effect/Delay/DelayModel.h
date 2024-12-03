@@ -27,7 +27,7 @@ class Model : public EffectInterface {
     void parseMidi(char cmd, char param1, char param2) override;
 
     // Method to render the next block of audio
-    bool renderNextBlock() override;
+    bool renderNextBlock(bool isSterero) override;
 
   protected:
     float *buffer;          // Pointer to audio buffer

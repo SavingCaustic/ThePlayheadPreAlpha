@@ -19,6 +19,20 @@ Model::Model() {
     }
 }
 
+void Model::reset() {
+    lut1.applySine(1, 0.5);
+    lut1.applySine(2, 0.3);
+    lut1.applySine(3, 0.3);
+    lut1.applySine(4, 0.2);
+    lut1.applySine(5, 0.2);
+    lut1.applySine(6, 0.1);
+    lut1.normalize();
+    //
+    lut2.applySine(1, 0.6);
+    lut2.applySine(3, 0.3);
+    lut2.normalize();
+}
+
 void Model::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
     this->buffer = audioBuffer;
     this->bufferSize = bufferSize;
@@ -30,6 +44,9 @@ void Model::setupParams(int upCount) {
         SynthBase::paramDefs = {
             {UP::osc1_fmsens, {"osc1_fmsens", 0.2f, 0, false, 0, 1, [this](float v) {
                                    fmSens = v;
+                               }}},
+            {UP::osc1_amsens, {"osc1_amsens", 0.0f, 0, false, 0, 1, [this](float v) {
+                                   amSens = v;
                                }}},
             {UP::osc1_senstrack, {"osc1_senstrack", 0.5f, 0, false, -1, 1, [this](float v) {
                                       senseTracking = v;
@@ -68,6 +85,9 @@ void Model::setupParams(int upCount) {
                                    vcaAR.setTime(audio::envelope::RELEASE, v);
                                    std::cout << "setting release to " << v << " ms" << std::endl;
                                }}},
+            {UP::vca_spatial, {"vca_spatial", 0.2f, 0, false, 0, 1, [this](float v) {
+                                   vcaSpatial = v;
+                               }}},
             {UP::vcf_type, {"vcf_type", 0.0f, 3, false, 0, 2, [this](float v) {
                                 // not totally safe but compact:
                                 filter.setFilterType(static_cast<audio::filter::FilterType>(static_cast<int>(v)));
@@ -94,7 +114,7 @@ void Model::setupParams(int upCount) {
                                     lfo1Routing = static_cast<LFO1Routing>(static_cast<int>(v));
                                     std::cout << "setting lfo1-routing to " << v << std::endl;
                                 }}},
-            {UP::lfo1_depth, {"lfo1_depth", 0.5f, 0, false, 0, 1, [this](float v) {
+            {UP::lfo1_depth, {"lfo1_depth", 0.0f, 0, false, 0, 1, [this](float v) {
                                   // of what really..
                                   std::cout << "setting lfo1-depth to " << v << std::endl;
                                   lfo1depth = v;
@@ -110,27 +130,13 @@ void Model::setupParams(int upCount) {
             {UP::lfo2_routing, {"lfo2_routing", 0.3f, 6, false, 0, 5, [this](float v) {
                                     lfo2Routing = static_cast<LFO2Routing>(static_cast<int>(v));
                                 }}},
-            {UP::lfo2_depth, {"lfo2_depth", 0.5f, 0, false, 0, 1, [this](float v) {
+            {UP::lfo2_depth, {"lfo2_depth", 0.0f, 0, false, 0, 1, [this](float v) {
                                   // of what really..
                                   lfo2depth = v;
                               }}}};
         // now reqeuest interface to reverse index.
         SynthBase::indexParams(upCount);
     }
-}
-
-void Model::reset() {
-    lut1.applySine(1, 0.5);
-    /*lut1.applySine(2, 0.4);
-    lut1.applySine(3, 0.3);
-    lut1.applySine(4, 0.2);
-    lut1.applySine(5, 0.2);
-    lut1.applySine(6, 0.1);*/
-    lut1.normalize();
-    //
-    lut2.applySine(1, 0.6);
-    /*lut2.applySine(3, 0.3); */
-    lut2.normalize();
 }
 
 void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
@@ -212,12 +218,8 @@ int8_t Model::findVoiceToAllocate(uint8_t note) {
 }
 
 bool Model::renderNextBlock() {
-    // make stuff not done inside chunk.
-    // LFO1
-    //$se = $this->settings;
-    //$lfoHz = $this->getNum('LFO1_RATE');
-    //$this->lfo1Sample = $this->lfo1->getNextSample($blockSize * $lfoHz);
-    // iterate over all voices and create a summed output.
+    // we are using synth-buffer to do dist-calculation, before sending to rack.
+    // synth-buffer should be doubled - stereo.
     for (uint8_t i = 0; i < bufferSize; i++) {
         synthBuffer[i] = 0;
     }
