@@ -203,6 +203,9 @@ class Voice {
             // we're getting a new delta. ok..
             modelRef.vcaAR.updateDelta(vcaARslope);
             float fmAmp = tracking * modelRef.fmSens * noteVelocity;
+            if (modelRef.lfo2Routing == LFO2Routing::fmSens) {
+                fmAmp *= (1 + modelRef.lfo2.getLFOval() * modelRef.lfo2depth);
+            }
             AudioMath::easeLog50(fmAmp, fmAmpEaseOut);
             float mixAmplitude = noteVelocity * 0.6f;
             AudioMath::easeLog5(modelRef.oscMix, oscMixEaseOut);

@@ -1,10 +1,3 @@
-/* omg.. the idea here is that any rack that wants to destroy an effect, synth etc,
-set a "queuedForUnmount" the effect. (done by UI-thread). And a queue-reader (this class), 
-verifies that the effect is not only queued but actually unmounted (must be done by audio-thread
- as it discovers the request), this class can do its job. Removing the unit from the heap.
- */
-
-
 #include <condition_variable>
 #include <memory>
 #include <mutex>

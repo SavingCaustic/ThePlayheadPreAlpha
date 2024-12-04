@@ -1,9 +1,9 @@
 Coding conventions
 ==================
-StaticClass         Pascal case for StaticClass of StaticClass
-hObjectInstance     Prefixed h of instance of Class
+sStaticObject
+hHeapObject
 variableName        Camel case for methods and attributes
-
+CONST_NAME
 
 Good to know
 ============
