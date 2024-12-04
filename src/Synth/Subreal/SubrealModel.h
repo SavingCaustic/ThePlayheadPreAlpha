@@ -231,10 +231,14 @@ class Voice {
                     float y1 = osc1.getNextSample(y2 * fmAmp * (vcaEaserVal + 0.3f)) * (1.0f + modelRef.amSens * y2);
                     // now weight sample to channel based on noteval.
                     float voiceOut = ((y1 * (1 - oscMixEaseOut) + y2 * oscMixEaseOut)) * vcaEaserVal * mixAmplitude;
+                    // inject these into stereo-chamber, with offset
+                    // eject from stereo-chamber. One channel enough really. (other side un-delayed)
+                    // maybe process internally first and copy later. SIMD etc..
                     modelRef.addToSample(i + j, voiceOut * (1 - leftAtt));
                     modelRef.addToSample(i + j + 1, voiceOut * (1 - rightAtt));
                 }
             }
+            // copy local voice-buffer to synth-buffer
             modelRef.vcaAR.commit(vcaARslope);
         } else {
             // Remove voice from playing

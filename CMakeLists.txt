@@ -20,7 +20,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0") # Enable debug symbols, disable optimizations
 else()
     set(MAIN_FILE "${PROJECT_SOURCE_DIR}/src/main.cpp") # Use main.cpp in Release
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mtune=native -ftree-vectorize -flto") # Optimize for Release
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=x86-64 -mtune=native -ftree-vectorize -flto") # Optimize for Release
 endif()
 
 # Automatically collect all .cpp files in src/ except the main file
