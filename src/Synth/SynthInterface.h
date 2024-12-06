@@ -19,14 +19,13 @@ class SynthInterface {
     virtual void bindBuffers(float *audioBuffer, std::size_t bufferSize) = 0;
 
     // non virtual (Base methods)
+    void handleMidiCC(u_int8_t ccNumber, float value);
     void setupCCmapping(const std::string &synthName);
 
     // i'd rather had this in the abstract but no luck..
     void setErrorWriter(ErrorWriter *errorWriter) {
         errorWriter_ = errorWriter;
     }
-
-    void handleMidiCC(u_int8_t ccNumber, float value);
 
     // this too..
     void logErr(int code, const std::string &message);

@@ -1,4 +1,5 @@
 #include "./PlayerEngine.h"
+// #include "DestructorBuffer.h"
 #include "ErrorWriter.h"
 #include "chrono"
 
@@ -40,6 +41,10 @@ void PlayerEngine::bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer) {
     audioErrorBuffer = &hAudioErrorBuffer;
 }
 
+/*void PlayerEngine::bindDestructorBuffer(DestructorBuffer &hDestructorBuffer) {
+    destructorBuffer = &hDestructorBuffer;
+}*/
+
 void PlayerEngine::bindMidiManager(MidiManager &hMidiManager) {
     midiManager = &hMidiManager;
 }
@@ -78,12 +83,55 @@ void PlayerEngine::sendError(int code, const std::string &message) {
     audioErrorBuffer->addAudioError(code, message);
 }
 
-bool PlayerEngine::loadSynth(SynthBase *&synth, int rackID) {
-    // Delegate synth setup to the rack
-    bool result = racks[rackID].setSynth(synth);
+bool PlayerEngine::loadSynth(SynthBase *&newSynth, int rackID) {
+    // Delegate synth setup to the rack. Why?
+    // bool result = racks[rackID].setSynth(synth);
+    if (racks[rackID].synth) {
+        std::cout << "destroying synth (inside audio-thread)" << std::endl;
+        delete racks[rackID].synth; // Clean up the old synth
+        racks[rackID].synth = nullptr;
+    }
+
+    racks[rackID].synth = newSynth;
+    if (newSynth) {
+        std::cout << "Binding buffers for synth in rack" << std::endl;
+        racks[rackID].synth->bindBuffers(racks[rackID].audioBuffer.data(), racks[rackID].audioBuffer.size()); // Bind the buffer here
+        racks[rackID].enabled = true;                                                                         // Mark the rack as enabled
+    } else {
+        racks[rackID].enabled = false; // Disable the rack if no synth
+    }
+
     // Reset the caller's pointer to avoid accidental reuse
-    synth = nullptr;
-    return result;
+    newSynth = nullptr;
+    return true;
+}
+
+bool PlayerEngine::loadEffect(EffectBase *&newEffect, int rackID, int effectSlot) {
+    std::cout << "at loadEffects" << std::endl;
+    EffectInterface **effectTarget = nullptr;
+    if (effectSlot == 1) {
+        effectTarget = &racks[rackID].effect1;
+    } else {
+        effectTarget = &racks[rackID].effect2;
+    }
+
+    if (*effectTarget) {
+        delete *effectTarget;
+        *effectTarget = nullptr; // Avoid dangling pointer
+    }
+
+    if (newEffect) {
+        std::cout << "yes new effect" << std::endl;
+        *effectTarget = newEffect;
+        (*effectTarget)->bindBuffers(racks[rackID].audioBuffer.data(), racks[rackID].audioBuffer.size());
+        // racks[rackID].enabled = true; // Mark the rack as enabled
+    } else {
+        // racks[rackID].enabled = false; // Disable the rack if no synth
+    }
+
+    // Reset the caller's pointer to avoid accidental reuse
+    newEffect = nullptr;
+    return true;
 }
 
 bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) {
@@ -268,7 +316,7 @@ u_int8_t PlayerEngine::remapCC(u_int8_t originalCC, u_int8_t param2) {
         if (originalCC == ccScrollerDials[i]) {
             // Remap based on scroller position
             // what if we hard-code it, big time.. 32->
-            uint8_t newCC = 20 + ccScrollerPosition * 10 + i;
+            uint8_t newCC = 16 + ccScrollerPosition * 8 + i;
             std::cout << "routed CC:" << static_cast<int>(newCC) << std::endl;
             return newCC;
         }

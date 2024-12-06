@@ -10,9 +10,9 @@ struct DestructorRecord {
     void (*deleter)(void *); // Function pointer to the deleter
 };
 
-class DestructorQueue {
+class DestructorBuffer {
   public:
-    DestructorQueue() : wrIdx(0), rdIdx(0) {}
+    DestructorBuffer() : wrIdx(0), rdIdx(0) {}
 
     // Push a message (Producer)
     bool push(const DestructorRecord &destRec) {

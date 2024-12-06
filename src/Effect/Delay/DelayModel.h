@@ -3,7 +3,7 @@
 // Forward declare Rack to avoid circular dependency
 // class Rack;
 
-#include "Effect/EffectInterface.h"
+#include "Effect/EffectBase.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
 #include "core/parameters/params.h"
@@ -15,11 +15,12 @@
 #include <vector>
 
 namespace Effect::Delay {
+using json = nlohmann::json;
 
-class Model : public EffectInterface {
+class Model : public EffectBase {
   public:
     // Constructor
-    Model(float *audioBuffer, std::size_t bufferSize);
+    Model();
     // Public methods. These should match interface right (contract)
     void reset() override;
 
@@ -29,15 +30,18 @@ class Model : public EffectInterface {
     // Method to render the next block of audio
     bool renderNextBlock(bool isSterero) override;
 
+    json getParamDefsAsJSON() override {
+        return EffectBase::getParamDefsAsJson();
+    }
+
   protected:
-    float *buffer;          // Pointer to audio buffer
-    std::size_t bufferSize; // Size of the audio buffer
     std::vector<float> delayBuffer;
     int wrPointer = 0;
     int rdPointer = 0;
     float mix = 0.3;
     float feedback = 0.2f;
     float time = 0.57f; // 105 bpm
+    int debugCnt = 0;
 
     void initializeParameters();
     // Handle incoming MIDI CC messages

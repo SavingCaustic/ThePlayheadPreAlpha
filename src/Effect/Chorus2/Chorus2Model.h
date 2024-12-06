@@ -1,7 +1,7 @@
 #pragma once
 
 // #include "./LowPassFilter.h"
-#include "Effect/EffectInterface.h"
+#include "Effect/EffectBase.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
 #include "core/parameters/params.h"
@@ -13,11 +13,12 @@
 #include <vector>
 
 namespace Effect::Chorus2 {
+using json = nlohmann::json;
 
-class Model : public EffectInterface {
+class Model : public EffectBase {
   public:
     // Constructor
-    Model(float *audioBuffer, std::size_t bufferSize);
+    Model();
     // Public methods. These should match interface right (contract)
     void reset() override;
 
@@ -27,10 +28,11 @@ class Model : public EffectInterface {
     // Method to render the next block of audio
     bool renderNextBlock(bool isSterero) override;
 
+    json getParamDefsAsJSON() override {
+        return EffectBase::getParamDefsAsJson();
+    }
+
   protected:
-    float *buffer; // Pointer to audio buffer
-    // LowPassFilter LPF;      // Declare the filter object here
-    std::size_t bufferSize; // Size of the audio buffer
     std::vector<double> delayBuffer;
     int delayBufferSize = 32768;
     int delayBufferMask = delayBufferSize - 1;

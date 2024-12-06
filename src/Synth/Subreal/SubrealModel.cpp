@@ -247,7 +247,7 @@ bool Model::renderNextBlock() {
     }
 
     // not always stereo for now..
-    return false;
+    return true;
 }
 
 float Model::getOscMix() {

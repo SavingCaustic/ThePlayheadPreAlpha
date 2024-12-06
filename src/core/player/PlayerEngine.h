@@ -26,6 +26,7 @@ class PlayerEngine {
 
     void bindErrorWriter();
 
+    // void bindDestructorBuffer(DestructorBuffer &hDestructorBuffer);
     void bindMessageInBuffer(MessageInBuffer &hMessageInBuffer);
     void bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer);
     void bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer);
@@ -43,6 +44,7 @@ class PlayerEngine {
     std::string getSynthParams(int rackId);
 
     bool loadSynth(SynthBase *&synth, int rackID);
+    bool loadEffect(EffectBase *&effect, int rackID, int effectSlot);
 
     bool setupRackWithSynth(int rackId, const std::string &synthName);
     // R    bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
@@ -79,6 +81,7 @@ class PlayerEngine {
     double midiInTS; // probably not used, we use it when we get it.
     MessageInBuffer *messageInBuffer = nullptr;
     MessageOutBuffer *messageOutBuffer = nullptr;
+    // DestructorBuffer *destructorBuffer = nullptr;
     MessageIn newMessage;               // Declare a reusable Message object
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
     AudioErrorBuffer *audioErrorBuffer = nullptr;

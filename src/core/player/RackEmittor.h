@@ -13,8 +13,8 @@ class RackEmittor {
     }
 
     bool processPanAndFader(bool isStereo) {
-        // for now, just fix the buffer out.
-        int rightOffset = (isStereo) ? 0 : 1;
+        // if mono, copy left to right.
+        int rightOffset = (isStereo) ? 1 : 0;
         float testGain = 1.0f;
         for (int i = 0; i < bufferLen; i = i + 2) {
             bufferPtr[i] = bufferPtr[i] * testGain;

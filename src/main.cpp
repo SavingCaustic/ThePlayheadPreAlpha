@@ -1,8 +1,11 @@
+#include "Effect/EffectBase.h"
+#include "Effect/EffectFactory.h"
 #include "Synth/SynthBase.h"
 #include "Synth/SynthFactory.h"
 #include "api/endpointsCrow.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
+// #include "core/destructor/DestructorBuffer.h"
 #include "core/errors/AudioErrorBuffer.h"
 #include "core/errors/ErrorBuffer.h"
 #include "core/errors/ErrorHandler.h"
@@ -65,6 +68,9 @@ AudioErrorBuffer sAudioErrorBuffer;                            // Error buffer u
 ErrorBuffer sErrorBuffer;                                      // Main error buffer for logging
 ErrorHandler sErrorHandler(&sAudioErrorBuffer, &sErrorBuffer); // Error handler with threads
 
+// DestructorBuffer
+// DestructorBuffer sDestructorBuffer;
+
 // StudioRunner - performing various low-prio task (micro-scheduler)
 StudioRunner sStudioRunner(sMidiManager, sAudioManager);
 
@@ -97,6 +103,7 @@ int main() {
     sPlayerEngine.bindMessageInBuffer(sMessageInBuffer);
     sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
     sPlayerEngine.bindErrorBuffer(sAudioErrorBuffer);
+    // sPlayerEngine.bindDestructorBuffer(sDestructorBuffer);
     sPlayerEngine.bindMidiManager(sMidiManager);
     sErrorHandler.start();
     sPlayerEngine.initializeRacks();
@@ -108,6 +115,10 @@ int main() {
         SynthBase *synth = nullptr;
         SynthFactory::setupSynth(synth, "Subreal");
         sPlayerEngine.loadSynth(synth, 0); // maybe return an nullptr from loadSynth?
+        EffectBase *effect = nullptr;
+        EffectFactory::setupEffect(effect, "Delay");
+        sPlayerEngine.loadEffect(effect, 0, 1); // stupid to have 1 at effect..
+
         // synth->parseMidi(0x90, 0x40, 0x050);
         //  set up another synth..
         SynthBase *synth2 = nullptr;

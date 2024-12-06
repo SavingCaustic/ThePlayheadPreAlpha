@@ -6,8 +6,7 @@ namespace Effect::Chorus2 {
 // maybe we should pass reference to playerEngine since we may want to send an error?
 
 // Constructor to accept buffer and size
-Model::Model(float *audioBuffer, std::size_t bufferSize)
-    : buffer(audioBuffer), bufferSize(bufferSize) {
+Model::Model() {
     setupParams();                       // creates the array with attributes and lambdas for parameters - NOT INTERFACE
     delayBuffer.resize(delayBufferSize); // must be 2^x since bitmasking.
     std::fill(delayBuffer.begin(), delayBuffer.end(), 0.0f);

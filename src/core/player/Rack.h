@@ -88,12 +88,24 @@ class Rack {
             }
         }
         if (effect1) {
+            debugCnt++;
+            if (debugCnt % 1024 == 0) {
+                if (isStereo) {
+                    std::cout << "pre-stereo!" << std::endl;
+                }
+            }
             // hey we should have a return argument here - telling if its stereo..
             isStereo = effect1->renderNextBlock(isStereo);
-        }
-        if (effect2) {
-            // hey we should have a return argument here - telling if its stereo..
-            isStereo = effect2->renderNextBlock(isStereo);
+            if (debugCnt % 1024 == 0) {
+                if (isStereo) {
+                    std::cout << "post-stereo!" << std::endl;
+                }
+            }
+            // only if effect1
+            if (effect2) {
+                // hey we should have a return argument here - telling if its stereo..
+                isStereo = effect2->renderNextBlock(isStereo);
+            }
         }
         isStereo = emittor.process(isStereo);
         //  uhm - maybe always stereo when rack is done..
@@ -167,6 +179,7 @@ class Rack {
     SynthInterface *synth = nullptr;
     EffectInterface *effect1 = nullptr;
     EffectInterface *effect2 = nullptr;
+    int debugCnt = 0;
 
     // I really don't think these methods should be here in Rack, since an effect
     // could be loaded somewhere else. Possibly also a synth..
@@ -259,14 +272,17 @@ class Rack {
         bool loadOK = true;
         switch (type) {
         case EffectType::Delay:
-            *effectTarget = new Effect::Delay::Model(audioBuffer.data(), audioBuffer.size());
+            *effectTarget = new Effect::Delay::Model();
+            (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
         case EffectType::Chorus:
-            *effectTarget = new Effect::Chorus::Model(audioBuffer.data(), audioBuffer.size());
+            *effectTarget = new Effect::Chorus::Model();
+            (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size());
             break;
         case EffectType::Chorus2:
-            *effectTarget = new Effect::Chorus2::Model(audioBuffer.data(), audioBuffer.size());
+            *effectTarget = new Effect::Chorus2::Model();
+            (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size());
             break;
         // Add cases for other synth types here
         default:
