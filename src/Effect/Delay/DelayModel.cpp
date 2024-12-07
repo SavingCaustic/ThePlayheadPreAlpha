@@ -8,41 +8,38 @@ namespace Effect::Delay {
 
 // Constructor to accept buffer and size
 Model::Model() {
-    setupParams();                 // creates the array with attributes and lambdas for parameters - NOT INTERFACE
-    delayBuffer.resize(48000 * 2); // maybe later times 2..
-    std::fill(delayBuffer.begin(), delayBuffer.end(), 0.0f);
-    // EffectInterface::initializeParameters();
-    //  EffectInterface::setupCCmapping("Dummy"); // Adjust path as needed
+    // ok now we lock buffersize assuming 48k. 48k * 1.28 => 128kB
     reset();
+    setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
+    EffectBase::initParams();
+
+    delayBuffer.resize(BUFFER_SIZE); // maybe later times 2..
+    std::fill(delayBuffer.begin(), delayBuffer.end(), 0.0f);
 }
 
 void Model::reset() {
-    // must be safe to call inside audio-thread, right?
-    wrPointer = time * 48000;
+    wrPointer = 0;
     rdPointer = 0;
 }
 
-void Model::setupParams() {
-}
-
-void Model::parseMidi(char cmd, char param1, char param2) {
-    u_int8_t messageType = static_cast<uint8_t>(cmd & 0xf0);
-    float fParam2 = static_cast<float>(param2) * (1.0f / 127.0f);
-
-    switch (messageType) {
-    case 0x80:
-        // Note off
-        break;
-    case 0x90:
-        // Note on
-        break;
-    case 0xb0:
-        // Control change (CC)
-        // EffectInterface::handleMidiCC(static_cast<int>(param1), fParam2);
-        break;
-    default:
-        // Handle other messages
-        break;
+void Model::setupParams(int upCount) {
+    if (EffectBase::paramDefs.empty()) {
+        // after declaration, indexation requested, see below..
+        EffectBase::paramDefs = {
+            {UP::time, {"time", 0.2f, 0, true, 20, 6, [this](float v) {
+                            // 20 - 1280 mS
+                            time = v / 1000;
+                            sampleGap = round(time * TPH_DSP_SR);
+                            std::cout << "time:" << time << std::endl;
+                        }}},
+            {UP::mix, {"mix", 0.5f, 0, false, 0, 1, [this](float v) {
+                           mix = v;
+                       }}},
+            {UP::feedback, {"feedback", 0.5f, 0, false, 0, 1, [this](float v) {
+                                std::cout << "setting feedback.." << std::endl;
+                                feedback = v;
+                            }}}}; // Removed the extra semicolon here
+        EffectBase::indexParams(upCount);
     }
 }
 
@@ -50,11 +47,14 @@ bool Model::renderNextBlock(bool isSterero) {
     // agnostic. Stereo-processing but keeping monoOut if monoIn
     debugCnt++;
     if (debugCnt % 1024 == 0) {
-        std::cout << "debug: " << bufferSize << std::endl;
+        // std::cout << "debug: " << bufferSize << std::endl;
     }
 
     float delayOutL, delayOutR;
     float audioInL, audioInR;
+    AudioMath::easeLog1(sampleGap, sampleGapEaseOut);
+    rdPointer = (wrPointer - static_cast<int>(round(sampleGapEaseOut))) & (BUFFER_SIZE - 1);
+
     for (std::size_t i = 0; i < bufferSize; i += 2) {
         //
         delayOutL = delayBuffer[rdPointer];
@@ -63,14 +63,14 @@ bool Model::renderNextBlock(bool isSterero) {
         audioInL = buffer[i];
         audioInR = buffer[i + 1];
         //
-        delayBuffer[wrPointer] = audioInL * (1 - feedback) + delayOutL * (feedback);
-        delayBuffer[wrPointer + 1] = audioInR * (1 - feedback) + delayOutR * (feedback);
+        delayBuffer[wrPointer] = audioInL * (1 - feedback) + delayOutL * feedback;
+        delayBuffer[wrPointer + 1] = audioInR * (1 - feedback) + delayOutR * feedback;
         //
         buffer[i] = delayOutL * mix + audioInL * (1 - mix);
         buffer[i + 1] = delayOutR * mix + audioInR * (1 - mix);
         //
-        wrPointer = (wrPointer + 2) % 96000;
-        rdPointer = (rdPointer + 2) % 96000;
+        wrPointer = (wrPointer + 2) & (BUFFER_SIZE - 1);
+        rdPointer = (rdPointer + 2) & (BUFFER_SIZE - 1);
     }
 
     //

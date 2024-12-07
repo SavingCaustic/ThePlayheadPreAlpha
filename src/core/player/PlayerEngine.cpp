@@ -248,8 +248,9 @@ void PlayerEngine::clockResetMethod() {
     clockReset = false; // Reset the clockReset flag
 }
 
-void PlayerEngine::updateMidiSettings(const std::string &strScrollerCC, const std::string &strScrollerDials) {
+void PlayerEngine::updateMidiSettings(const std::string &strScrollerCC, const std::string &strSubScrollerCC, const std::string &strScrollerDials) {
     this->scrollerCC = std::stoi(strScrollerCC);
+    this->subScrollerCC = std::stoi(strSubScrollerCC);
     std::cout << "setting scrolerCC to " << this->scrollerCC << std::endl;
     // Initialize the scroller dials to zero
     std::fill(std::begin(ccScrollerDials), std::end(ccScrollerDials), 0);
@@ -271,6 +272,7 @@ void PlayerEngine::updateMidiSettings(const std::string &strScrollerCC, const st
 
 bool PlayerEngine::pollMidiIn() {
     MidiMessage newMessage;
+    u_int8_t remappedCC = 0;
     this->rackReceivingMidi = 1;
     if (this->rackReceivingMidi >= 0) {
         while (midiManager->getNextMessage(newMessage)) {
@@ -282,9 +284,13 @@ bool PlayerEngine::pollMidiIn() {
             if (racks[channel].enabled) {
                 // if cc-cmd, see if it should be re-routed.
                 if ((newMessage.cmd & 0xf0) == 0xb0) { // note parenthesis!!
-                    newMessage.param1 = remapCC(newMessage.param1, newMessage.param2);
+                    remappedCC = remapCC(newMessage.param1, newMessage.param2);
+                    if (remappedCC != newMessage.param1) {
+                        std::cout << "remapped cc:" << static_cast<int>(newMessage.param1) << " to " << static_cast<int>(remappedCC) << std::endl;
+                    }
+                    newMessage.param1 = remappedCC;
                 }
-                if (newMessage.param1 != 255) {
+                if (newMessage.param1 != 255) { // scroller dialed, so surpress!
                     racks[channel].parseMidi(newMessage.cmd, newMessage.param1, newMessage.param2);
                 }
             }
@@ -299,9 +305,8 @@ bool PlayerEngine::pollMidiIn() {
 
 u_int8_t PlayerEngine::remapCC(u_int8_t originalCC, u_int8_t param2) {
     // Check if the CC corresponds to a pot
-    // std::cout << "orgCC is" << static_cast<int>(originalCC) << " and ccSP is " << static_cast<int>(scrollerCC) << std::endl;
     if (originalCC == scrollerCC) {
-        u_int8_t testScroller = round(param2 * (8.0f / 127.0f));
+        u_int8_t testScroller = round(param2 * (6.0f / 127.0f));
         if ((testScroller & 0x01) == 0x00) {
             // at value (not threshold), now shift.
             testScroller = testScroller >> 1;
@@ -312,12 +317,40 @@ u_int8_t PlayerEngine::remapCC(u_int8_t originalCC, u_int8_t param2) {
         }
         return 255; // surpress later processing
     }
-    for (int i = 0; i < 7; i++) {
+    // do the same for subscroller
+    if (originalCC == subScrollerCC) {
+        u_int8_t testScroller = round(param2 * (6.0f / 127.0f));
+        if ((testScroller & 0x01) == 0x00) {
+            // at value (not threshold), now shift.
+            testScroller = testScroller >> 1;
+            if (ccSubScrollerPosition != testScroller) {
+                std::cout << "setting sub-pager to " << static_cast<int>(testScroller) << std::endl;
+                ccSubScrollerPosition = testScroller;
+            }
+        }
+        return 255; // surpress later processing
+    }
+
+    for (int i = 0; i < 6; i++) {
         if (originalCC == ccScrollerDials[i]) {
-            // Remap based on scroller position
-            // what if we hard-code it, big time.. 32->
-            uint8_t newCC = 16 + ccScrollerPosition * 8 + i;
-            std::cout << "routed CC:" << static_cast<int>(newCC) << std::endl;
+            // ok, a bit more complicated.. if scroller pos 0 or 1 (synth):
+            uint8_t newCC;
+            switch (ccScrollerPosition) {
+            case 0:
+            case 1:
+                // synth stuff.. CC16 - 16+8*6=64 (63)
+                newCC = 16 + (ccScrollerPosition * 4 + ccSubScrollerPosition) * 6 + i;
+                std::cout << "routed CC:" << static_cast<int>(newCC) << std::endl;
+                break;
+            case 2:
+                // eventors & effects ev1:72-77, ev2:78-83, ef1: 84-89, ef2:90-95
+                newCC = 24 + (2 * 4 + ccSubScrollerPosition) * 6 + i;
+                break;
+            case 3:
+                // emittor and ? patch-assigned?
+                newCC = 24 + (3 * 4 + ccSubScrollerPosition) * 6 + i;
+                break;
+            }
             return newCC;
         }
     }

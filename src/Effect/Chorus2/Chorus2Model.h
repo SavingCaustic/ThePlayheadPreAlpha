@@ -22,9 +22,6 @@ class Model : public EffectBase {
     // Public methods. These should match interface right (contract)
     void reset() override;
 
-    // Method to parse MIDI commands
-    void parseMidi(char cmd, char param1, char param2) override;
-
     // Method to render the next block of audio
     bool renderNextBlock(bool isSterero) override;
 

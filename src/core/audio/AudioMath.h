@@ -22,6 +22,10 @@ class AudioMath {
         return masterTune * std::exp2((note - 69.0f) * (1 / 12.0f));
     }
 
+    inline static void easeLog1(float in, float &out) {
+        out = in * 0.01f + out * 0.99f;
+    }
+
     inline static void easeLog2(float in, float &out) {
         out = in * 0.02f + out * 0.98f;
     }

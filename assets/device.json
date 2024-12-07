@@ -6,5 +6,6 @@
     "midi_device": "1",
     "http_port": "18080",
     "scroller_cc": "10",
-    "scroller_dials": "74,71,5,84,78,76,77"
+    "subscroller_cc":"84",
+    "scroller_dials": "74,71,5,78,76,77"
 }

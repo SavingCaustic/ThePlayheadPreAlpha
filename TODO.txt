@@ -1,5 +1,11 @@
 TODO
 ====
+* parameters i effects. Hur routa från midi-kbd i kombi med pager?
+  * får väl bygga på enklare kbds.. en extra page?!
+
+* kanske en eventor? En arpeggiator vore ju nice..
+  * Börja med ngt riktigt enkelt, retrigger typ
+
 * kunna spara parametrar som patch.
 > och antagligen också settings?
 
@@ -12,7 +18,7 @@ TODO
 * Where to put the json-stuff.. maybe ok to have the load/save-stuff in the interface?
 
 * WavReader kan ha Intro + SideA + SideB. När läsning av sideB börjar ska sideA uppdateras, om inte då hela alltet ryms i
-intro + A + B. 32+32+32 = 96 kB. => mono 2 sek. Sedan behöver läsning ske varje sek.
+intro + A + B. 32+32+32 = 96 kB. => mono 2 sek. xSedan behöver läsning ske varje sek.
 Denna är ju synkron. Bara en tråd.
 
 * Nåt med audioManager hotplugging som behver skruvas.

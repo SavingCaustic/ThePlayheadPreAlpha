@@ -80,7 +80,10 @@ std::string EffectBase::resolveUPname(const int paramID) {
 }
 
 void EffectBase::pushStrParam(const std::string &name, float val) {
-    int upEnum = resolveUPenum(name);
+    // here "name" is actually 1-6. Nothing else..
+    // std::cout << "running pustStrParam with name: " << name << std::endl;
+    int upEnum = stoi(name); // resolveUPenum(name); // this should be replaced as we pass a number in the name when effects. (Right?)
+    // reason we do that is because it's the rack who's performing midi action, not knowing stuff about effect.
     if (upEnum != -1) {
         auto it = paramDefs.find(upEnum);             // Look for the parameter in the definitions
         const ParamDefinition &paramDef = it->second; // Get the parameter definition
@@ -126,3 +129,14 @@ nlohmann::json EffectBase::getParamDefsAsJson() {
     }
     return jsonOutput.dump(4); //?? huh??
 }
+
+// void EffectBase::setupCCmapping(const std::string &effectName) {
+// the cc-mapping it's actually in the rack, not the effect..
+//  i'd rather not have json files here. just use enum of parameters..
+//}
+
+// void EffectBase::handleMidiCC(int ccNumber, float value) {
+//  maybe the cc's should be changed *outside* the effect and not here..
+//  yeah kind of makes more sense. it's rack how's manipulating the effect from outside..
+//  so effects does *not* recieve midi. Settled!
+//}

@@ -3,15 +3,5 @@
 #include <core/ext/nlohmann/json.hpp>
 #include <drivers/FileDriver.h>
 #include <iostream>
-// none of code below is specific to synth.
+// none of code below is specific to effect.
 // they should be removed.
-
-// CC-mapping stuff
-
-void EffectInterface::setupCCmapping(const std::string &effectName) {
-    // to be implemented
-}
-
-void EffectInterface::handleMidiCC(int ccNumber, float value) {
-    // to be implemented
-}

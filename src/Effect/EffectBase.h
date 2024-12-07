@@ -29,6 +29,9 @@ class EffectBase : public EffectInterface {
     void pushAllParams();
     void indexParams(const int upCount);
 
+    // void setupCCmapping(const std::string &effectName);
+    //  void handleMidiCC(int ccNumber, float value);
+
   public:
     // static std::unordered_map<int, ParamDefinition> paramDefs;
     // static std::unordered_map<std::string, int> paramIndex;

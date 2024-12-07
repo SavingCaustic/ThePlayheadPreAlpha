@@ -117,6 +117,20 @@ class Rack {
     ------------------- */
 
     void parseMidi(uint8_t cmd, uint8_t param1 = 0x00, uint8_t param2 = 0x00) {
+        // cc are hardcoded. They are handled by each unit.
+        char ccIdx[2];
+        if ((cmd & 0xf0) == 0xb0) {
+            if (param1 >= 84 && param1 <= 89) {
+                ccIdx[0] = static_cast<char>('0' + (param1 - 84));
+                ccIdx[1] = '\0';
+                passParamToUnit(UnitType::Effect1, ccIdx, param2);
+                return;
+            } else if (param1 >= 90 && param1 <= 95) {
+                passParamToUnit(UnitType::Effect2, "time", param2);
+                return;
+            }
+        }
+        // default stuff - run through eventors and synth..
         if (!(this->hEventor1)) {
             this->synth->parseMidi(cmd, param1, param2);
         } else {
@@ -157,8 +171,14 @@ class Rack {
             // Handle eventors
             break;
         case UnitType::Effect1:
+            if (effect1) {
+                effect1->pushStrParam(name, fVal);
+            }
+            break;
         case UnitType::Effect2:
-            // Handle effects
+            if (effect2) {
+                effect2->pushStrParam(name, fVal);
+            }
             break;
         default:
             // Handle unknown or unsupported units

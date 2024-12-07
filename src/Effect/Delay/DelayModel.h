@@ -17,15 +17,21 @@
 namespace Effect::Delay {
 using json = nlohmann::json;
 
+enum UP {
+    time,
+    mix,
+    feedback,
+    up_count
+};
+
 class Model : public EffectBase {
   public:
+    static constexpr uint32_t BUFFER_SIZE = 1024 * 128;
+
     // Constructor
     Model();
     // Public methods. These should match interface right (contract)
     void reset() override;
-
-    // Method to parse MIDI commands
-    void parseMidi(char cmd, char param1, char param2) override;
 
     // Method to render the next block of audio
     bool renderNextBlock(bool isSterero) override;
@@ -37,6 +43,8 @@ class Model : public EffectBase {
   protected:
     std::vector<float> delayBuffer;
     int wrPointer = 0;
+    int sampleGap = 0;
+    float sampleGapEaseOut = 0;
     int rdPointer = 0;
     float mix = 0.3;
     float feedback = 0.2f;
@@ -44,10 +52,8 @@ class Model : public EffectBase {
     int debugCnt = 0;
 
     void initializeParameters();
-    // Handle incoming MIDI CC messages
-    void handleMidiCC(int ccNumber, float value);
     //
-    void setupParams();
+    void setupParams(int upCount);
 };
 
 } // namespace Effect::Delay

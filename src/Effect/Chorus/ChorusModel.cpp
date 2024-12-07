@@ -24,23 +24,6 @@ void Model::setupParams() {
     // Initialize any parameters here
 }
 
-void Model::parseMidi(char cmd, char param1, char param2) {
-    u_int8_t messageType = static_cast<uint8_t>(cmd & 0xf0);
-    float fParam2 = static_cast<float>(param2) * (1.0f / 127.0f);
-
-    switch (messageType) {
-    case 0x80: // Note off
-        break;
-    case 0x90: // Note on
-        break;
-    case 0xb0: // Control change (CC)
-        // EffectInterface::handleMidiCC(static_cast<int>(param1), fParam2);
-        break;
-    default:
-        break;
-    }
-}
-
 // maybe let this be a mono chorus with a shared delay line..
 
 bool Model::renderNextBlock(bool isStereo) {
