@@ -97,10 +97,13 @@ void Model::setupParams(int upCount) {
             {UP::osc2_oct, {"osc2_oct", 0.5f, 7, false, -3, 3, [this](float v) {
                                 osc2octave = round(v);
                             }}},
+            {UP::osc2_noise_mix, {"osc2_noise_mix", 0.0f, 0, false, 0, 1, [this](float v) {
+                                      osc2noiseMix = v;
+                                  }}},
             {UP::osc2_freqtrack, {"osc2_freqtrack", 1.0f, 0, false, 0, 1, [this](float v) {
                                       osc2freqTrack = v;
                                   }}},
-            {UP::vcf_cutoff, {"vcf_cutoff", 0.5f, 0, true, 50, 8, [this](float v) {
+            {UP::vcf_cutoff, {"vcf_cutoff", 0.5f, 0, true, 100, 8, [this](float v) {
                                   filterCutoff = v;
                                   // filter.setCutoff(v);
                                   // filter.initFilter();
@@ -116,37 +119,37 @@ void Model::setupParams(int upCount) {
                                 // filter.initFilter();
                             }}},
             {UP::vcf_attack, {"vcf_attack", 0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
-                                  vcfAR.setTime(audio::envelope::ATTACK, v);
+                                  vcfAR.setTime(audio::envelope::ADSFRState::ATTACK, v);
                               }}},
             {UP::vcf_decay, {"vcf_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
-                                 vcfAR.setTime(audio::envelope::DECAY, v);
+                                 vcfAR.setTime(audio::envelope::ADSFRState::DECAY, v);
                              }}},
             {UP::vcf_sustain, {"vcf_sustain", 0.8f, 0, false, 0, 1, [this](float v) {
-                                   vcfAR.setLevel(audio::envelope::SUSTAIN, v);
+                                   vcfAR.setLevel(audio::envelope::ADSFRState::SUSTAIN, v);
                                }}},
             {UP::vcf_fade, {"vcf_fade", 0.3f, 0, false, 0, 1, [this](float v) {
-                                vcfAR.setLeak(audio::envelope::FADE, v);
+                                vcfAR.setLeak(audio::envelope::ADSFRState::FADE, v);
                             }}},
             {UP::vcf_release, {"vcf_release", 0.2f, 0, true, 10, 8, [this](float v) {
-                                   vcfAR.setTime(audio::envelope::RELEASE, v);
+                                   vcfAR.setTime(audio::envelope::ADSFRState::RELEASE, v);
                                }}},
             {UP::vca_attack, {"vca_attack", 0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
-                                  vcaAR.setTime(audio::envelope::ATTACK, v - 1.5f);
+                                  vcaAR.setTime(audio::envelope::ADSFRState::ATTACK, v - 1.5f);
                               }}},
             {UP::vca_decay, {"vca_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
-                                 vcaAR.setTime(audio::envelope::DECAY, v);
+                                 vcaAR.setTime(audio::envelope::ADSFRState::DECAY, v);
                                  std::cout << "setting decay to " << v << " ms" << std::endl;
                              }}},
             {UP::vca_sustain, {"vca_sustain", 0.8f, 0, false, 0, 1, [this](float v) {
-                                   vcaAR.setLevel(audio::envelope::SUSTAIN, v);
+                                   vcaAR.setLevel(audio::envelope::ADSFRState::SUSTAIN, v);
                                    std::cout << "setting sustain to " << v << std::endl;
                                }}},
             {UP::vca_fade, {"vca_fade", 0.3f, 0, false, 0, 1, [this](float v) {
-                                vcaAR.setLeak(audio::envelope::FADE, v);
+                                vcaAR.setLeak(audio::envelope::ADSFRState::FADE, v);
                                 std::cout << "setting fade to " << v << std::endl;
                             }}},
             {UP::vca_release, {"vca_release", 0.2f, 0, true, 10, 8, [this](float v) {
-                                   vcaAR.setTime(audio::envelope::RELEASE, v);
+                                   vcaAR.setTime(audio::envelope::ADSFRState::RELEASE, v);
                                    std::cout << "setting release to " << v << " ms" << std::endl;
                                }}},
             {UP::vca_spatial, {"vca_spatial", 0.2f, 0, false, 0, 1, [this](float v) {
@@ -184,7 +187,13 @@ void Model::setupParams(int upCount) {
             {UP::lfo2_depth, {"lfo2_depth", 0.0f, 0, false, 0, 1, [this](float v) {
                                   // of what really..
                                   lfo2depth = v;
-                              }}}};
+                              }}},
+            {UP::peg_atime, {"peg_atime", 0.1f, 0, true, 10, 8, [this](float v) { // 8192 max
+                                 // pegAR.setTime(audio::envelope::ASRState::ATTACK, v);
+                             }}},
+            {UP::peg_rtime, {"peg_rtime", 0.1f, 0, true, 10, 8, [this](float v) { // 8192 max
+                                 // pegAR.setTime(audio::envelope::ASRState::RELEASE, v);
+                             }}}};
         // now reqeuest interface to reverse index.
         SynthBase::indexParams(upCount);
     }

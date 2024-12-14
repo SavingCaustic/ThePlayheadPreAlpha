@@ -287,7 +287,7 @@ class Voice {
   protected:
     audio::osc::LUTosc osc1;
     audio::osc::LUTosc osc2;
-    audio::envelope::Slope vcaARslope;
+    audio::envelope::ADSFRSlope vcaARslope;
     audio::misc::Easer oscMixEaser;
     audio::misc::Easer vcaEaser;
     float leftAtt;

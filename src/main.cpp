@@ -115,9 +115,9 @@ int main() {
         SynthBase *synth = nullptr;
         SynthFactory::setupSynth(synth, "Subreal");
         sPlayerEngine.loadSynth(synth, 0); // maybe return an nullptr from loadSynth?
-        EffectBase *effect = nullptr;
-        EffectFactory::setupEffect(effect, "Delay");
-        sPlayerEngine.loadEffect(effect, 0, 1); // stupid to have 1 at effect..
+        // EffectBase *effect = nullptr;
+        // EffectFactory::setupEffect(effect, "Delay");
+        // sPlayerEngine.loadEffect(effect, 0, 1); // stupid to have 1 at effect..
 
         // synth->parseMidi(0x90, 0x40, 0x050);
         //  set up another synth..

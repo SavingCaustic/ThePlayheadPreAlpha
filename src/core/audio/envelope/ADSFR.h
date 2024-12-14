@@ -16,7 +16,7 @@ enum ADSFRCmd { NOTE_ON,
                 NOTE_OFF,
                 NOTE_REON };
 
-struct Slope {
+struct ADSFRSlope {
     ADSFRState state = OFF;
     float currVal = 0;
     float targetVal = 0; // used for saturated ramping
@@ -30,9 +30,9 @@ class ADSFR {
     void setTime(ADSFRState state, float time);
     void setLevel(ADSFRState state, float level);
     void setLeak(ADSFRState state, float level);
-    void triggerSlope(Slope &slope, ADSFRCmd cmd);
-    void updateDelta(Slope &slope);
-    void commit(Slope &slope);
+    void triggerSlope(ADSFRSlope &slope, ADSFRCmd cmd);
+    void updateDelta(ADSFRSlope &slope);
+    void commit(ADSFRSlope &slope);
 
   private:
     float sLevel = 0.5f;
@@ -42,8 +42,8 @@ class ADSFR {
     float rFactor = 0;
 
     float calcDelta(float time) const;
-    void setSlopeState(Slope &slope, ADSFRState state);
-    void stateChange(Slope &slope);
+    void setSlopeState(ADSFRSlope &slope, ADSFRState state);
+    void stateChange(ADSFRSlope &slope);
 };
 
 } // namespace audio::envelope

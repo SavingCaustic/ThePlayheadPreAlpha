@@ -99,7 +99,7 @@ class Model : public SynthBase {
   protected:
     audio::filter::MultiFilter filter;
     audio::envelope::ADSFR vcaAR;
-    audio::envelope::Slope vcaARslope;
+    audio::envelope::ADSFRSlope vcaARslope;
     audio::lfo::Standard lfo1;
     audio::lfo::Standard lfo2;
     audio::misc::Easer oscMixEaser;

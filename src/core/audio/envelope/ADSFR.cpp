@@ -30,7 +30,7 @@ void ADSFR::setLeak(ADSFRState state, float level) {
     fFactor = level / 1000;
 }
 
-void ADSFR::triggerSlope(Slope &slope, ADSFRCmd cmd) {
+void ADSFR::triggerSlope(ADSFRSlope &slope, ADSFRCmd cmd) {
     switch (cmd) {
     case NOTE_ON:
         setSlopeState(slope, ATTACK);
@@ -44,7 +44,7 @@ void ADSFR::triggerSlope(Slope &slope, ADSFRCmd cmd) {
     }
 }
 
-void ADSFR::updateDelta(Slope &slope) {
+void ADSFR::updateDelta(ADSFRSlope &slope) {
     if (slope.state == ATTACK) {
         if (slope.currVal > slope.goalVal) {
             stateChange(slope);
@@ -62,7 +62,7 @@ void ADSFR::updateDelta(Slope &slope) {
     slope.gap = (slope.targetVal - slope.currVal) * slope.factor;
 }
 
-void ADSFR::commit(Slope &slope) {
+void ADSFR::commit(ADSFRSlope &slope) {
     slope.currVal += slope.gap;
 }
 
@@ -71,7 +71,7 @@ float ADSFR::calcDelta(float time) const {
     return TPH_RACK_RENDER_SIZE / (totalSamples + 40);
 }
 
-void ADSFR::setSlopeState(Slope &slope, ADSFRState state) {
+void ADSFR::setSlopeState(ADSFRSlope &slope, ADSFRState state) {
     switch (state) {
     case ATTACK:
         slope.state = ATTACK;
@@ -109,7 +109,7 @@ void ADSFR::setSlopeState(Slope &slope, ADSFRState state) {
     }
 }
 
-void ADSFR::stateChange(Slope &slope) {
+void ADSFR::stateChange(ADSFRSlope &slope) {
     switch (slope.state) {
     case ATTACK:
         setSlopeState(slope, DECAY);

@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "core/audio/AudioMath.h"
 #include "core/audio/envelope/ADSFR.h"
+#include "core/audio/envelope/ASR.h"
 #include "core/audio/filter/MultiFilter.h"
 #include "core/audio/lfo/LFO.h"
 #include "core/audio/misc/Easer.h"
@@ -44,6 +45,7 @@ enum UP {
     osc1_senstrack,
     osc2_semi,
     osc2_oct,
+    osc2_noise_mix,
     osc2_freqtrack,
     osc_mix,
     osc_detune,
@@ -69,6 +71,10 @@ enum UP {
     lfo2_speed,
     lfo2_routing,
     lfo2_depth,
+    peg_atime,
+    peg_rtime,
+    peg_asemis,
+    peg_rsems,
     up_count
 };
 
@@ -163,6 +169,7 @@ class Model : public SynthBase {
     float senseTracking = 0.0f;
     audio::envelope::ADSFR vcaAR;
     audio::envelope::ADSFR vcfAR;
+    audio::envelope::ASR pegAR;
     float *buffer; // Pointer to audio buffer, minimize write so:
     float synthBuffer[TPH_RACK_BUFFER_SIZE];
     float fmSens = 0.0f;
@@ -176,6 +183,7 @@ class Model : public SynthBase {
     audio::lfo::Standard lfo1; // change to ramp. duh. no, it's in voice..
     audio::lfo::Standard lfo2;
     float vcaSpatial;
+    float osc2noiseMix;
     float amSens;
     float filterCutoff = 500;
     float filterResonance = 0.5;
@@ -313,12 +321,20 @@ class Voice { //: public VoiceInterface {
                 AudioMath::easeLog50(fmAmp, fmAmpEaseOut);
                 AudioMath::easeLog5(modelRef.oscMix, oscMixEaseOut);
                 for (std::size_t j = 0; j < chunkSize; j++) {
-                    float y2 = osc2.getNextSample(0);
-                    float y1 = osc1.getNextSample(y2 * fmAmpEaseOut);
-                    chunkSample[j] = y1 * (1 - oscMixEaseOut) + y2 * oscMixEaseOut;
+                    chunkSample[j] = osc2.getNextSample(0);
                 }
-                // VCF
-                filter.setCutoff(modelRef.filterCutoff * vcfARslope.currVal);
+                if (modelRef.osc2noiseMix > 0.02f) {
+                    for (std::size_t j = 0; j < chunkSize; j++) {
+                        float noise = AudioMath::noise();
+                        chunkSample[j] = chunkSample[j] * (1.0f - modelRef.osc2noiseMix) + noise * modelRef.osc2noiseMix;
+                    }
+                }
+                for (std::size_t j = 0; j < chunkSize; j++) {
+                    float y1 = osc1.getNextSample(chunkSample[j] * fmAmpEaseOut);
+                    chunkSample[j] = y1 * (1 - oscMixEaseOut) + chunkSample[j] * oscMixEaseOut;
+                }
+                // VCF (100 is appropirate for lpf - maybe not for others..)
+                filter.setCutoff(100 + modelRef.filterCutoff * vcfARslope.currVal);
                 filter.setResonance(modelRef.filterResonance);
                 filter.initFilter();
                 filter.processBlock(chunkSample, chunkSize);
@@ -348,8 +364,8 @@ class Voice { //: public VoiceInterface {
     audio::osc::LUTosc osc1;
     audio::osc::LUTosc osc2;
     audio::filter::MultiFilter filter;
-    audio::envelope::Slope vcaARslope;
-    audio::envelope::Slope vcfARslope; // should prob be called vcfEnvSlope..
+    audio::envelope::ADSFRSlope vcaARslope;
+    audio::envelope::ADSFRSlope vcfARslope; // should prob be called vcfEnvSlope..
     // audio::misc::Easer oscMixEaser;
     audio::misc::Easer vcaEaser; // maybe replace with audioMath-inline easeLin(delta,target)
     audio::misc::Easer vcfEaser; // maybe replace with audioMath-inline easeLin(delta,target)

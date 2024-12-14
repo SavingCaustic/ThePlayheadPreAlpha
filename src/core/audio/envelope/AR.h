@@ -5,22 +5,16 @@
 
 namespace audio::envelope {
 
-namespace AR {
-enum State { OFF,
-             ATTACK,
-             DECAY,
-             SUSTAIN,
-             FADE,
-             RELEASE };
+enum class ARState { OFF,
+                     ATTACK,
+                     RELEASE };
 
-enum Cmd { NOTE_ON,
-           NOTE_OFF,
-           NOTE_REON };
+enum class ARCmd { NOTE_ON,
+                   NOTE_OFF,
+                   NOTE_REON };
 
-} // namespace AR
-
-struct Slope {
-    AR::State state = OFF;
+struct ARSlope {
+    ARState state = ARState::OFF;
     float currVal = 0;
     float targetVal = 0; // used for saturated ramping
     float goalVal = 0;   // real goal
@@ -28,25 +22,22 @@ struct Slope {
     float gap = 0;
 };
 
-class ADSFR {
+class AR {
   public:
-    void setTime(AR::State state, float time);
-    void setLevel(AR::State state, float level);
-    void setLeak(AR::State state, float level);
-    void triggerSlope(Slope &slope, AR::Cmd cmd);
-    void updateDelta(Slope &slope);
-    void commit(Slope &slope);
+    void setTime(ARState state, float time);
+    void setLevel(ARState state, float level);
+    void setLeak(ARState state, float level);
+    void triggerSlope(ARSlope &slope, ARCmd cmd);
+    void updateDelta(ARSlope &slope);
+    void commit(ARSlope &slope);
 
   private:
-    float sLevel = 0.5f;
     float aFactor = 0;
-    float dFactor = 0;
-    float fFactor = 0;
     float rFactor = 0;
 
     float calcDelta(float time) const;
-    void setSlopeState(Slope &slope, AR::State state);
-    void stateChange(Slope &slope);
+    void setSlopeState(ARSlope &slope, ARState state);
+    void stateChange(ARSlope &slope);
 };
 
 } // namespace audio::envelope

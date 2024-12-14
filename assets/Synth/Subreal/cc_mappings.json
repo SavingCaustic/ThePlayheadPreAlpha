@@ -11,8 +11,8 @@
     "22": "osc2_wf",
     "23": "osc2_semi",
     "24": "osc2_oct",
-    "25": "noise_level",
-    "26": "vca_spatial",
+    "25": "osc2_noise_mix",
+    "26": "osc1_senstrack",
     "27": "osc2_freqtrack",
 
     "28": "vcf_cutoff",    
@@ -50,10 +50,10 @@
     "56": "",
     "57": "",
 
-    "58": "peg_attacktime",
-    "59": "peg_releasetime",
-    "60": "peg_semisattack",
-    "61": "peg_semisrelease",
+    "58": "peg_atime",
+    "59": "peg_rtime",
+    "60": "peg_asemis",
+    "61": "peg_rsemis",
     "62": "",
-    "63": ""
+    "63": "vca_spatial"
 }
