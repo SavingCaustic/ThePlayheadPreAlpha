@@ -1,65 +1,24 @@
-#include "Synth/Subreal/SubrealModel.h"
-#include "core/audio/envelope/ADSFR.h"
+#include "./BeatnikModel.h"
 #include <cmath>
-#include <core/utils/FNV.h>
 #include <iostream>
 #include <vector>
 
-namespace Synth::Subreal {
+namespace Synth::Beatnik {
 constexpr int VOICE_COUNT = 16;
 
+// Constructor to accept buffer and size
 Model::Model() {
-    setupParams(UP::up_count);
+    setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
     SynthBase::initParams();
-    initSettings();
-    SynthInterface::setupCCmapping("Subreal");
-    reset(); // setup luts. Must come before voice allocation.
-    voices.reserve(VOICE_COUNT);
+    SynthInterface::setupCCmapping("Beatnik");
+    reset();                     // setup luts. Must come before voice allocation.
+    voices.reserve(VOICE_COUNT); // Preallocate memory for voices
     for (int i = 0; i < VOICE_COUNT; ++i) {
         voices.emplace_back(*this); // Pass reference to Model
     }
 }
 
-void Model::initSettings() {
-    // this init function will declare the keys and set default values.
-    std::unordered_map<std::string, std::string> settings = {
-        {"lut1_overtones", "0.8,0.4,0.2"},
-        {"lut2_overtones", "0.7,0.0,0.1"},
-        {"name", "silly_patch"}};
-
-    // Iterate over the map with explicit types
-    for (std::unordered_map<std::string, std::string>::const_iterator it = settings.begin(); it != settings.end(); ++it) {
-        updateSetting(it->first, it->second);
-    }
-}
-
-void Model::updateSetting(std::string key, std::string value) {
-    uint32_t keyFNV = Utils::Hash::fnv1a(key);
-    switch (keyFNV) {
-    case Utils::Hash::fnv1a_hash("lut1_overtones"):
-        buildLUT(lut1, value);
-        break;
-    case Utils::Hash::fnv1a_hash("lut2_overtones"):
-        buildLUT(lut2, value);
-        break;
-    }
-}
-
-void Model::buildLUT(audio::osc::LUT &lut, const std::string val) {
-    std::vector<float> values;
-    std::istringstream stream(val);
-    std::string token;
-    int h = 1;
-    while (std::getline(stream, token, ',')) {
-        lut.applySine(h, std::stof(token));
-        h++;
-    }
-    lut.normalize();
-}
-
 void Model::reset() {
-    buildLUT(lut1, "0.5,0.3,0.3,0.2,0.2,0.1");
-    buildLUT(lut2, "0.6,0.3");
 }
 
 void Model::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
@@ -100,38 +59,9 @@ void Model::setupParams(int upCount) {
             {UP::osc2_freqtrack, {"osc2_freqtrack", 1.0f, 0, false, 0, 1, [this](float v) {
                                       osc2freqTrack = v;
                                   }}},
-            {UP::vcf_cutoff, {"vcf_cutoff", 0.5f, 0, true, 50, 8, [this](float v) {
-                                  filterCutoff = v;
-                                  // filter.setCutoff(v);
-                                  // filter.initFilter();
-                              }}},
-            {UP::vcf_resonance, {"vcf_resonance", 0.0f, 0, false, 0, 1, [this](float v) {
-                                     filterResonance = v;
-                                     // filter.setResonance(v);
-                                     // filter.initFilter();
-                                 }}},
-            {UP::vcf_type, {"vcf_type", 0.0f, 3, false, 0, 2, [this](float v) {
-                                // not totally safe but compact:
-                                filterType = static_cast<audio::filter::FilterType>(static_cast<int>(v));
-                                // filter.initFilter();
-                            }}},
-            {UP::vcf_attack, {"vcf_attack", 0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
-                                  vcfAR.setTime(audio::envelope::ATTACK, v);
-                              }}},
-            {UP::vcf_decay, {"vcf_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
-                                 vcfAR.setTime(audio::envelope::DECAY, v);
-                             }}},
-            {UP::vcf_sustain, {"vcf_sustain", 0.8f, 0, false, 0, 1, [this](float v) {
-                                   vcfAR.setLevel(audio::envelope::SUSTAIN, v);
-                               }}},
-            {UP::vcf_fade, {"vcf_fade", 0.3f, 0, false, 0, 1, [this](float v) {
-                                vcfAR.setLeak(audio::envelope::FADE, v);
-                            }}},
-            {UP::vcf_release, {"vcf_release", 0.2f, 0, true, 10, 8, [this](float v) {
-                                   vcfAR.setTime(audio::envelope::RELEASE, v);
-                               }}},
             {UP::vca_attack, {"vca_attack", 0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
-                                  vcaAR.setTime(audio::envelope::ATTACK, v - 1.5f);
+                                  vcaAR.setTime(audio::envelope::ATTACK, v);
+                                  std::cout << "setting attack to " << v << " ms" << std::endl;
                               }}},
             {UP::vca_decay, {"vca_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
                                  vcaAR.setTime(audio::envelope::DECAY, v);
@@ -152,6 +82,19 @@ void Model::setupParams(int upCount) {
             {UP::vca_spatial, {"vca_spatial", 0.2f, 0, false, 0, 1, [this](float v) {
                                    vcaSpatial = v;
                                }}},
+            {UP::vcf_type, {"vcf_type", 0.0f, 3, false, 0, 2, [this](float v) {
+                                // not totally safe but compact:
+                                filter.setFilterType(static_cast<audio::filter::FilterType>(static_cast<int>(v)));
+                                filter.initFilter();
+                            }}},
+            {UP::vcf_cutoff, {"vcf_cutoff", 0.5f, 0, true, 50, 8, [this](float v) {
+                                  filter.setCutoff(v);
+                                  filter.initFilter();
+                              }}},
+            {UP::vcf_resonance, {"vcf_resonance", 0.0f, 0, false, 0, 1, [this](float v) {
+                                     filter.setResonance(v);
+                                     filter.initFilter();
+                                 }}},
             {UP::lfo1_shape, {"lfo1_shape", 0.0f, audio::lfo::LFOShape::_count, false, 0, audio::lfo::LFOShape::_count - 1, [this](float v) {
                                   // of what really..
                                   std::cout << "setting lfo1-shape to " << v << std::endl;
@@ -255,7 +198,7 @@ int8_t Model::findVoiceToAllocate(uint8_t note) {
             // ok try to overtake..
             if (myVoice.getVCAstate() == audio::envelope::ADSFRState::RELEASE) {
                 // candidate, see if amp lower than current.
-                float temp = myVoice.getVCAlevel();
+                float temp = myVoice.getVCALevel();
                 if (temp < releasedVoiceAmp) {
                     // candidate!
                     releasedVoice = i;
@@ -301,17 +244,20 @@ bool Model::renderNextBlock() {
     return true;
 }
 
+float Model::getOscMix() {
+    return oscMix;
+}
+
 void Model::addToSample(std::size_t sampleIdx, float val) {
     // use local buffer for spead. Possibly double..
     this->synthBuffer[sampleIdx] += val;
 }
 
 const audio::osc::LUT &Model::getLUT1() const {
-    // needed on construction of voice (lut-osc)
     return lut1; // Return a const reference to lut1
 }
 
 const audio::osc::LUT &Model::getLUT2() const {
     return lut2; // Return a const reference to lut2
 }
-} // namespace Synth::Subreal
+} // namespace Synth::Beatnik

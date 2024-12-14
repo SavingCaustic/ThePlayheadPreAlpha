@@ -1,100 +1,50 @@
 #pragma once
 
-#include <cmath>
-#include <constants.h>
-#include <iostream>
-
 namespace audio::filter {
-// This filter isn't worth a penny and needs to be replaced.
 
-enum FilterType {
-    LPF, // Low Pass Filter
-    BPF, // Band Pass Filter
-    HPF  // High Pass Filter
+enum class FilterType {
+    lowPass,
+    highPass,
+    bandPass,
+    bandStop,
+    bypass
+};
+
+enum class FilterPoles {
+    p2,
+    p4,
 };
 
 class MultiFilter {
   public:
-    void setFilterType(FilterType type) {
-        filterType = type;
-        initFilter();
-    }
+    // uhm - this class may be needed to process single samples - not blocks..
 
-    void setCutoff(float frequency) {
-        if (frequency > 0.0f) {
-            cutoffHz = frequency;
-            initFilter();
-        } else {
-            std::cerr << "Invalid cutoff frequency: " << frequency << std::endl;
-        }
-    }
+    MultiFilter();
 
-    void setResonance(float res) {
-        resonance = std::clamp(res, 0.0f, 1.0f); // Clamping resonance between 0 and 1
-        initFilter();                            // Re-initialize the filter to apply the new resonance
-    }
+    void reset();
 
-    void initFilter() {
-        const float dt = 1.0f / TPH_DSP_SR;
-        float RC, RC2;
-        std::cout << "Initializing filter with cutoff frequency: " << cutoffHz
-                  << " and resonance: " << resonance << std::endl;
+    void setFilterType(FilterType flt);
+    void setCutoff(float inCutoff);
+    void setResonance(float inRes);
+    void setPoles(FilterPoles inPoles);
 
-        switch (filterType) {
-        case LPF:
-            RC = 1.0f / (2.0f * M_PI * cutoffHz);
-            alpha = dt / (RC + dt);
-            alpha *= 1.0f + resonance; // Adjust alpha by resonance factor for emphasis
-            break;
+    void initFilter();
 
-        case BPF:
-            RC = 1.0f / (2.0f * M_PI * cutoffHz);
-            RC2 = 1.0f / (2.0f * M_PI * (cutoffHz * bandwidthFactor));
-            alpha = dt / (RC + dt);
-            alpha2 = dt / (RC2 + dt);
-            alpha *= 1.0f + resonance; // Apply resonance to the low-pass part
-            break;
+    // mono only
+    void processBlock(float *buffer, int numSamples);
+    float processSample(float sample, FilterPoles poles);
 
-        case HPF:
-            RC = 1.0f / (2.0f * M_PI * cutoffHz);
-            alpha = RC / (RC + dt);
-            alpha *= 1.0f + resonance; // Apply resonance for a sharper high-pass cutoff
-            break;
-        }
-    }
-
-    void applyFilter(float &sample) {
-        switch (filterType) {
-        case LPF:
-            sample = alpha * sample + (1.0f - alpha) * previousSample;
-            previousSample = sample;
-            break;
-
-        case BPF:
-            highPassedSample = alpha2 * (sample - previousSample) + (1.0f - alpha2) * highPassedSample;
-            previousSample = sample;
-            lowPassedSample = alpha * highPassedSample + (1.0f - alpha) * lowPassedSample;
-            sample = lowPassedSample;
-            break;
-
-        case HPF:
-            highPassedSample = alpha * (sample - previousSample + highPassedSample);
-            previousSample = sample;
-            sample = highPassedSample;
-            break;
-        }
-    }
+  public:
+    FilterType filterType = FilterType::lowPass;
+    FilterPoles filterPoles = FilterPoles::p2;
+    float filterCutoff = 1500;
+    float filterResonance = 0.5f;
 
   private:
-    FilterType filterType = LPF;
-    float previousSample = 0.0f; // Renamed from previousLeft to previousSample
-    float highPassedSample = 0.0f;
-    float lowPassedSample = 0.0f;
-    float alpha = 0.0f;
-    float alpha2 = 0.0f;
-    float cutoffHz = 8000.0f;
-    float resonance = 0.0f;       // New resonance property
-    float bandwidthFactor = 1.5f; // Adjustable bandwidth factor for BPF
+    double d1 = 0;
+    double d2 = 0;
+    double d3 = 0;
+    double d4 = 0;
+    double a0, a1, a2, b1, b2;
 };
-
 } // namespace audio::filter

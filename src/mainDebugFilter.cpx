@@ -81,19 +81,10 @@ int main() {
     signal(SIGINT, signal_handler);
     //
     std::unordered_map<std::string, std::string> deviceSettings;
-    // initialize
-    deviceSettings["buffer_size"] = "64"; // set in three places now. here, device.json and where matters - constants.cpp
-    deviceSettings["audio_sr"] = "48000";
-    deviceSettings["audio_device"] = "default";
-    deviceSettings["midi_device"] = "1";
-    deviceSettings["http_port"] = "18080";
-    deviceSettings["scroller_cc"] = "84";
-    deviceSettings["scroller_dials"] = "1,2,3,4,5,6,7";
-
-    SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
+    SettingsManager::jsonRead(deviceSettings, "device.json");
 
     // Kickstart the StudioRunner (low-priority job scheduler)
-    sStudioRunner.updateSetting("audio_device", deviceSettings["audio_device"]);
+    // sStudioRunner.updateSetting("audio_device", deviceSettings["audio_device"]);
     // postpone this so we wait with the audio-thread..
     // sStudioRunner.start();
 
@@ -118,7 +109,6 @@ int main() {
     // sPlayerEngine.setupRackWithSynth(0, "Monolith");
 
     // faking setting up synth here. Queue to be added later.
-    SynthBase *synth = nullptr;
     // SynthFactory::setupSynth(synth, "Monolith");
     // SynthFactory::patchLoad(synth, "Portabello");
     SynthBase *synth = nullptr;

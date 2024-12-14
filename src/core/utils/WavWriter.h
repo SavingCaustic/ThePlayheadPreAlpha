@@ -7,11 +7,12 @@ namespace Utils {
 
 class WavWriter {
   public:
-    WavWriter(const std::string &filename, int sample_rate, int num_channels, int dataSize);
+    WavWriter();
     ~WavWriter();
 
+    bool open(const std::string &filename, int sample_rate, int num_channels);
     bool isOpen() const;
-    void write(const float *data); // Updated to take a pointer to float array
+    void write(const float *data, std::size_t size);
     void close();
 
   private:

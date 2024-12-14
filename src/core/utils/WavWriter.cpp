@@ -3,8 +3,11 @@
 #include <cmath>
 #include <cstring>
 namespace Utils {
-WavWriter::WavWriter(const std::string &filename, int sample_rate, int num_channels, int dataSize)
-    : file(nullptr), samples_written(0), dataSize(dataSize) {
+WavWriter::WavWriter() {};
+
+bool WavWriter::open(const std::string &filename, int sample_rate, int num_channels) {
+    file = 0;
+    samples_written = 0;
     int bits_per_sample = 16;
 
     std::strncpy(header.riff_tag, "RIFF", 4);
@@ -28,6 +31,7 @@ WavWriter::WavWriter(const std::string &filename, int sample_rate, int num_chann
     if (file) {
         writeHeader();
     }
+    return true;
 }
 
 WavWriter::~WavWriter() {
@@ -38,15 +42,18 @@ bool WavWriter::isOpen() const {
     return file != nullptr;
 }
 
-void WavWriter::write(const float *data) {
+void WavWriter::write(const float *data, std::size_t size) {
     if (file) {
-        for (int i = 0; i < dataSize; i++) {
+        for (std::size_t i = 0; i < size; i++) {
             // Clamp the data and convert to short
-            short_data[i] = static_cast<short>(std::clamp(data[i], -1.0f, 1.0f) * 32767);
+            short_data[i % 1024] = static_cast<short>(std::clamp(data[i], -1.0f, 1.0f) * 32767);
+
+            // If the buffer is full or it's the last sample, write it to the file
+            if ((i % 1024 == 1023) || (i == size - 1)) {
+                std::fwrite(short_data, sizeof(short), (i % 1024) + 1, file);
+            }
         }
-        // Write the short_data buffer
-        std::fwrite(short_data, sizeof(short), dataSize, file);
-        samples_written += dataSize;
+        samples_written += size;
     }
 }
 

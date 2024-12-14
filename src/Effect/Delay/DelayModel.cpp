@@ -1,7 +1,4 @@
 #include "./DelayModel.h"
-// #include "core/Rack.h"
-// #include "ext/dr_wav.h" //not used but now we have it..
-// #include <iostream>
 #include <vector>
 
 namespace Effect::Delay {
@@ -12,7 +9,7 @@ Model::Model() {
     reset();
     setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
     EffectBase::initParams();
-
+    delayBuffer.reserve(BUFFER_SIZE);
     delayBuffer.resize(BUFFER_SIZE); // maybe later times 2..
     std::fill(delayBuffer.begin(), delayBuffer.end(), 0.0f);
 }
@@ -52,7 +49,7 @@ bool Model::renderNextBlock(bool isSterero) {
 
     float delayOutL, delayOutR;
     float audioInL, audioInR;
-    AudioMath::easeLog1(sampleGap, sampleGapEaseOut);
+    AudioMath::easeLog10(sampleGap, sampleGapEaseOut); // this dists anyway so no real point of easing..
     rdPointer = (wrPointer - static_cast<int>(round(sampleGapEaseOut))) & (BUFFER_SIZE - 1);
 
     for (std::size_t i = 0; i < bufferSize; i += 2) {
@@ -72,8 +69,6 @@ bool Model::renderNextBlock(bool isSterero) {
         wrPointer = (wrPointer + 2) & (BUFFER_SIZE - 1);
         rdPointer = (rdPointer + 2) & (BUFFER_SIZE - 1);
     }
-
-    //
     return isSterero;
 }
 

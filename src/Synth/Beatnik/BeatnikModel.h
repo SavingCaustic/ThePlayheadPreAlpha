@@ -17,25 +17,7 @@
 
 using json = nlohmann::json;
 
-namespace Synth::Subreal {
-
-class VoiceInterface {
-    /* not possible to use interface when voices are allocated statically */
-  public:
-    // Constructor initializes modelRef and LUTs for oscillators
-    virtual ~VoiceInterface() = default;
-    virtual void noteOn(uint8_t midiNote, float velocity) = 0;
-    virtual void noteOff() = 0;
-    virtual audio::envelope::ADSFRState getVCAstate() = 0;
-    virtual float getVCAlevel() = 0;
-    virtual bool checkVoiceActive() = 0;
-    virtual bool renderNextVoiceBlock(std::size_t bufferSize) = 0;
-
-    uint8_t notePlaying;
-
-  protected:
-    VoiceInterface() = default; // Allow only derived classes to instantiate
-};
+namespace Synth::Beatnik {
 
 enum UP {
     osc1_wf,
@@ -47,20 +29,15 @@ enum UP {
     osc2_freqtrack,
     osc_mix,
     osc_detune,
-    vcf_type,
-    vcf_cutoff,
-    vcf_resonance,
-    vcf_attack,
-    vcf_decay,
-    vcf_sustain,
-    vcf_fade,
-    vcf_release,
     vca_attack,
     vca_decay,
     vca_sustain,
     vca_fade,
     vca_release,
     vca_spatial,
+    vcf_type,
+    vcf_cutoff,
+    vcf_resonance,
     lfo1_shape,
     lfo1_speed,
     lfo1_routing,
@@ -130,9 +107,6 @@ class Model : public SynthBase {
     Model();
     // Public methods. These should match interface right (contract)
     void reset() override;
-    void initSettings();
-    void updateSetting(std::string key, std::string value);
-
     void bindBuffers(float *audioBuffer, std::size_t bufferSize);
 
     json getParamDefsAsJSON() override {
@@ -150,6 +124,7 @@ class Model : public SynthBase {
     bool renderNextBlock() override;
 
     void addToSample(std::size_t sampleIdx, float val);
+    float getOscMix();
 
     const audio::osc::LUT &getLUT1() const;
     const audio::osc::LUT &getLUT2() const;
@@ -162,7 +137,6 @@ class Model : public SynthBase {
     float bendCents = 0;
     float senseTracking = 0.0f;
     audio::envelope::ADSFR vcaAR;
-    audio::envelope::ADSFR vcfAR;
     float *buffer; // Pointer to audio buffer, minimize write so:
     float synthBuffer[TPH_RACK_BUFFER_SIZE];
     float fmSens = 0.0f;
@@ -175,15 +149,9 @@ class Model : public SynthBase {
     float lfo2depth = 0.5;
     audio::lfo::Standard lfo1; // change to ramp. duh. no, it's in voice..
     audio::lfo::Standard lfo2;
+    audio::filter::MultiFilter filter;
     float vcaSpatial;
     float amSens;
-    float filterCutoff = 500;
-    float filterResonance = 0.5;
-    audio::filter::FilterType filterType = audio::filter::FilterType::highPass;
-    audio::filter::FilterPoles filterPoles = audio::filter::FilterPoles::p2;
-
-  private:
-    void buildLUT(audio::osc::LUT &lut, const std::string val);
 
   protected:
     std::vector<Voice> voices; // Vector to hold Voice objects
@@ -217,8 +185,8 @@ class Model : public SynthBase {
 // VOICE - could be moved to separate file
 // ---------------------------------------
 
-class Voice { //: public VoiceInterface {
-              // pass reference to model so we can use AR there. The voice has the ARslope.
+class Voice {
+    // pass reference to model so we can use AR there. The voice has the ARslope.
   public:
     // Constructor initializes modelRef and LUTs for oscillators
     Voice(Model &model)
@@ -240,24 +208,20 @@ class Voice { //: public VoiceInterface {
         leftAtt = fmin(1, fmax(0, (notePlaying - 60) * 0.04f * modelRef.vcaSpatial));
         rightAtt = fmin(1, fmax(0, (60 - notePlaying) * 0.04f * modelRef.vcaSpatial));
         noteVelocity = velocity;
-        mixAmplitude = noteVelocity * 0.6f; // Factor to avoid too much dist on polyphony..
         tracking = fmax(0, (2.0f + modelRef.senseTracking * AudioMath::noteToFloat(notePlaying) * 7));
         modelRef.vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_ON);
-        modelRef.vcfAR.triggerSlope(vcfARslope, audio::envelope::NOTE_ON);
-        filter.initFilter();
     }
 
     void noteOff() {
         // enter release state in all envelopes.
         modelRef.vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_OFF);
-        modelRef.vcfAR.triggerSlope(vcfARslope, audio::envelope::NOTE_OFF);
     }
 
     audio::envelope::ADSFRState getVCAstate() {
         return vcaARslope.state;
     }
 
-    float getVCAlevel() {
+    float getVCALevel() {
         return vcaARslope.currVal;
     }
 
@@ -269,36 +233,27 @@ class Voice { //: public VoiceInterface {
         float osc1hz, osc2hz;
         // Chunk could be set to SIMD-capability.
         constexpr int chunkSize = 16;
-        float chunkSample[chunkSize]; // cache-optimized storage for chunks. (mono)
         if (vcaARslope.state != audio::envelope::OFF) {
             // put stuff here that should be interactive on note on.
-            // calc osc2
-            int osc2note = notePlaying + modelRef.semitone + modelRef.osc2octave * 12;
-            float osc2cents = modelRef.bendCents + modelRef.oscDetune;
-            if (modelRef.lfo1Routing == LFO1::Routing::osc12 || modelRef.lfo1Routing == LFO1::Routing::osc2) {
-                osc2cents += modelRef.lfo1.getLFOval() * modelRef.lfo1depth * 200.0f;
-            }
-            osc2hz = AudioMath::noteToHz(osc2note, osc2cents);
-            osc2.setAngle(osc2hz);
-            // calc fmSens
             float fmAmp = tracking * modelRef.fmSens * noteVelocity;
             if (modelRef.lfo2Routing == LFO2::Routing::fmSens) {
                 fmAmp *= (1 + modelRef.lfo2.getLFOval() * modelRef.lfo2depth);
             }
-            // calc note and cent for osc1
-            float osc1cents = modelRef.bendCents - modelRef.oscDetune;
-            if (modelRef.lfo1Routing == LFO1::Routing::osc12 || modelRef.lfo1Routing == LFO1::Routing::osc1) {
-                osc1cents += modelRef.lfo1.getLFOval() * modelRef.lfo1depth * 200.0f;
+            AudioMath::easeLog50(fmAmp, fmAmpEaseOut);
+            float mixAmplitude = noteVelocity * 0.6f;
+            AudioMath::easeLog5(modelRef.oscMix, oscMixEaseOut);
+            int osc2note = notePlaying + modelRef.semitone + modelRef.osc2octave * 12;
+            float osc2cents = modelRef.bendCents + modelRef.oscDetune;
+            if (modelRef.lfo1Routing == LFO1::Routing::osc12 || modelRef.lfo1Routing == LFO1::Routing::osc2) {
+                osc2cents += modelRef.lfo1.getLFOval() * modelRef.lfo1depth * 1200.0f;
             }
-            osc1hz = AudioMath::noteToHz(notePlaying, osc1cents);
+            osc2hz = AudioMath::noteToHz(osc2note, osc2cents);
+            osc2.setAngle(osc2hz);
+            osc1hz = AudioMath::noteToHz(notePlaying, modelRef.bendCents - modelRef.oscDetune);
             osc1.setAngle(osc1hz);
             // setup new delta (lin-easer) for VCA
             modelRef.vcaAR.updateDelta(vcaARslope);
             float vcaTarget = vcaARslope.currVal + vcaARslope.gap;
-            // same for VCF
-            modelRef.vcfAR.updateDelta(vcfARslope);
-            float vcfTarget = vcfARslope.currVal + vcfARslope.gap;
-
             if (modelRef.lfo1Routing == LFO1::Routing::vca) {
                 vcaTarget *= (modelRef.lfo1.getLFOval() * modelRef.lfo1depth) + 1.0f;
             }
@@ -306,53 +261,35 @@ class Voice { //: public VoiceInterface {
                 vcaTarget *= (modelRef.lfo2.getLFOval() * modelRef.lfo2depth) + 1.0f;
             }
             vcaEaser.setTarget(vcaTarget);
-            vcfEaser.setTarget(vcfTarget);
 
-            for (std::size_t i = 0; i < bufferSize; i += chunkSize * 2) {
-                // chunk here.. 1/2/3. Oscillators | Filter | VCA
-                AudioMath::easeLog50(fmAmp, fmAmpEaseOut);
-                AudioMath::easeLog5(modelRef.oscMix, oscMixEaseOut);
-                for (std::size_t j = 0; j < chunkSize; j++) {
+            for (std::size_t i = 0; i < bufferSize; i += chunkSize) {
+                for (std::size_t j = 0; j < chunkSize; j = j + 2) {
                     float y2 = osc2.getNextSample(0);
-                    float y1 = osc1.getNextSample(y2 * fmAmpEaseOut);
-                    chunkSample[j] = y1 * (1 - oscMixEaseOut) + y2 * oscMixEaseOut;
-                }
-                // VCF
-                filter.setCutoff(modelRef.filterCutoff * vcfARslope.currVal);
-                filter.setResonance(modelRef.filterResonance);
-                filter.initFilter();
-                filter.processBlock(chunkSample, chunkSize);
-                // VCA
-                for (std::size_t j = 0; j < chunkSize; j++) {
                     vcaEaserVal = vcaEaser.getValue();
-                    chunkSample[j] = chunkSample[j] * vcaEaserVal * mixAmplitude;
-                }
-                // send to model (sum)
-                for (std::size_t j = 0; j < chunkSize; j++) {
-                    modelRef.addToSample(i + j * 2, chunkSample[j] * (1 - leftAtt));
-                    modelRef.addToSample(i + j * 2 + 1, chunkSample[j] * (1 - rightAtt));
+                    float y1 = osc1.getNextSample(y2 * fmAmp * (vcaEaserVal + 0.3f)) * (1.0f + modelRef.amSens * y2);
+                    // now weight sample to channel based on noteval.
+                    float voiceOut = ((y1 * (1 - oscMixEaseOut) + y2 * oscMixEaseOut)) * vcaEaserVal * mixAmplitude;
+                    modelRef.addToSample(i + j, voiceOut * (1 - leftAtt));
+                    modelRef.addToSample(i + j + 1, voiceOut * (1 - rightAtt));
                 }
             }
             // copy local voice-buffer to synth-buffer
             modelRef.vcaAR.commit(vcaARslope);
-            modelRef.vcfAR.commit(vcfARslope);
         } else {
             // Remove voice from playing
             // maybe use return-type
         }
         return true;
     }
+
     uint8_t notePlaying;
 
   protected:
     audio::osc::LUTosc osc1;
     audio::osc::LUTosc osc2;
-    audio::filter::MultiFilter filter;
     audio::envelope::Slope vcaARslope;
-    audio::envelope::Slope vcfARslope; // should prob be called vcfEnvSlope..
-    // audio::misc::Easer oscMixEaser;
-    audio::misc::Easer vcaEaser; // maybe replace with audioMath-inline easeLin(delta,target)
-    audio::misc::Easer vcfEaser; // maybe replace with audioMath-inline easeLin(delta,target)
+    audio::misc::Easer oscMixEaser;
+    audio::misc::Easer vcaEaser;
     float leftAtt;
     float rightAtt;
     float noteVelocity;
@@ -364,7 +301,6 @@ class Voice { //: public VoiceInterface {
     Model &modelRef; // Use reference to Model
     float oscMixEaseOut = 0;
     float fmAmpEaseOut = 0;
-    float mixAmplitude;
 };
 
-} // namespace Synth::Subreal
+} // namespace Synth::Beatnik

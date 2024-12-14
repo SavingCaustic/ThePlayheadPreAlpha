@@ -1,0 +1,20 @@
+{
+    "settings": {
+        "sample_S0": "lm-2/kick.wav",
+        "sample_S1": "lm-2/snare-m.wav",
+        "sample_S2": "lm-2/hihat-closed.wav",
+        "sample_S3": "lm-2/hihat-open.wav",
+        "sample_S4": "lm-2/cowb.wav",
+        "sample_S5": "lm-2/snare-m.wav",
+        "sample_S6": "lm-2/tom-h.wav",
+        "sample_S7": "lm-2/tom-m.wav",
+        "sample_S8": "lm-2/tom-l.wav",
+        "sample_S9": "lm-2/ride.wav",
+        "sample_SA": "lm-2/crash.wav",
+        "sample_SB": "lm-2/snare-m.wav"
+    },
+    "params": {
+        "vca_attack": 0.5,
+        "vca_release": 0.5
+    }
+}
