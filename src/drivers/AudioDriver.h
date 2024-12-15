@@ -28,6 +28,7 @@ class AudioDriver {
 
     ~AudioDriver() {
         stop();
+        std::cout << "terminating audio-driver" << std::endl;
         Pa_Terminate(); // Correct way to terminate PortAudio
     }
 

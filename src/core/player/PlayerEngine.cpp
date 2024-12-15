@@ -1,5 +1,4 @@
 #include "./PlayerEngine.h"
-// #include "DestructorBuffer.h"
 #include "ErrorWriter.h"
 #include "chrono"
 
@@ -41,9 +40,9 @@ void PlayerEngine::bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer) {
     audioErrorBuffer = &hAudioErrorBuffer;
 }
 
-/*void PlayerEngine::bindDestructorBuffer(DestructorBuffer &hDestructorBuffer) {
+void PlayerEngine::bindDestructorBuffer(Destructor::Queue &hDestructorBuffer) {
     destructorBuffer = &hDestructorBuffer;
-}*/
+}
 
 void PlayerEngine::bindMidiManager(MidiManager &hMidiManager) {
     midiManager = &hMidiManager;
@@ -83,24 +82,32 @@ void PlayerEngine::sendError(int code, const std::string &message) {
     audioErrorBuffer->addAudioError(code, message);
 }
 
+bool PlayerEngine::destroySynth(int rackID) {
+    Destructor::Record record;
+    record.ptr = racks[rackID].synth;
+    record.deleter = [](void *ptr) { delete static_cast<SynthBase *>(ptr); }; // Create deleter for SynthBase
+    // Push the record to the destructor queue
+    if (!destructorBuffer->push(record)) {
+        std::cout << "Destructor queue is full, could not enqueue the synth to be deleted." << std::endl;
+    }
+    // std::cout << "destroying synth (inside audio-thread)" << std::endl;
+    // delete racks[rackID].synth; // Clean up the old synth
+    racks[rackID].synth = nullptr;
+    racks[rackID].enabled = false; // Disable the rack if no synth
+    return true;
+}
+
 bool PlayerEngine::loadSynth(SynthBase *&newSynth, int rackID) {
-    // Delegate synth setup to the rack. Why?
     // bool result = racks[rackID].setSynth(synth);
     if (racks[rackID].synth) {
-        std::cout << "destroying synth (inside audio-thread)" << std::endl;
-        delete racks[rackID].synth; // Clean up the old synth
-        racks[rackID].synth = nullptr;
+        // Create a Record containing the pointer and deleter
+        destroySynth(rackID);
     }
-
+    // now setup
     racks[rackID].synth = newSynth;
-    if (newSynth) {
-        std::cout << "Binding buffers for synth in rack" << std::endl;
-        racks[rackID].synth->bindBuffers(racks[rackID].audioBuffer.data(), racks[rackID].audioBuffer.size()); // Bind the buffer here
-        racks[rackID].enabled = true;                                                                         // Mark the rack as enabled
-    } else {
-        racks[rackID].enabled = false; // Disable the rack if no synth
-    }
-
+    std::cout << "Binding buffers for synth in rack" << std::endl;
+    racks[rackID].synth->bindBuffers(racks[rackID].audioBuffer.data(), racks[rackID].audioBuffer.size()); // Bind the buffer here
+    racks[rackID].enabled = true;                                                                         // Mark the rack as enabled
     // Reset the caller's pointer to avoid accidental reuse
     newSynth = nullptr;
     return true;

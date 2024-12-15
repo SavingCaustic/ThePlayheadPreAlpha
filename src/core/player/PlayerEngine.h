@@ -4,6 +4,7 @@
 #include "ErrorWriter.h"
 #include "Synth/SynthBase.h"
 #include "chrono"
+#include "core/destructor/Queue.h"
 #include "core/errors/AudioErrorBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutBuffer.h"
@@ -32,6 +33,8 @@ class PlayerEngine {
     void bindMessageInBuffer(MessageInBuffer &hMessageInBuffer);
     void bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer);
     void bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer);
+    void bindDestructorBuffer(Destructor::Queue &hDestructorBuffer);
+
     void bindMidiManager(MidiManager &hMidiManager);
 
     bool sendMessage(int rackId, const char *target, float paramValue, const char *paramName, const char *paramLabel);
@@ -46,6 +49,7 @@ class PlayerEngine {
     std::string getSynthParams(int rackId);
 
     bool loadSynth(SynthBase *&synth, int rackID);
+    bool destroySynth(int rackID);
     bool loadEffect(EffectBase *&effect, int rackID, int effectSlot);
 
     bool setupRackWithSynth(int rackId, const std::string &synthName);
@@ -58,6 +62,7 @@ class PlayerEngine {
     void sendError(int code, const std::string &message);
 
     CCManager ccManager;
+    // Destructor::Queue destructorQueue;
 
   private:
     Rack racks[TPH_RACK_COUNT]; // Array of Rack objects
@@ -81,7 +86,7 @@ class PlayerEngine {
     double midiInTS; // probably not used, we use it when we get it.
     MessageInBuffer *messageInBuffer = nullptr;
     MessageOutBuffer *messageOutBuffer = nullptr;
-    // DestructorBuffer *destructorBuffer = nullptr;
+    Destructor::Queue *destructorBuffer = nullptr;
     MessageIn newMessage;               // Declare a reusable Message object
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
     AudioErrorBuffer *audioErrorBuffer = nullptr;

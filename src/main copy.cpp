@@ -5,7 +5,7 @@
 #include "api/endpointsCrow.h"
 #include "constants.h"
 #include "core/audio/AudioMath.h"
-// #include "core/destructor/DestructorBuffer.h"
+#include "core/destructor/Worker.h"
 #include "core/errors/AudioErrorBuffer.h"
 #include "core/errors/ErrorBuffer.h"
 #include "core/errors/ErrorHandler.h"
@@ -69,7 +69,8 @@ ErrorBuffer sErrorBuffer;                                      // Main error buf
 ErrorHandler sErrorHandler(&sAudioErrorBuffer, &sErrorBuffer); // Error handler with threads
 
 // DestructorBuffer
-// DestructorBuffer sDestructorBuffer;
+Destructor::Queue sDestructorQueue;
+Destructor::Worker sDestructorWorker(sDestructorQueue);
 
 // StudioRunner - performing various low-prio task (micro-scheduler)
 StudioRunner sStudioRunner(sMidiManager, sAudioManager);
@@ -103,7 +104,7 @@ int main() {
     sPlayerEngine.bindMessageInBuffer(sMessageInBuffer);
     sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
     sPlayerEngine.bindErrorBuffer(sAudioErrorBuffer);
-    // sPlayerEngine.bindDestructorBuffer(sDestructorBuffer);
+    sPlayerEngine.bindDestructorBuffer(sDestructorQueue);
     sPlayerEngine.bindMidiManager(sMidiManager);
     sErrorHandler.start();
     sPlayerEngine.initializeRacks();
@@ -112,6 +113,7 @@ int main() {
     if (false) {
         sPlayerEngine.setupRackWithSynth(0, "Monolith");
     } else {
+        sPlayerEngine.setupRackWithSynth(0, "Monolith"); // this here only to force use of queue below.
         SynthBase *synth = nullptr;
         SynthFactory::setupSynth(synth, "Subreal");
         sPlayerEngine.loadSynth(synth, 0); // maybe return an nullptr from loadSynth?
@@ -131,6 +133,8 @@ int main() {
     // Start the audio driver
     sAudioManager.mountPreferedOrDefault(deviceSettings["audio_device"]);
     sStudioRunner.start();
+    sDestructorWorker.start();
+
     //
     crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
     int httpPort = std::stoi(deviceSettings["http_port"]);
@@ -145,6 +149,10 @@ int main() {
     std::cout << "beginning shutdown.." << std::endl;
     sMessageOutReader.stop();
     std::cout << "stopped web-socket feeder" << std::endl;
+    //
+    std::cout << "stopping destructor...";
+    sDestructorWorker.start();
+    std::cout << "done.\n";
     //
     std::cout << "Stopping the server..." << std::endl;
     api.stop();
