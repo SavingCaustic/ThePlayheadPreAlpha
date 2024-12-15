@@ -8,10 +8,10 @@
     "20": "mod_routing",
     "21": "osc1_senstrack",
     
-    "22": "osc2_wf",
+    "22": "osc2_noise_mix",
     "23": "osc2_semi",
-    "24": "osc2_oct",
-    "25": "osc2_noise_mix",
+    "24": "osc2_wf",
+    "25": "osc2_oct",
     "26": "osc1_senstrack",
     "27": "osc2_freqtrack",
 

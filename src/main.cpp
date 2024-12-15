@@ -91,7 +91,7 @@ int main() {
     sStudioRunner.reset();
 
     // meh - almost factory here..
-    sPlayerEngine.updateMidiSettings(deviceSettings["scroller_cc"], deviceSettings["subscroller_cc"], deviceSettings["scroller_dials"]);
+    sPlayerEngine.ccManager.updateMidiSettings(deviceSettings["scroller_cc"], deviceSettings["subscroller_cc"], deviceSettings["scroller_dials"]);
     // postpone this so we wait with the audio-thread..
     // sStudioRunner.start();
 

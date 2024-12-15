@@ -1,5 +1,7 @@
 #pragma once
 
+#include "./CCManager.h"
+#include "ErrorWriter.h"
 #include "Synth/SynthBase.h"
 #include "chrono"
 #include "core/errors/AudioErrorBuffer.h"
@@ -55,9 +57,7 @@ class PlayerEngine {
     // may be private
     void sendError(int code, const std::string &message);
 
-    void updateMidiSettings(const std::string &strScrollerCC, const std::string &strSubScrollerCC, const std::string &strScrollerDials);
-
-    u_int8_t remapCC(u_int8_t originalCC, u_int8_t param2);
+    CCManager ccManager;
 
   private:
     Rack racks[TPH_RACK_COUNT]; // Array of Rack objects
@@ -86,11 +86,6 @@ class PlayerEngine {
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
     AudioErrorBuffer *audioErrorBuffer = nullptr;
     MidiManager *midiManager = nullptr;
-    u_int8_t scrollerCC = 0;
-    u_int8_t subScrollerCC = 0;
-    u_int8_t ccScrollerDials[6];
-    u_int8_t ccScrollerPosition = 0;    // Current scroller position
-    u_int8_t ccSubScrollerPosition = 0; // Current scroller position
 
     float loadAvg = 0;
     int debugCnt = 0;
