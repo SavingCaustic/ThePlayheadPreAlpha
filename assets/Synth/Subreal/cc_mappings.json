@@ -18,7 +18,7 @@
     "28": "vcf_cutoff",    
     "29": "vcf_resonance",
     "30": "vcf_type",
-    "31": "vcf_poles",
+    "31": "vcf_shape",
     "32": "vcf_velsens",
     "33": "vcf_tracking",
 

@@ -49,9 +49,10 @@ enum UP {
     osc2_freqtrack,
     osc_mix,
     osc_detune,
-    vcf_type,
     vcf_cutoff,
     vcf_resonance,
+    vcf_type,
+    vcf_shape,
     vcf_attack,
     vcf_decay,
     vcf_sustain,
@@ -187,6 +188,7 @@ class Model : public SynthBase {
     float amSens;
     float filterCutoff = 500;
     float filterResonance = 0.5;
+    bool vcfInverse = false;
     audio::filter::FilterType filterType = audio::filter::FilterType::highPass;
     audio::filter::FilterPoles filterPoles = audio::filter::FilterPoles::p2;
 
@@ -333,9 +335,15 @@ class Voice { //: public VoiceInterface {
                     float y1 = osc1.getNextSample(chunkSample[j] * fmAmpEaseOut);
                     chunkSample[j] = y1 * (1 - oscMixEaseOut) + chunkSample[j] * oscMixEaseOut;
                 }
-                // VCF (100 is appropirate for lpf - maybe not for others..)
-                filter.setCutoff(100 + modelRef.filterCutoff * vcfARslope.currVal);
+                // VCF (100Hz is appropirate for lpf - maybe not for others..)
+                if (modelRef.vcfInverse) {
+                    filter.setCutoff(100 + modelRef.filterCutoff * (1.0f - vcfARslope.currVal));
+                } else {
+                    filter.setCutoff(100 + modelRef.filterCutoff * vcfARslope.currVal);
+                }
                 filter.setResonance(modelRef.filterResonance);
+                filter.setPoles(modelRef.filterPoles);
+                filter.setFilterType(modelRef.filterType);
                 filter.initFilter();
                 filter.processBlock(chunkSample, chunkSize);
                 // VCA

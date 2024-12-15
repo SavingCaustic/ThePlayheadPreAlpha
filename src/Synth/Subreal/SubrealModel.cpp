@@ -113,11 +113,18 @@ void Model::setupParams(int upCount) {
                                      // filter.setResonance(v);
                                      // filter.initFilter();
                                  }}},
-            {UP::vcf_type, {"vcf_type", 0.0f, 3, false, 0, 2, [this](float v) {
-                                // not totally safe but compact:
+            {UP::vcf_type, {"vcf_type", 0.0f, 4, false, 0, 3, [this](float v) {
+                                // LFP,HPF,BPF&NOTCH not totally safe but compact:
                                 filterType = static_cast<audio::filter::FilterType>(static_cast<int>(v));
                                 // filter.initFilter();
                             }}},
+            {UP::vcf_shape, {"vcf_shape", 0.0f, 4, false, 0, 3, [this](float v) {
+                                 // not totally safe but compact:
+                                 int i = round(v);
+                                 filterPoles = static_cast<audio::filter::FilterPoles>(i % 2);
+                                 vcfInverse = (i > 1);
+                                 // filter.initFilter();
+                             }}},
             {UP::vcf_attack, {"vcf_attack", 0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
                                   vcfAR.setTime(audio::envelope::ADSFRState::ATTACK, v);
                               }}},

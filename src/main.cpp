@@ -113,13 +113,13 @@ int main() {
     if (false) {
         sPlayerEngine.setupRackWithSynth(0, "Monolith");
     } else {
-        sPlayerEngine.setupRackWithSynth(0, "Monolith"); // this here only to force use of queue below.
+        // sPlayerEngine.setupRackWithSynth(0, "Monolith"); // this here only to force use of queue below.
         SynthBase *synth = nullptr;
         SynthFactory::setupSynth(synth, "Subreal");
         sPlayerEngine.loadSynth(synth, 0); // maybe return an nullptr from loadSynth?
-        // EffectBase *effect = nullptr;
-        // EffectFactory::setupEffect(effect, "Delay");
-        // sPlayerEngine.loadEffect(effect, 0, 1); // stupid to have 1 at effect..
+        EffectBase *effect = nullptr;
+        EffectFactory::setupEffect(effect, "Delay");
+        sPlayerEngine.loadEffect(effect, 0, 1); // stupid to have 1 at effect..
 
         // synth->parseMidi(0x90, 0x40, 0x050);
         //  set up another synth..

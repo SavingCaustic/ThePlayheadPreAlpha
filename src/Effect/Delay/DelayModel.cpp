@@ -23,7 +23,7 @@ void Model::setupParams(int upCount) {
     if (EffectBase::paramDefs.empty()) {
         // after declaration, indexation requested, see below..
         EffectBase::paramDefs = {
-            {UP::time, {"time", 0.2f, 0, true, 20, 6, [this](float v) {
+            {UP::time, {"time", 0.5f, 0, true, 20, 6, [this](float v) {
                             // 20 - 1280 mS
                             time = v / 1000;
                             sampleGap = round(time * TPH_DSP_SR);
@@ -49,8 +49,9 @@ bool Model::renderNextBlock(bool isSterero) {
 
     float delayOutL, delayOutR;
     float audioInL, audioInR;
-    AudioMath::easeLog10(sampleGap, sampleGapEaseOut); // this dists anyway so no real point of easing..
-    rdPointer = (wrPointer - static_cast<int>(round(sampleGapEaseOut))) & (BUFFER_SIZE - 1);
+    int currGap = 0.5f * ((wrPointer - rdPointer) & (BUFFER_SIZE - 1));
+    AudioMath::easeLog5(sampleGap, sampleGapEaseOut);
+    rdPointer = (wrPointer - static_cast<int>(round(sampleGapEaseOut) * 2)) & (BUFFER_SIZE - 1);
 
     for (std::size_t i = 0; i < bufferSize; i += 2) {
         //
