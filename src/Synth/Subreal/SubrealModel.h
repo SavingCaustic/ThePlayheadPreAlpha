@@ -138,7 +138,9 @@ class Model : public SynthBase {
     // Public methods. These should match interface right (contract)
     void reset() override;
     void initSettings();
-    void updateSetting(std::string key, std::string value);
+    // void updateSetting(std::string key, std::string value);
+    // void updateSetting(const std::string &key, const std::string &value, void *object, uint32_t size, bool isStereo);
+    void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Constructor::Queue &constructorQueue) override;
 
     void bindBuffers(float *audioBuffer, std::size_t bufferSize);
 
@@ -176,8 +178,8 @@ class Model : public SynthBase {
     float fmSens = 0.0f;
     LFO1::Routing lfo1Routing;
     LFO2::Routing lfo2Routing;
-    audio::osc::LUT lut1;
-    audio::osc::LUT lut2;
+    audio::osc::LUT *lut1 = nullptr;
+    audio::osc::LUT *lut2 = nullptr;
     std::size_t bufferSize; // Size of the audio buffer
     float lfo1depth = 0.5;
     float lfo2depth = 0.5;

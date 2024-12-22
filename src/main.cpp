@@ -60,8 +60,10 @@ MessageInBuffer sMessageInBuffer(8);
 MessageOutBuffer sMessageOutBuffer;
 MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr); // Initialize without connection
 
-RPCParser rpcParser;
 Constructor::Queue sConstructorQueue;
+// with factories being stateless, it's API and PlayerEngine that needs to know sConstructorQueue
+
+RPCParser rpcParser(sConstructorQueue);
 
 AudioDriver sAudioDriver;
 AudioManager sAudioManager(sAudioDriver, sPlayerEngine);
@@ -110,6 +112,8 @@ int main() {
     sPlayerEngine.bindErrorBuffer(sAudioErrorBuffer);
     sPlayerEngine.bindDestructorBuffer(sDestructorQueue);
     sPlayerEngine.bindMidiManager(sMidiManager);
+    sPlayerEngine.bindConstructorQueue(sConstructorQueue);
+
     sErrorHandler.start();
     sPlayerEngine.initializeRacks();
 
@@ -140,7 +144,7 @@ int main() {
     sDestructorWorker.start();
 
     //
-    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer, rpcParser);
+    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer, rpcParser, sConstructorQueue);
     int httpPort = std::stoi(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {

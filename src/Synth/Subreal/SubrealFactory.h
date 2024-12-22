@@ -2,7 +2,6 @@
 #include "Synth/Subreal/SubrealModel.h"
 #include "core/audio/envelope/ADSFR.h"
 #include "core/audio/osc/LUT.h"
-#include "core/constructor/GlobalQueue.h"
 #include "core/constructor/Queue.h"
 #include <array>
 #include <cmath>
@@ -16,29 +15,29 @@
 namespace Synth::Subreal {
 class Factory {
   public:
-    static void prepareSetting(std::string key, std::string value, int rackID) {
+    static void prepareSetting(std::string key, std::string value, int rackID, Constructor::Queue &constructorQueue) {
         // ok so this bascially pushes the record onto the injector queue..
         std::cout << key << std::endl;
         uint32_t keyFNV = Utils::Hash::fnv1a(key);
         switch (keyFNV) {
         case Utils::Hash::fnv1a_hash("lut1_overtones"): {
-            createLUT(0, value);
+            createLUT(0, value, constructorQueue);
             break;
         }
             // push the lut to the queue for object injects. We need to know rack id.
         case Utils::Hash::fnv1a_hash("lut2_overtones"): {
-            createLUT(1, value);
+            createLUT(1, value, constructorQueue);
             break;
         }
         }
     }
 
-    static void createLUT(int lutNo, std::string value) {
+    static void createLUT(int lutNo, std::string value, Constructor::Queue &constructorQueue) {
         std::cout << "creating lut1 now.." << std::endl;
         audio::osc::LUT *lutTmp = new audio::osc::LUT();
         buildLUT(lutTmp, value);
         // Push the LUT into the Constructor Queue
-        if (!sConstructorQueue.push(lutTmp, sizeof(audio::osc::LUT), false, "LUT")) {
+        if (!constructorQueue.push(lutTmp, sizeof(audio::osc::LUT), false, "LUT")) {
             std::cerr << "Failed to push LUT into Constructor Queue. Queue is full!" << std::endl;
             delete lutTmp; // Clean up if the push fails
         }
@@ -59,10 +58,10 @@ class Factory {
         lut->normalize();
     }
 
-    static void reset() {
+    static void reset(int rackID, Constructor::Queue &constructorQueue) {
         // set some default values. maybe move to json later..
-        prepareSetting("lut1_overtones", "0.5,0.3,0.3,0.2,0.2,0.1", 0);
-        prepareSetting("lut2_overtones", "0.5,0.0,0.1", 0);
+        prepareSetting("lut1_overtones", "0.5,0.3,0.3,0.2,0.2,0.1", rackID, constructorQueue);
+        prepareSetting("lut2_overtones", "0.5,0.0,0.1", rackID, constructorQueue);
     }
 };
 

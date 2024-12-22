@@ -76,6 +76,8 @@ class Model : public SynthBase {
     void reset() override;
     void setupParams(int upCount);
 
+    void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Constructor::Queue &constructorQueue) override;
+
     static std::unordered_map<int, ParamDefinition> SparamDefs;
     static std::unordered_map<std::string, int> SparamIndex;
 

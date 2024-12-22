@@ -11,7 +11,6 @@ constexpr int VOICE_COUNT = 16;
 Model::Model() {
     setupParams(UP::up_count);
     SynthBase::initParams();
-    initSettings();
     SynthInterface::setupCCmapping("Subreal");
     reset(); // setup luts. Must come before voice allocation.
     voices.reserve(VOICE_COUNT);
@@ -20,32 +19,47 @@ Model::Model() {
     }
 }
 
-void Model::initSettings() {
-    // um. it's wierd actually.. *factory* responsible for preparing objects
-    // injected by queue-reader. Source of truth (for serialization) - model (not factory)
-    //  this init function will declare the keys and set default values.
-    // what about loading a default patch - how does that work?
-    // maybe default values for settings needs to be in factory (not model)
-    std::unordered_map<std::string, std::string> settings = {
-        {"lut1_overtones", "0.8,0.4,0.2"},
-        {"lut2_overtones", "0.7,0.0,0.1"},
-        {"name", "silly_patch"}};
+void Model::updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Constructor::Queue &constructorQueue) {
+    // Hash the key
+    uint32_t keyFNV = Utils::Hash::fnv1a(type);
 
-    // Iterate over the map with explicit types
-    for (std::unordered_map<std::string, std::string>::const_iterator it = settings.begin(); it != settings.end(); ++it) {
-        updateSetting(it->first, it->second);
-    }
-}
-
-void Model::updateSetting(std::string key, std::string value) {
-    uint32_t keyFNV = Utils::Hash::fnv1a(key);
+    // Handle settings based on hashed keys
     switch (keyFNV) {
     case Utils::Hash::fnv1a_hash("lut1_overtones"):
-        buildLUT(lut1, value);
+        if (object && size == sizeof(audio::osc::LUT)) {
+            // Safely cast the object to the expected type
+            auto *lut = reinterpret_cast<audio::osc::LUT *>(object);
+            // Push the current LUT to the destructor queue, or delete it directly
+            if (lut1) {
+                delete lut1;
+                // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
+            }
+            // Assign the new LUT
+            lut1 = lut;
+        } else {
+            // Handle error: Unexpected object type or size
+            throw std::runtime_error("Invalid object for lut1_overtones");
+        }
         break;
     case Utils::Hash::fnv1a_hash("lut2_overtones"):
-        buildLUT(lut2, value);
+        if (object && size == sizeof(audio::osc::LUT)) {
+            // Safely cast the object to the expected type
+            auto *lut = reinterpret_cast<audio::osc::LUT *>(object);
+            // Push the current LUT to the destructor queue, or delete it directly
+            if (lut2) {
+                delete lut2;
+                // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
+            }
+            // Assign the new LUT
+            lut2 = lut;
+        } else {
+            // Handle error: Unexpected object type or size
+            throw std::runtime_error("Invalid object for lut1_overtones");
+        }
         break;
+    default:
+        // Handle keys that don't match
+        throw std::invalid_argument("Unknown key for updateSetting: " + type);
     }
 }
 
@@ -62,8 +76,6 @@ void Model::buildLUT(audio::osc::LUT &lut, const std::string val) {
 }
 
 void Model::reset() {
-    buildLUT(lut1, "0.5,0.3,0.3,0.2,0.2,0.1");
-    buildLUT(lut2, "0.6,0.3");
 }
 
 void Model::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
@@ -327,11 +339,16 @@ void Model::addToSample(std::size_t sampleIdx, float val) {
 }
 
 const audio::osc::LUT &Model::getLUT1() const {
-    // needed on construction of voice (lut-osc)
-    return lut1; // Return a const reference to lut1
+    if (!lut1) {
+        throw std::runtime_error("lut1 is not initialized");
+    }
+    return *lut1; // Dereference lut1 to return a reference to the actual object
 }
 
 const audio::osc::LUT &Model::getLUT2() const {
-    return lut2; // Return a const reference to lut2
+    if (!lut2) {
+        throw std::runtime_error("lut2 is not initialized");
+    }
+    return *lut2; // Dereference lut1 to return a reference to the actual object
 }
 } // namespace Synth::Subreal

@@ -37,6 +37,8 @@ class PlayerEngine {
 
     void bindMidiManager(MidiManager &hMidiManager);
 
+    void bindConstructorQueue(Constructor::Queue &hConstructorQueue);
+
     bool sendMessage(int rackId, const char *target, float paramValue, const char *paramName, const char *paramLabel);
 
     void reset();
@@ -87,6 +89,7 @@ class PlayerEngine {
     MessageInBuffer *messageInBuffer = nullptr;
     MessageOutBuffer *messageOutBuffer = nullptr;
     Destructor::Queue *destructorBuffer = nullptr;
+    Constructor::Queue *constructorQueue = nullptr;
     MessageIn newMessage;               // Declare a reusable Message object
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
     AudioErrorBuffer *audioErrorBuffer = nullptr;

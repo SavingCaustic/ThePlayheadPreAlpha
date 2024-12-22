@@ -1,7 +1,7 @@
 #pragma once
+#include "core/constructor/Queue.h"
 #include "crow.h"      // Crow server library
 #include <crow/json.h> // Ensure to include this
-
 // Forward declarations of your global/static classes
 class PlayerEngine;
 class AudioManager;
@@ -22,4 +22,5 @@ void crowSetupEndpoints(
     MessageOutBuffer &MessageOutBuffer,
     MessageOutReader &MessageOutReader,
     ErrorBuffer &ErrorBuffer,
-    RPCParser &rpcParser);
+    RPCParser &rpcParser,
+    Constructor::Queue &constructorQueue);

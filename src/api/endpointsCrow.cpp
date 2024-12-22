@@ -1,5 +1,6 @@
 #include "endpointsCrow.h"
 #include "constants.h"
+#include "core/constructor/Queue.h"
 #include "core/errors/ErrorBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutReader.h"
@@ -26,7 +27,8 @@ void crowSetupEndpoints(
     MessageOutBuffer &messageOutBuffer,
     MessageOutReader &messageOutReader,
     ErrorBuffer &errorBuffer,
-    RPCParser &rpcParser) {
+    RPCParser &rpcParser,
+    Constructor::Queue &constructorQueue) {
     // root endpoint. just info.
     CROW_ROUTE(api, "/")
     ([]() { return crow::response(200, "PLAYHEAD AUDIO SERVER"); });

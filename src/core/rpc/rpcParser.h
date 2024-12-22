@@ -5,10 +5,21 @@
 #include <iostream>
 #include <string>
 
+// Forward declaration
+namespace Constructor {
+class Queue;
+}
+
 class RPCParser {
-    // uhm - should the factories be static? Probably..
+    // Reference to Constructor::Queue
+    Constructor::Queue &constructorQueue;
+
   public:
-    void parse(std::string strClass, std::string strMethod, std::string strKey, std::string strVal, std::string rackID) {
+    // Constructor with an initializer list to set the reference
+    explicit RPCParser(Constructor::Queue &queue) : constructorQueue(queue) {}
+
+    void parse(const std::string &strClass, const std::string &strMethod, const std::string &strKey,
+               const std::string &strVal, const std::string &rackID) {
         // ok. for simplicity.
         uint32_t classFNV = Utils::Hash::fnv1a(strClass);
         uint32_t methodFNV = Utils::Hash::fnv1a(strMethod);
@@ -25,7 +36,7 @@ class RPCParser {
             break;
         case Utils::Hash::fnv1a_hash("unit"):
             std::cout << "unit here we go.." << std::endl;
-            Factory::Unit::parse(strMethod, strKey, strVal, stoi(rackID));
+            Factory::Unit::parse(strMethod, strKey, strVal, stoi(rackID), constructorQueue);
             break;
         case Utils::Hash::fnv1a_hash("pattern"):
             break;

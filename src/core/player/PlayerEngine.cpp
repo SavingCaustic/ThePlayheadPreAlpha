@@ -1,8 +1,8 @@
 #include "./PlayerEngine.h"
 #include "ErrorWriter.h"
 #include "chrono"
-#include "core/constructor/GlobalQueue.h"
 #include "core/constructor/Queue.h"
+#include "core/utils/FNV.h"
 
 PlayerEngine::PlayerEngine()
     : noiseVolume(0.2f), isWritingMessage(false), hRotator(), errorWriter_(*this) {
@@ -44,6 +44,10 @@ void PlayerEngine::bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer) {
 
 void PlayerEngine::bindDestructorBuffer(Destructor::Queue &hDestructorBuffer) {
     destructorBuffer = &hDestructorBuffer;
+}
+
+void PlayerEngine::bindConstructorQueue(Constructor::Queue &hConstructorQueue) {
+    constructorQueue = &hConstructorQueue;
 }
 
 void PlayerEngine::bindMidiManager(MidiManager &hMidiManager) {
@@ -194,18 +198,31 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     }
 
     // meh - refactor this call..
-    timeLeftUs = sendLoadStats(nextFrameTime, frameDurationMicroSec);
     if (timeLeftUs > 500) {
         // check object-injector queue.
-        if (!sConstructorQueue.isEmpty()) {
-            // hello. we could just pop and destroy. That would be amamzing.
-            auto recordOpt = sConstructorQueue.pop();
+        if (!constructorQueue->isEmpty()) {
+            auto recordOpt = constructorQueue->pop();
             if (recordOpt.has_value()) {
                 const Constructor::Record &record = recordOpt.value();
-                // Assuming it's a pointer type, we can delete the object here
-                if (record.ptr) {
-                    std::cout << "deleting a created object - all works " << std::endl;
-                    delete record.ptr; // Delete the object to free memory
+
+                // Extract unit and setting from record.type
+                std::string type = record.type;
+                std::string unit, setting;
+
+                size_t delimiterPos = type.find('.');
+                if (delimiterPos != std::string::npos) {
+                    unit = type.substr(0, delimiterPos);     // Extract part before "."
+                    setting = type.substr(delimiterPos + 1); // Extract part after "."
+                } else {
+                    // Handle error if no delimiter is found
+                    throw std::runtime_error("Invalid type format in record: " + type);
+                }
+                uint32_t unitFNV = Utils::Hash::fnv1a(unit);
+                uint32_t settingFNV = Utils::Hash::fnv1a(setting);
+                switch (unitFNV) {
+                case Utils::Hash::fnv1a_hash("synth"):
+                    racks[0].synth->updateSetting(setting, record.ptr, record.size, record.isStereo, *constructorQueue);
+                    break;
                 }
             }
         }
