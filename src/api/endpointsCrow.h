@@ -10,6 +10,7 @@ class MessageInBuffer;
 class MessageOutBuffer;
 class MessageOutReader;
 class ErrorBuffer;
+class RPCParser;
 
 // Function to set up Crow routes
 void crowSetupEndpoints(
@@ -20,4 +21,5 @@ void crowSetupEndpoints(
     MessageInBuffer &messageInBuffer,
     MessageOutBuffer &MessageOutBuffer,
     MessageOutReader &MessageOutReader,
-    ErrorBuffer &ErrorBuffer);
+    ErrorBuffer &ErrorBuffer,
+    RPCParser &rpcParser);

@@ -89,18 +89,18 @@ class Rack {
         }
         if (effect1) {
             debugCnt++;
-            if (debugCnt % 1024 == 0) {
+            /*if (debugCnt % 1024 == 0) {
                 if (isStereo) {
                     std::cout << "pre-stereo!" << std::endl;
                 }
-            }
+            }*/
             // hey we should have a return argument here - telling if its stereo..
             isStereo = effect1->renderNextBlock(isStereo);
-            if (debugCnt % 1024 == 0) {
+            /*if (debugCnt % 1024 == 0) {
                 if (isStereo) {
                     std::cout << "post-stereo!" << std::endl;
                 }
-            }
+            }*/
             // only if effect1
             if (effect2) {
                 // hey we should have a return argument here - telling if its stereo..

@@ -5,6 +5,7 @@
 #include "core/messages/MessageOutReader.h"
 #include "core/parameters/SettingsManager.h"
 #include "core/player/PlayerEngine.h" // Include your relevant headers
+#include "core/rpc/rpcParser.h"
 #include "crow/json.h"
 #include "drivers/AudioManager.h"
 #include "drivers/FileDriver.h"
@@ -24,7 +25,8 @@ void crowSetupEndpoints(
     MessageInBuffer &messageInBuffer,
     MessageOutBuffer &messageOutBuffer,
     MessageOutReader &messageOutReader,
-    ErrorBuffer &errorBuffer) {
+    ErrorBuffer &errorBuffer,
+    RPCParser &rpcParser) {
     // root endpoint. just info.
     CROW_ROUTE(api, "/")
     ([]() { return crow::response(200, "PLAYHEAD AUDIO SERVER"); });
@@ -79,91 +81,37 @@ void crowSetupEndpoints(
             }
         });
 
-    CROW_ROUTE(api, "/shutdown")
-    ([]() {
-        auto response = crow::response(200, "Service shutting down");
-        shutdown_flag.store(true);  // Set shutdown flag to true when /shutdown is hit
-        return response; });
+    CROW_ROUTE(api, "/rpc")
+        .methods(crow::HTTPMethod::Get)([&rpcParser](const crow::request &req) {
+            // Extract query parameters with safety
+            std::string method = req.url_params.get("method") ? req.url_params.get("method") : "";
+            std::string key = req.url_params.get("key") ? req.url_params.get("key") : "";
+            std::string value = req.url_params.get("value") ? req.url_params.get("value") : "";
+            std::string rack_id = req.url_params.get("rack_id") ? req.url_params.get("rack_id") : "";
 
-    CROW_ROUTE(api, "/startup")
-    ([&audioManager, &midiManager, &playerEngine]() {
-        // audioManager.start(); //dunno what to do really now when manager supervises all..
-        midiManager.mountAllDevices(); // Virtual keyboard as default..
-        return crow::response(200, "Services started");
-    });
+            // Check if any of the parameters are missing
+            if (method.empty()) {
+                return crow::response(400, "Missing required query parameters");
+            }
 
-    // Endpoint to start audio generation
-    CROW_ROUTE(api, "/device/audio/doStart")
-    ([&audioManager]() {
-        std::unordered_map<std::string, std::string> deviceSettings;
-        SettingsManager::jsonRead(deviceSettings, "device.json");
-        audioManager.mountPreferedOrDefault(deviceSettings["audio_device"]);
-        if (true) { //audioDriver.start()) {
-            return crow::response(200, "Audio started successfully");
-        } else {
-            return crow::response(500, "Failed to start audio");
-        } });
+            // Split the method at the first dot
+            size_t dot_pos = method.find('.');
+            if (dot_pos != std::string::npos) {
+                std::string class_name = method.substr(0, dot_pos);   // Extract the part before the dot
+                std::string method_name = method.substr(dot_pos + 1); // Extract the part after the dot
 
-    // Endpoint to stop audio generation
-    CROW_ROUTE(api, "/device/audio/doStop")
-    ([&audioManager]() {
-        audioManager.unmountDevice();
-        //audioManager.stop(); //ok, maybe signal to audio-manager, stop everything. We're closing down.
-        return crow::response(200, "Audio stopped successfully"); });
+                // Call the RPC parser with the split values
+                rpcParser.parse(class_name, method_name, key, value, rack_id);
+            } else {
+                // Handle the error when there is no dot in the method
+                // For example, you might want to send an error response
+                return crow::response(400, "Invalid method format");
+            }
 
-    CROW_ROUTE(api, "/device/midi/list")
-    ([&midiManager]() {
-        // Get the list of available MIDI devices
-        std::vector<std::string> devices = midiManager.getAvailableDevices();
-        crow::json::wvalue::list deviceArray;
-        for (const auto &deviceName : devices) {
-            deviceArray.emplace_back(deviceName); // Add each device to the li>
-        }
-        // Create a JSON object for the response
-        crow::json::wvalue jsonResponse;
-        // Populate the JSON array directly into the jsonResponse
-        jsonResponse["devices"] = std::move(deviceArray); // Add each device to the "devices" field
-        // Return the JSON response with HTTP status 200
-        return crow::response(200, jsonResponse);
-    });
-
-    CROW_ROUTE(api, "/device/midi/doStart")
-    ([&playerEngine, &midiManager]() {
-        midiManager.mountAllDevices();  //playerEngine not involved anymore. Logic in manager.
-        return crow::response(200, "Midi started successfully"); });
-
-    CROW_ROUTE(api, "/device/midi/doStop")
-    ([&playerEngine, &midiManager]() {
-        midiManager.stopAll();
-        return crow::response(200, "Midi stopped successfully"); });
-
-    CROW_ROUTE(api, "/stat/pe/loadAvg")
-    ([&playerEngine]() {
-        float loadAvg = playerEngine.getLoadAvg();
-        std::cout << "LoadAvg: " << (loadAvg*100) << std::endl;
-        return crow::response(200, "Loadavg:"); });
-
-    CROW_ROUTE(api, "/test/pe/ping")
-    ([&playerEngine]() {
-        playerEngine.ping();
-        return crow::response(200, "Ping sent from PlayerEngine"); });
-
-    /*CROW_ROUTE(api, "/test/pe/rackSetup")
-    ([&playerEngine]() {
-        playerEngine.testRackSetup();
-        return crow::response(200, "Test synth setup");
-    });*/
-
-    CROW_ROUTE(api, "/rack/getFakeSynthParams")
-    ([&playerEngine]() {
-        std::string json = playerEngine.getSynthParams(0);
-        if (json.empty()) {
-            return crow::response(500, "Failed to retrieve synth parameters");
-        }
-
-        // Return the JSON response with a 200 OK status
-        return crow::response(200, json);
-    });
+            // Return a response
+            return crow::response(200, "Request processed successfully");
+        });
+    // below to be removed
 
     api.route_dynamic("/setRackUnitParam")([&messageInBuffer](const crow::request &req) {
         auto rack_str = req.url_params.get("rack");

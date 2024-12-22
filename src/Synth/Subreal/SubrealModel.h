@@ -250,7 +250,7 @@ class Voice { //: public VoiceInterface {
         leftAtt = fmin(1, fmax(0, (notePlaying - 60) * 0.04f * modelRef.vcaSpatial));
         rightAtt = fmin(1, fmax(0, (60 - notePlaying) * 0.04f * modelRef.vcaSpatial));
         noteVelocity = velocity;
-        mixAmplitude = noteVelocity * 0.6f; // Factor to avoid too much dist on polyphony..
+        mixAmplitude = noteVelocity * 0.4f; // Factor to avoid too much dist on polyphony..
         tracking = fmax(0, (2.0f + modelRef.senseTracking * AudioMath::noteToFloat(notePlaying) * 7));
         modelRef.vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_ON);
         modelRef.vcfAR.triggerSlope(vcfARslope, audio::envelope::NOTE_ON);

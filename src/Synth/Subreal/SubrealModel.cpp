@@ -21,7 +21,11 @@ Model::Model() {
 }
 
 void Model::initSettings() {
-    // this init function will declare the keys and set default values.
+    // um. it's wierd actually.. *factory* responsible for preparing objects
+    // injected by queue-reader. Source of truth (for serialization) - model (not factory)
+    //  this init function will declare the keys and set default values.
+    // what about loading a default patch - how does that work?
+    // maybe default values for settings needs to be in factory (not model)
     std::unordered_map<std::string, std::string> settings = {
         {"lut1_overtones", "0.8,0.4,0.2"},
         {"lut2_overtones", "0.7,0.0,0.1"},

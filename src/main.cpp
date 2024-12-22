@@ -16,6 +16,7 @@
 #include "core/parameters/SettingsManager.h"
 #include "core/player/PlayerEngine.h"
 #include "core/player/Rack.h"
+#include "core/rpc/rpcParser.h"
 #include "core/runner/StudioRunner.h"
 #include "crow.h"
 #include "drivers/AudioDriver.h"
@@ -58,6 +59,9 @@ PlayerEngine sPlayerEngine;
 MessageInBuffer sMessageInBuffer(8);
 MessageOutBuffer sMessageOutBuffer;
 MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr); // Initialize without connection
+
+RPCParser rpcParser;
+Constructor::Queue sConstructorQueue;
 
 AudioDriver sAudioDriver;
 AudioManager sAudioManager(sAudioDriver, sPlayerEngine);
@@ -136,7 +140,7 @@ int main() {
     sDestructorWorker.start();
 
     //
-    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer);
+    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer, rpcParser);
     int httpPort = std::stoi(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {

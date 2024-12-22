@@ -37,6 +37,10 @@ enum UP {
     osc3_wf,
     osc3_vol,
     osc3_tracking,
+    vcf_cutoff,
+    vcf_resonance,
+    vcf_type,
+    vcf_shape,
     vca_attack,
     vca_decay,
     vca_sustain,
@@ -95,6 +99,12 @@ class Model : public SynthBase {
 
     Waveform osc1type;
     Waveform osc2type;
+
+    float filterCutoff = 500;
+    float filterResonance = 0.5;
+    bool vcfInverse = false;
+    audio::filter::FilterType filterType = audio::filter::FilterType::highPass;
+    audio::filter::FilterPoles filterPoles = audio::filter::FilterPoles::p2;
 
   protected:
     audio::filter::MultiFilter filter;

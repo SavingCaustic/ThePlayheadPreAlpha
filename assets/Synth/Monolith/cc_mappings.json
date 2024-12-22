@@ -1,29 +1,34 @@
 {
     "1": "lfo1_vca",
     "7": "kbd_glide",
+
     "16": "osc1_detune",
     "17": "osc1_range",
     "18": "osc1_wf",
     "19": "osc3_modlevel",
     "20": "osc2_detune",
     "21": "osc2_range",
+
     "22": "osc2_wf",
     "23": "",
     "24": "osc3_detune",
     "25": "osc3_range",
     "26":  "osc3_wf",
     "27": "osc3_tracking",
+
     "28": "mod_source",
     "29": "mod_mix",
     "30": "osc2_wf",
-    "31": "",
-    "32": "osc1_vol",
-    "33": "osc2_vol",
-    "34": "osc3_vol",
-    "35": "noise_vol",
-    "36": "loop_vol",
+    "31": "osc1_vol",
+    "32": "osc2_vol",
+    "33": "osc3_vol",
+    
+    "34": "noise_vol",
+    "35": "loop_vol",
+    "36": "vcf_type",
     "37": "vcf_cutoff",
     "38": "vcf_resonance",
-    "39": ""
+    "39": "vcf_type"
+
 }
  

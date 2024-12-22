@@ -1,6 +1,8 @@
 #include "./PlayerEngine.h"
 #include "ErrorWriter.h"
 #include "chrono"
+#include "core/constructor/GlobalQueue.h"
+#include "core/constructor/Queue.h"
 
 PlayerEngine::PlayerEngine()
     : noiseVolume(0.2f), isWritingMessage(false), hRotator(), errorWriter_(*this) {
@@ -176,7 +178,6 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     }
     int64_t timeLeftUs = sendLoadStats(nextFrameTime, frameDurationMicroSec);
 
-    // this code not working so fake it..
     if (timeLeftUs > 500) {
         // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
         auto optionalMessage = messageInBuffer->pop();
@@ -189,6 +190,24 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
                 newMessage.paramName,
                 newMessage.paramValue);
             sendMessage(1, "synth", newMessage.paramValue, newMessage.paramName, "yaba daba");
+        }
+    }
+
+    // meh - refactor this call..
+    timeLeftUs = sendLoadStats(nextFrameTime, frameDurationMicroSec);
+    if (timeLeftUs > 500) {
+        // check object-injector queue.
+        if (!sConstructorQueue.isEmpty()) {
+            // hello. we could just pop and destroy. That would be amamzing.
+            auto recordOpt = sConstructorQueue.pop();
+            if (recordOpt.has_value()) {
+                const Constructor::Record &record = recordOpt.value();
+                // Assuming it's a pointer type, we can delete the object here
+                if (record.ptr) {
+                    std::cout << "deleting a created object - all works " << std::endl;
+                    delete record.ptr; // Delete the object to free memory
+                }
+            }
         }
     }
 }
@@ -214,7 +233,7 @@ int64_t PlayerEngine::sendLoadStats(std::chrono::time_point<std::chrono::high_re
     this->loadAvg = (alpha * rawLoad) + ((1 - alpha) * this->loadAvg);
 
     debugCnt++;
-    if ((debugCnt & (1024 - 1)) == 0) {
+    if ((debugCnt & (4096 - 1)) == 0) {
         sendError(100, "Stat: " + std::to_string(this->loadAvg));
         sendError(105, "TimeLeftUs: " + std::to_string(timeLeftUs));
     }

@@ -1,16 +1,24 @@
 TODO
 ====
+factory-process
+1) endpoint för factory rpc?unit.synth&rack_id=0&key=lut_osc1&value=1,0.5,0.3
+2) parsa från main till rätt factory
+3) lägga objekt i kö
+4) poll av kö från player engine
+5) överta pekare från kö
+6) ev förstöra tidigare objekt.
 
-* nåt slags filter för subsynth iaf.
+
+rpc?rack.synth.delete
+rpc?unit.synth&rack_id=0&key=lut_osc1&value=1,0.5,0.3
+
+
 
 * beatnik. ladda patch (samples) och lämna över till player
-
-* object-destructor
 
 * dokumentation
 
 * kodstäd (subklasser i player engine)
-
 
 * börja med timing..
 
@@ -53,6 +61,11 @@ Denna är ju synkron. Bara en tråd.
 
 
 FIXAT:
+
+* object-destructor
+
+* nåt slags filter för subsynth iaf.
+
 * parameters i effects. Hur routa från midi-kbd i kombi med pager?
   * får väl bygga på enklare kbds.. en extra page?!
 

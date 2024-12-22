@@ -85,6 +85,28 @@ void Model::setupParams(int upCount) {
                             // it's probably here that we should have the easer. meh...
                             osc3vol = (v - 10) * (1.0f / 2550.0f);
                         }}},
+            {UP::vcf_cutoff, {"vcf_cutoff", 0.5f, 0, true, 100, 8, [this](float v) {
+                                  filterCutoff = v;
+                                  // filter.setCutoff(v);
+                                  // filter.initFilter();
+                              }}},
+            {UP::vcf_resonance, {"vcf_resonance", 0.0f, 0, false, 0, 1, [this](float v) {
+                                     filterResonance = v;
+                                     // filter.setResonance(v);
+                                     // filter.initFilter();
+                                 }}},
+            {UP::vcf_type, {"vcf_type", 0.0f, 4, false, 0, 3, [this](float v) {
+                                // LFP,HPF,BPF&NOTCH not totally safe but compact:
+                                filterType = static_cast<audio::filter::FilterType>(static_cast<int>(v));
+                                // filter.initFilter();
+                            }}},
+            {UP::vcf_shape, {"vcf_shape", 0.0f, 4, false, 0, 3, [this](float v) {
+                                 // not totally safe but compact:
+                                 int i = round(v);
+                                 filterPoles = static_cast<audio::filter::FilterPoles>(i % 2);
+                                 vcfInverse = (i > 1);
+                                 // filter.initFilter();
+                             }}},
             {vca_attack, {"vca_attack", 0.0f, 0, true, 2, 11, [this](float v) { // 8192 max
                               logErr(100, "setting attack to " + std::to_string(v));
                               vcaAR.setTime(audio::envelope::ATTACK, v);
