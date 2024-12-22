@@ -191,8 +191,8 @@ class Voice {
     // Constructor initializes modelRef and LUTs for oscillators
     Voice(Model &model)
         : modelRef(model),
-          osc1(model.getLUT1()), // Initialize osc1 with LUT from model
-          osc2(model.getLUT2())  // Initialize osc2 with LUT from model
+          osc1(), // Initialize osc1 with LUT from model
+          osc2()  // Initialize osc2 with LUT from model
     {
         reset();
     }

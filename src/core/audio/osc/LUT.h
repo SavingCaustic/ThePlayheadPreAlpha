@@ -16,20 +16,47 @@ class LUT {
         return wave[index];
     }
 
-  private:
+    // private:
+    // public so factory can change this. Not optimal but for now..
     float wave[LUT_SIZE]{};
 };
 
 class LUTosc {
   public:
-    explicit LUTosc(const LUT &theLut); // Constructor
+    explicit LUTosc() // Default constructor
+        : lutWave(nullptr), lutIdx(0.0f), angle(0.0f) {}
 
-    float getNextSample(float offset);
-    void reset();
-    void setAngle(float hz);
+    // Set LUT after creation
+    void setLUT(const LUT &theLut) {
+        lutWave = &theLut; // Set LUT reference
+    }
+
+    float getNextSample(float offset) {
+        if (lutWave) {
+            int intOffset = (offset * LUT_SIZE);
+            int intIdx = (intOffset + static_cast<int>(lutIdx)) & (LUT_SIZE - 1);
+            float y = lutWave->getSample(intIdx);
+
+            lutIdx += angle;
+            if (lutIdx >= LUT_SIZE)
+                lutIdx -= LUT_SIZE;
+
+            return y;
+        }
+        return 0;
+    }
+
+    void reset() {
+        lutIdx = 0.0f;
+    }
+
+    void setAngle(float hz) {
+        // Set oscillator angle (frequency related logic)
+        angle = hz;
+    }
 
   private:
-    const LUT &lutWave;
+    const LUT *lutWave; // Pointer to LUT (nullptr by default)
     float lutIdx;
     float angle;
 };

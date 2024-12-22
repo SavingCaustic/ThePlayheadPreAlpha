@@ -1,5 +1,6 @@
 #pragma once
-#include "core/factory/app.h"
+#include "core/factory/rack.h"
+#include "core/factory/server.h"
 #include "core/factory/unit.h"
 #include <core/utils/FNV.h>
 #include <iostream>
@@ -24,15 +25,17 @@ class RPCParser {
         uint32_t classFNV = Utils::Hash::fnv1a(strClass);
         uint32_t methodFNV = Utils::Hash::fnv1a(strMethod);
         switch (classFNV) {
-        case Utils::Hash::fnv1a_hash("app"):
+        case Utils::Hash::fnv1a_hash("server"):
             std::cout << "parsing verb: " << strMethod << std::endl;
-            Factory::App::parse(methodFNV, "", "");
+            Factory::Server::parse(methodFNV, "", "");
             break;
         case Utils::Hash::fnv1a_hash("device"):
             break;
         case Utils::Hash::fnv1a_hash("project"):
             break;
         case Utils::Hash::fnv1a_hash("rack"):
+            std::cout << "rack here we go.." << std::endl;
+            Factory::Rack::parse(strMethod, strKey, strVal, stoi(rackID), constructorQueue);
             break;
         case Utils::Hash::fnv1a_hash("unit"):
             std::cout << "unit here we go.." << std::endl;

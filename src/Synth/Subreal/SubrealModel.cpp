@@ -19,6 +19,8 @@ Model::Model() {
     }
 }
 
+// well maybe its not setting after all.. more like a factory needed here, but factory have no access to the model..
+// so this class should rather be called mountObject
 void Model::updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Constructor::Queue &constructorQueue) {
     // Hash the key
     uint32_t keyFNV = Utils::Hash::fnv1a(type);

@@ -6,7 +6,7 @@
 namespace Factory {
 
 // factories are static
-class App {
+class Server {
   public:
     static void parse(u_int32_t methodFNV, std::string key, std::string strValue) {
         switch (methodFNV) {

@@ -115,16 +115,20 @@ int main() {
     sPlayerEngine.bindConstructorQueue(sConstructorQueue);
 
     sErrorHandler.start();
+    sDestructorWorker.start();
     sPlayerEngine.initializeRacks();
 
     // this should go, but debugging now..
-    if (false) {
-        sPlayerEngine.setupRackWithSynth(0, "Monolith");
-    } else {
+    if (true) {
         // sPlayerEngine.setupRackWithSynth(0, "Monolith"); // this here only to force use of queue below.
+        // queue without RPC
         SynthBase *synth = nullptr;
         SynthFactory::setupSynth(synth, "Subreal");
-        sPlayerEngine.loadSynth(synth, 0); // maybe return an nullptr from loadSynth?
+        sConstructorQueue.push(synth, sizeof(synth), false, "rack.synth");
+        synth = nullptr;
+        // good bye beta: sPlayerEngine.loadSynth(synth, 0); // maybe return an nullptr from loadSynth?
+
+        /*
         EffectBase *effect = nullptr;
         EffectFactory::setupEffect(effect, "Delay");
         sPlayerEngine.loadEffect(effect, 0, 1); // stupid to have 1 at effect..
@@ -137,11 +141,11 @@ int main() {
         sPlayerEngine.loadSynth(synth2, 1);
         // synth2->parseMidi(0x90, 0x44, 0x050);
         //   set up another synth..
+        */
     }
     // Start the audio driver
     sAudioManager.mountPreferedOrDefault(deviceSettings["audio_device"]);
     sStudioRunner.start();
-    sDestructorWorker.start();
 
     //
     crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer, rpcParser, sConstructorQueue);

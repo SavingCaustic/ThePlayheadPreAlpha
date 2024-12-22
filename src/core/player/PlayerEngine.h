@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./CCManager.h"
+#include "./ConstructorReader.h"
 #include "ErrorWriter.h"
 #include "Synth/SynthBase.h"
 #include "chrono"
@@ -64,6 +65,7 @@ class PlayerEngine {
     void sendError(int code, const std::string &message);
 
     CCManager ccManager;
+    ConstructorReader constructorReader;
     // Destructor::Queue destructorQueue;
 
   private:
@@ -89,7 +91,6 @@ class PlayerEngine {
     MessageInBuffer *messageInBuffer = nullptr;
     MessageOutBuffer *messageOutBuffer = nullptr;
     Destructor::Queue *destructorBuffer = nullptr;
-    Constructor::Queue *constructorQueue = nullptr;
     MessageIn newMessage;               // Declare a reusable Message object
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
     AudioErrorBuffer *audioErrorBuffer = nullptr;

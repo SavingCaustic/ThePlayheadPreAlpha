@@ -235,8 +235,8 @@ class Voice { //: public VoiceInterface {
     // Constructor initializes modelRef and LUTs for oscillators
     Voice(Model &model)
         : modelRef(model),
-          osc1(model.getLUT1()), // Initialize osc1 with LUT from model
-          osc2(model.getLUT2())  // Initialize osc2 with LUT from model
+          osc1(), // Initialize osc1 with LUT from model
+          osc2()  // Initialize osc2 with LUT from model
     {
         reset();
     }
@@ -244,6 +244,11 @@ class Voice { //: public VoiceInterface {
     void reset() {
         // Called on setup
         notePlaying = 255; // unsigned byte. best like this..
+    }
+
+    void setLUTs(const audio::osc::LUT &lut1, const audio::osc::LUT &lut2) {
+        osc1.setLUT(lut1); // Set LUT for osc1
+        osc2.setLUT(lut2); // Set LUT for osc2
     }
 
     void noteOn(uint8_t midiNote, float velocity) {
@@ -371,8 +376,8 @@ class Voice { //: public VoiceInterface {
     uint8_t notePlaying;
 
   protected:
-    audio::osc::LUTosc osc1;
-    audio::osc::LUTosc osc2;
+    audio::osc::LUTosc osc1; // First oscillator (not a pointer)
+    audio::osc::LUTosc osc2; // Second oscillator (not a pointer)
     audio::filter::MultiFilter filter;
     audio::envelope::ADSFRSlope vcaARslope;
     audio::envelope::ADSFRSlope vcfARslope; // should prob be called vcfEnvSlope..
