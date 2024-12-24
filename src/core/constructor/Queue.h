@@ -19,7 +19,7 @@ class Queue {
         // Optionally accept a size parameter, but currently unused
     }
 
-    bool push(void *ptr, uint32_t size, bool isStereo, const char *type) {
+    bool push(void *ptr, uint32_t size, bool isStereo, const char *type, int rackID) {
         size_t nextWrIdx = (wrIdx.load(std::memory_order_relaxed) + 1) & (bufferSize - 1);
         if (nextWrIdx == rdIdx.load(std::memory_order_acquire)) {
             // Buffer is full
@@ -27,7 +27,7 @@ class Queue {
         }
 
         // Construct a Record and add it to the queue
-        constructorQueue[wrIdx.load(std::memory_order_relaxed)] = Record(ptr, size, isStereo, type);
+        constructorQueue[wrIdx.load(std::memory_order_relaxed)] = Record(ptr, size, isStereo, type, rackID);
         wrIdx.store(nextWrIdx, std::memory_order_release); // Atomically update wrIdx
         return true;
     }

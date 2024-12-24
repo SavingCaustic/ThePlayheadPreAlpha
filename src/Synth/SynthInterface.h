@@ -18,7 +18,7 @@ class SynthInterface {
     virtual nlohmann::json getParamDefsAsJSON() = 0;
     virtual void bindBuffers(float *audioBuffer, std::size_t bufferSize) = 0;
     // virtual void updateSetting(Constructor::Record::type, record.value, record.ptr, record.isStereo) = 0;
-    virtual void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Constructor::Queue &constructorQueue) = 0;
+    virtual void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo) = 0; //, Constructor::Queue &constructorQueue) = 0;
 
     // non virtual (Base methods)
     void handleMidiCC(u_int8_t ccNumber, float value);

@@ -21,23 +21,26 @@ class Factory {
         uint32_t keyFNV = Utils::Hash::fnv1a(key);
         switch (keyFNV) {
         case Utils::Hash::fnv1a_hash("lut1_overtones"): {
-            createLUT(0, value, constructorQueue);
+            createLUT(key, value, rackID, constructorQueue);
             break;
         }
             // push the lut to the queue for object injects. We need to know rack id.
         case Utils::Hash::fnv1a_hash("lut2_overtones"): {
-            createLUT(1, value, constructorQueue);
+            createLUT(key, value, rackID, constructorQueue);
             break;
         }
         }
     }
 
-    static void createLUT(int lutNo, std::string value, Constructor::Queue &constructorQueue) {
+    static void createLUT(std::string &key, std::string value, int rackID, Constructor::Queue &constructorQueue) {
         std::cout << "creating lut1 now.." << std::endl;
         audio::osc::LUT *lutTmp = new audio::osc::LUT();
         buildLUT(lutTmp, value);
+        // Prepend "unit." to the key
+        std::string prefixedKey = "synth." + key;
+
         // Push the LUT into the Constructor Queue
-        if (!constructorQueue.push(lutTmp, sizeof(audio::osc::LUT), false, "LUT")) {
+        if (!constructorQueue.push(lutTmp, sizeof(audio::osc::LUT), false, prefixedKey.c_str(), rackID)) {
             std::cerr << "Failed to push LUT into Constructor Queue. Queue is full!" << std::endl;
             delete lutTmp; // Clean up if the push fails
         }

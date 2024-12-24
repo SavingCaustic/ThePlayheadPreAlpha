@@ -122,10 +122,13 @@ int main() {
     if (true) {
         // sPlayerEngine.setupRackWithSynth(0, "Monolith"); // this here only to force use of queue below.
         // queue without RPC
-        SynthBase *synth = nullptr;
-        SynthFactory::setupSynth(synth, "Subreal");
-        sConstructorQueue.push(synth, sizeof(synth), false, "rack.synth");
-        synth = nullptr;
+        // SynthBase *synth = nullptr;
+        // SynthFactory::setupSynth(synth, "Subreal");
+        // sConstructorQueue.push(synth, sizeof(synth), false, "rack.synth", 0);
+        // synth = nullptr;
+
+        // sConstructorQueue.push(synth, sizeof(synth), false, "rack.synth", 0);
+
         // good bye beta: sPlayerEngine.loadSynth(synth, 0); // maybe return an nullptr from loadSynth?
 
         /*

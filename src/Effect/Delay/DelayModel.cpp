@@ -35,7 +35,17 @@ void Model::setupParams(int upCount) {
             {UP::feedback, {"feedback", 0.5f, 0, false, 0, 1, [this](float v) {
                                 std::cout << "setting feedback.." << std::endl;
                                 feedback = v;
-                            }}}}; // Removed the extra semicolon here
+                            }}},
+            {UP::highcut, {"highcut", 0.0f, 0, false, 0, 1, [this](float v) {
+                               std::cout << "highcut " << v << std::endl;
+                               highcut = v;
+                           }}},
+            {UP::lowcut, {"lowcut", 0.0f, 0, false, 0, 1, [this](float v) {
+                              lowcut = v;
+                          }}},
+            {UP::noise, {"noise", 0.0f, 0, false, 0, 1, [this](float v) {
+                             noise = v;
+                         }}}}; // Removed the extra semicolon here
         EffectBase::indexParams(upCount);
     }
 }
@@ -57,6 +67,17 @@ bool Model::renderNextBlock(bool isSterero) {
         //
         delayOutL = delayBuffer[rdPointer];
         delayOutR = delayBuffer[rdPointer + 1];
+        // calc rms
+        RMS = RMS * 0.9f + (delayOutL + delayOutR) * (delayOutL + delayOutR) * 0.1f;
+        //
+        noisePink = noisePink * 0.5f + AudioMath::noise() * 0.5f;
+        highCutLeft = highCutLeft * 0.8f + delayOutL * 0.2f; // about 2 khz
+        highCutRight = highCutRight * 0.8f + delayOutR * 0.2f;
+        delayOutL = (highCutLeft * highcut + delayOutL * (1.0f - highcut));
+        delayOutR = (highCutRight * highcut + delayOutR * (1.0f - highcut));
+        // add noise
+        delayOutL += RMS * noisePink * noise * 0.2f;
+        delayOutR += RMS * noisePink * noise * 0.2f;
         //
         audioInL = buffer[i];
         audioInR = buffer[i + 1];

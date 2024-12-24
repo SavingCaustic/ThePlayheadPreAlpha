@@ -239,6 +239,24 @@ class Rack {
         return synth != nullptr;
     }
 
+    bool setEffect(EffectBase *newEffect, int effectSlot = 1) {
+        EffectInterface **effectTarget = nullptr;
+        if (effectSlot == 1) {
+            effectTarget = &effect1;
+        } else {
+            effectTarget = &effect2;
+        }
+        if (*effectTarget) {
+            delete *effectTarget;
+            *effectTarget = nullptr; // Avoid dangling pointer
+        }
+
+        *effectTarget = newEffect;
+        (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size());
+
+        return *effectTarget != nullptr;
+    }
+
     bool setSynthFromStr(const std::string &synthName) {
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
@@ -271,7 +289,7 @@ class Rack {
         return (loadOK);
     }
 
-    bool setEffect(const std::string &effectName, int effectSlot = 1) {
+    bool setEffectFromStr(const std::string &effectName, int effectSlot = 1) {
         std::cout << "we're setting up effect: " << effectName << std::endl;
         EffectType type = getEffectType(effectName);
         EffectInterface **effectTarget = nullptr;

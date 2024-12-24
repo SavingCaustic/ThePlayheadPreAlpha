@@ -5,12 +5,14 @@
 #include <iostream>
 #include <string>
 
+// we *need* implementation of unit-factories here. They are called for here.
+
 namespace Factory {
 
 class Unit {
   public:
     static void parse(const std::string &strMethod, const std::string &key, const std::string &strValue, int rackID, Constructor::Queue &constructorQueue) {
-        // strMethod is synth, effect0, etc.
+        // strMethod is: synth (unit removed)
         uint32_t unitFNV = Utils::Hash::fnv1a(strMethod);
         switch (unitFNV) {
         case Utils::Hash::fnv1a_hash("eventor1"):
@@ -24,7 +26,7 @@ class Unit {
         case Utils::Hash::fnv1a_hash("effect2"):
             break;
         default:
-            std::cerr << "Unknown unit type: " << strMethod << std::endl;
+            std::cerr << "Unknown unit type request: " << strMethod << std::endl;
             break;
         }
     }
@@ -32,6 +34,7 @@ class Unit {
   private:
     static void synthParse(const std::string &key, const std::string &val, int rackID, Constructor::Queue &constructorQueue) {
         // Delegate to the appropriate synth factory
+        // Yeah, hard to get around. We need the appropriate factory, that's it.
         Synth::Subreal::Factory::prepareSetting(key, val, rackID, constructorQueue);
     }
 };

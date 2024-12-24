@@ -48,8 +48,9 @@ class ConstructorReader {
                 std::string className, methodName;
                 // Handle error if no delimiter is found
                 // throw std::runtime_error("controlled demolition with : " + type); //rack.synth
+                std::cout << "yey, here" << std::endl;
 
-                size_t delimiterPos = type.find('.');
+                size_t delimiterPos = type.find('.'); // uhm.. type format is bad. It's more like target. Where it's going. dots should be used.
                 if (delimiterPos != std::string::npos) {
                     className = type.substr(0, delimiterPos);   // Extract part before "."
                     methodName = type.substr(delimiterPos + 1); // Extract part after "."
@@ -60,15 +61,34 @@ class ConstructorReader {
                 uint32_t classFNV = Utils::Hash::fnv1a(className);
                 uint32_t methodFNV = Utils::Hash::fnv1a(methodName);
                 switch (classFNV) {
+                case Utils::Hash::fnv1a_hash("rack"):
+                    // maybe it's here we deal with the units?
+                    switch (methodFNV) {
+                    case Utils::Hash::fnv1a_hash("synth"):
+                        std::cout << "mounting synth now.. " << std::endl;
+                        racks[0].setSynth(reinterpret_cast<SynthBase *>(record.ptr));
+                        break;
+                    case Utils::Hash::fnv1a_hash("effect1"):
+                        std::cout << "mounting effect1 now.. " << std::endl;
+                        racks[0].setEffect(reinterpret_cast<EffectBase *>(record.ptr), 1);
+                        break;
+                    case Utils::Hash::fnv1a_hash("effect2"):
+                        std::cout << "mounting effect2 now.. " << std::endl;
+                        racks[0].setEffect(reinterpret_cast<EffectBase *>(record.ptr), 2);
+                        break;
+                    }
+                    break;
                 case Utils::Hash::fnv1a_hash("synth"):
-                    racks[0].synth->updateSetting(methodName, record.ptr, record.size, record.isStereo, *constructorQueue);
+                    std::cout << "updating synth-setting now.. " << std::endl;
+                    racks[0].synth->updateSetting(methodName, record.ptr, record.size, record.isStereo); //, *constructorQueue);
                     break;
                 }
             }
         }
     }
 
-    void processRack() {
+    void
+    processRack() {
         // say i set up a new synth. I would like to call its model, right?
     }
 

@@ -19,9 +19,16 @@ Model::Model() {
     }
 }
 
+void Model::updateVoiceLUT(const audio::osc::LUT &lut, int no) {
+    for (int i = 0; i < VOICE_COUNT; i++) {
+        Voice &myVoice = voices[i];
+        myVoice.setLUTs(lut, no);
+    }
+}
+
 // well maybe its not setting after all.. more like a factory needed here, but factory have no access to the model..
 // so this class should rather be called mountObject
-void Model::updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Constructor::Queue &constructorQueue) {
+void Model::updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo) { //}, Constructor::Queue &constructorQueue) {
     // Hash the key
     uint32_t keyFNV = Utils::Hash::fnv1a(type);
 
@@ -37,7 +44,9 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
                 // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
             }
             // Assign the new LUT
+            std::cout << "setting new lut-1 wave" << std::endl;
             lut1 = lut;
+            updateVoiceLUT(*lut1, 1);
         } else {
             // Handle error: Unexpected object type or size
             throw std::runtime_error("Invalid object for lut1_overtones");
@@ -53,7 +62,9 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
                 // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
             }
             // Assign the new LUT
+            std::cout << "setting new lut-2 wave" << std::endl;
             lut2 = lut;
+            updateVoiceLUT(*lut2, 2);
         } else {
             // Handle error: Unexpected object type or size
             throw std::runtime_error("Invalid object for lut1_overtones");

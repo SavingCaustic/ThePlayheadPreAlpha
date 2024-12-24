@@ -140,7 +140,7 @@ class Model : public SynthBase {
     void initSettings();
     // void updateSetting(std::string key, std::string value);
     // void updateSetting(const std::string &key, const std::string &value, void *object, uint32_t size, bool isStereo);
-    void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Constructor::Queue &constructorQueue) override;
+    void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo) override; //, Constructor::Queue &constructorQueue) override;
 
     void bindBuffers(float *audioBuffer, std::size_t bufferSize);
 
@@ -154,6 +154,8 @@ class Model : public SynthBase {
 
     // Method to parse MIDI commands
     void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) override;
+
+    void updateVoiceLUT(const audio::osc::LUT &lut, int no);
 
     // Method to render the next block of audio
     bool renderNextBlock() override;
@@ -246,9 +248,12 @@ class Voice { //: public VoiceInterface {
         notePlaying = 255; // unsigned byte. best like this..
     }
 
-    void setLUTs(const audio::osc::LUT &lut1, const audio::osc::LUT &lut2) {
-        osc1.setLUT(lut1); // Set LUT for osc1
-        osc2.setLUT(lut2); // Set LUT for osc2
+    void setLUTs(const audio::osc::LUT &lut, int no) {
+        if (no == 1) {
+            osc1.setLUT(lut); // Set LUT for osc1
+        } else {
+            osc2.setLUT(lut); // Set LUT for osc2
+        }
     }
 
     void noteOn(uint8_t midiNote, float velocity) {

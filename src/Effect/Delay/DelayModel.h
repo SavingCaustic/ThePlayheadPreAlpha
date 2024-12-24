@@ -21,6 +21,9 @@ enum UP {
     time,
     mix,
     feedback,
+    highcut,
+    lowcut,
+    noise,
     up_count
 };
 
@@ -49,11 +52,20 @@ class Model : public EffectBase {
     float mix = 0.3;
     float feedback = 0.2f;
     float time = 0.57f; // 105 bpm
+    float lowcut = 0;
+    float highcut = 0;
+    float noise = 0; // noise is filtered too, for pink noise.
     int debugCnt = 0;
 
     void initializeParameters();
     //
     void setupParams(int upCount);
+
+  private:
+    float highCutLeft, highCutRight;
+    float lowCutLeft, lowCutRight;
+    float noisePink;
+    double RMS;
 };
 
 } // namespace Effect::Delay
