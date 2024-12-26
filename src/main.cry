@@ -1,9 +1,0 @@
-#include "ThePlayhead.h"
-//this is how we'd like the main.cpp to be..
-
-int main() {
-    ThePlayhead thePlayhead;
-    thePlayhead.initialize();
-    thePlayhead.run();
-    return 0;
-}

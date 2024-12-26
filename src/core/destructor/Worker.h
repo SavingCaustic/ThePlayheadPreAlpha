@@ -45,6 +45,7 @@ class Worker {
             while (!queue_.isEmpty()) {
                 auto record = queue_.pop();
                 if (record) {
+                    std::cout << "nam-nam destructor yammy.." << std::endl;
                     record->deleter(record->ptr); // Call the deleter function
                     std::cout << "Destructor thread: Destroying an object.\n";
                 }

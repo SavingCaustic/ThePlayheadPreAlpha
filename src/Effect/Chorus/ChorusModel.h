@@ -41,7 +41,7 @@ class Model : public EffectBase {
     int delaySamples = 100;
     float lfoPhase = 0.0f;
     float lfoFrequency = 2.5f;
-    float lfoDepth = 0.1; // really has no precice unit. 0.8 round P-P 100 cent.
+    float lfoDepth = 0.2; // really has no precice unit. 0.8 round P-P 100 cent.
     //
     float cutoff = 1200;
     float alpha = exp(-2.0 * M_PI * cutoff / TPH_DSP_SR);

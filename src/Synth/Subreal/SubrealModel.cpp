@@ -328,8 +328,12 @@ bool Model::renderNextBlock() {
     for (uint8_t i = 0; i < bufferSize; i++) {
         // we could add some sweet dist here..
         dist = synthBuffer[i];
-        dist = dist * dist; // skip polarity..
-        buffer[i] = synthBuffer[i] * (5 - dist) * 0.1f;
+        dist = dist * dist; // skip polarity.. But we'll get problems as dist² > 5.
+        dist = fmin(4.0f, dist * dist);
+        buffer[i] = synthBuffer[i] * (5 - dist) * 0.2f;
+        // 0.1 => 0.001 => (5 - 0.01) * 0.1 => 0.499 => 0.0499
+        // 0.5 => 0.25 => (5 - 0.25) * 0.1 => 0.475 => 0.287
+        // 2 => 4 => (5 - 4) * 0.1 => 0.1 => 0.2
     }
     // motherboard-stuff..
     lfo1.updatePhase();
