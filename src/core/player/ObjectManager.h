@@ -38,29 +38,30 @@ class ObjectManager {
                 }
                 uint32_t classFNV = Utils::Hash::fnv1a(className);
                 uint32_t methodFNV = Utils::Hash::fnv1a(methodName);
+                int rackID = record.rackID;
                 switch (classFNV) {
                 case Utils::Hash::fnv1a_hash("rack"):
                     // maybe it's here we deal with the units?
                     switch (methodFNV) {
+                    case Utils::Hash::fnv1a_hash("eventor1"):
+                        destroyEventor(0, 1);
+                        std::cout << "mounting eventor1 now.. " << std::endl;
+                        racks[rackID].setEventor(reinterpret_cast<EventorBase *>(record.ptr), 1);
+                        break;
                     case Utils::Hash::fnv1a_hash("synth"):
                         std::cout << "mounting synth now.. " << std::endl;
                         destroySynth(0);
-                        racks[0].setSynth(reinterpret_cast<SynthBase *>(record.ptr));
+                        racks[rackID].setSynth(reinterpret_cast<SynthBase *>(record.ptr));
                         break;
                     case Utils::Hash::fnv1a_hash("effect1"):
                         destroyEffect(0, 1);
                         std::cout << "mounting effect1 now.. " << std::endl;
-                        racks[0].setEffect(reinterpret_cast<EffectBase *>(record.ptr), 1);
+                        racks[rackID].setEffect(reinterpret_cast<EffectBase *>(record.ptr), 1);
                         break;
                     case Utils::Hash::fnv1a_hash("effect2"):
                         destroyEffect(0, 2);
                         std::cout << "mounting effect2 now.. " << std::endl;
-                        racks[0].setEffect(reinterpret_cast<EffectBase *>(record.ptr), 2);
-                        break;
-                    case Utils::Hash::fnv1a_hash("eventor1"):
-                        // destroyEventor(0, 1);
-                        std::cout << "mounting eventor1 now.. " << std::endl;
-                        // racks[0].setEventor(reinterpret_cast<EventorBase *>(record.ptr), 1);
+                        racks[rackID].setEffect(reinterpret_cast<EffectBase *>(record.ptr), 2);
                         break;
                     }
                     break;
@@ -68,7 +69,7 @@ class ObjectManager {
                     Destructor::Record recordDelete;
                     std::cout << "updating synth-setting now.. " << std::endl;
                     // hmm.. tricky to call destroy here since we don't know the name of the property. Better to provide destructor queue?
-                    racks[0].synth->updateSetting(methodName, record.ptr, record.size, record.isStereo, recordDelete);
+                    racks[rackID].synth->updateSetting(methodName, record.ptr, record.size, record.isStereo, recordDelete);
                     // if recordDelete has a set pointer, add it to the queue
                     if (recordDelete.ptr != nullptr) {
                         destructorBuffer->push(recordDelete);
@@ -105,7 +106,8 @@ class ObjectManager {
             effectTarget = &racks[rackID].effect2;
         }
 
-        if (effectTarget != nullptr) {
+        if (*effectTarget != nullptr) {
+            std::cout << "hey i should not destroy eventor yet" << std::endl;
             Destructor::Record record;
             record.ptr = *effectTarget;
             record.deleter = [](void *ptr) { delete static_cast<EffectBase *>(ptr); }; // Create deleter for SynthBase
@@ -128,7 +130,8 @@ class ObjectManager {
             eventorTarget = &racks[rackID].eventor2;
         }
 
-        if (eventorTarget != nullptr) {
+        if (*eventorTarget != nullptr) {
+            std::cout << "hey i should not destroy eventor yet" << std::endl;
             Destructor::Record record;
             record.ptr = *eventorTarget;
             record.deleter = [](void *ptr) { delete static_cast<EventorBase *>(ptr); }; // Create deleter for SynthBase
@@ -136,8 +139,6 @@ class ObjectManager {
             if (!destructorBuffer->push(record)) {
                 std::cout << "Destructor queue is full, could not enqueue the eventor to be deleted." << std::endl;
             }
-            // std::cout << "destroying synth (inside audio-thread)" << std::endl;
-            // delete racks[rackID].synth; // Clean up the old synth
             *eventorTarget = nullptr;
         }
         return true;

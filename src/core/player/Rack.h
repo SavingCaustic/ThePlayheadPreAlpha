@@ -254,11 +254,11 @@ class Rack {
         } else {
             effectTarget = &effect2;
         }
-        if (*effectTarget) {
+        // should already be deleted by ObjectManager
+        /*if (*effectTarget) {
             delete *effectTarget;
             *effectTarget = nullptr; // Avoid dangling pointer
-        }
-
+        }*/
         *effectTarget = newEffect;
         (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size());
 
@@ -268,17 +268,20 @@ class Rack {
     bool setEventor(EventorBase *newEventor, int eventorSlot = 1) {
         EventorInterface **eventorTarget = nullptr;
         if (eventorSlot == 1) {
+            std::cout << "ok i got here at least" << std::endl;
             eventorTarget = &eventor1;
-            eventor1->setMidiTarget(synth);
-            eventor1->setPosition(1);
         } else {
             eventorTarget = &eventor2;
         }
+        newEventor->setMidiTarget(synth);
+        newEventor->setPosition(1);
+
+        /*
         if (*eventorTarget) {
             delete *eventorTarget;
             *eventorTarget = nullptr; // Avoid dangling pointer
         }
-
+        */
         *eventorTarget = newEventor;
 
         return *eventorTarget != nullptr;

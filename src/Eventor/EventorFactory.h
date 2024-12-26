@@ -34,7 +34,7 @@ class EventorFactory {
             break;
         // Add cases for other synth types here
         default:
-            std::cerr << "Unknown effect type: " << eventorName << std::endl;
+            std::cerr << "Unknown eventor type: " << eventorName << std::endl;
             return false; // Indicate failure
             loadOK = false;
         }
