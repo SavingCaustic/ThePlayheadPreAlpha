@@ -1,7 +1,7 @@
 #pragma once
 
 #include "./CCManager.h"
-#include "./ConstructorReader.h"
+#include "./ObjectManager.h"
 #include "ErrorWriter.h"
 #include "Synth/SynthBase.h"
 #include "chrono"
@@ -30,7 +30,6 @@ class PlayerEngine {
 
     void bindErrorWriter();
 
-    // void bindDestructorBuffer(DestructorBuffer &hDestructorBuffer);
     void bindMessageInBuffer(MessageInBuffer &hMessageInBuffer);
     void bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer);
     void bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer);
@@ -52,7 +51,6 @@ class PlayerEngine {
     std::string getSynthParams(int rackId);
 
     bool loadSynth(SynthBase *&synth, int rackID);
-    bool destroySynth(int rackID);
     bool loadEffect(EffectBase *&effect, int rackID, int effectSlot);
 
     bool setupRackWithSynth(int rackId, const std::string &synthName);
@@ -65,7 +63,7 @@ class PlayerEngine {
     void sendError(int code, const std::string &message);
 
     CCManager ccManager;
-    ConstructorReader constructorReader;
+    ObjectManager objectManager;
     // Destructor::Queue destructorQueue;
 
   private:
@@ -90,7 +88,7 @@ class PlayerEngine {
     double midiInTS; // probably not used, we use it when we get it.
     MessageInBuffer *messageInBuffer = nullptr;
     MessageOutBuffer *messageOutBuffer = nullptr;
-    Destructor::Queue *destructorBuffer = nullptr;
+    // Destructor::Queue *destructorBuffer = nullptr;
     MessageIn newMessage;               // Declare a reusable Message object
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
     AudioErrorBuffer *audioErrorBuffer = nullptr;

@@ -4,7 +4,7 @@
 #include "core/utils/FNV.h"
 
 PlayerEngine::PlayerEngine()
-    : noiseVolume(0.2f), isWritingMessage(false), hRotator(), errorWriter_(*this), constructorReader(racks) {
+    : noiseVolume(0.2f), isWritingMessage(false), hRotator(), errorWriter_(*this), objectManager(racks) {
     this->rackReceivingMidi = 0; // meh
     this->loadAvg = 0.0f;
 }
@@ -42,11 +42,13 @@ void PlayerEngine::bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer) {
 }
 
 void PlayerEngine::bindDestructorBuffer(Destructor::Queue &hDestructorBuffer) {
-    destructorBuffer = &hDestructorBuffer;
+    // really just a proxy
+    objectManager.destructorBuffer = &hDestructorBuffer;
 }
 
 void PlayerEngine::bindConstructorQueue(Constructor::Queue &hConstructorQueue) {
-    constructorReader.constructorQueue = &hConstructorQueue;
+    // really just a proxy
+    objectManager.constructorQueue = &hConstructorQueue;
 }
 
 void PlayerEngine::bindMidiManager(MidiManager &hMidiManager) {
@@ -85,77 +87,6 @@ bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue,
 void PlayerEngine::sendError(int code, const std::string &message) {
     // dunno if this should be kept. But still, units have to be context-aware..
     audioErrorBuffer->addAudioError(code, message);
-}
-
-bool PlayerEngine::destroySynth(int rackID) {
-    Destructor::Record record;
-    record.ptr = racks[rackID].synth;
-    record.deleter = [](void *ptr) { delete static_cast<SynthBase *>(ptr); }; // Create deleter for SynthBase
-    // Push the record to the destructor queue
-    if (!destructorBuffer->push(record)) {
-        std::cout << "Destructor queue is full, could not enqueue the synth to be deleted." << std::endl;
-    }
-    // std::cout << "destroying synth (inside audio-thread)" << std::endl;
-    // delete racks[rackID].synth; // Clean up the old synth
-    racks[rackID].synth = nullptr;
-    racks[rackID].enabled = false; // Disable the rack if no synth
-    return true;
-}
-
-bool PlayerEngine::loadSynth(SynthBase *&newSynth, int rackID) {
-    // bool result = racks[rackID].setSynth(synth);
-    if (racks[rackID].synth) {
-        // Create a Record containing the pointer and deleter
-        destroySynth(rackID);
-    }
-    // now setup
-    racks[rackID].synth = newSynth;
-    std::cout << "Binding buffers for synth in rack" << std::endl;
-    racks[rackID].synth->bindBuffers(racks[rackID].audioBuffer.data(), racks[rackID].audioBuffer.size()); // Bind the buffer here
-    racks[rackID].enabled = true;                                                                         // Mark the rack as enabled
-    // Reset the caller's pointer to avoid accidental reuse
-    newSynth = nullptr;
-    return true;
-}
-
-bool PlayerEngine::loadEffect(EffectBase *&newEffect, int rackID, int effectSlot) {
-    std::cout << "at loadEffects" << std::endl;
-    EffectInterface **effectTarget = nullptr;
-    if (effectSlot == 1) {
-        effectTarget = &racks[rackID].effect1;
-    } else {
-        effectTarget = &racks[rackID].effect2;
-    }
-
-    if (*effectTarget) {
-        delete *effectTarget;
-        *effectTarget = nullptr; // Avoid dangling pointer
-    }
-
-    if (newEffect) {
-        std::cout << "yes new effect" << std::endl;
-        *effectTarget = newEffect;
-        (*effectTarget)->bindBuffers(racks[rackID].audioBuffer.data(), racks[rackID].audioBuffer.size());
-        // racks[rackID].enabled = true; // Mark the rack as enabled
-    } else {
-        // racks[rackID].enabled = false; // Disable the rack if no synth
-    }
-
-    // Reset the caller's pointer to avoid accidental reuse
-    newEffect = nullptr;
-    return true;
-}
-
-bool PlayerEngine::setupRackWithSynth(int rackId, const std::string &synthName) {
-    // Check if the rack already exists
-    racks[rackId].setSynthFromStr(synthName);
-    sendError(200, "real audio error hello");
-    //   Now, setup the synth for the rack
-    // racks[rackId].setEffect("Delay"); // Chorus
-    // racks[rackId].setEffect("Delay", 2);
-    //   to be improved..
-    rackReceivingMidi = 0;
-    return false;
 }
 
 float PlayerEngine::getLoadAvg() {
@@ -198,7 +129,7 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
 
     // meh - refactor this call..
     if (timeLeftUs > 500) {
-        constructorReader.process();
+        objectManager.process();
     }
 }
 
@@ -254,7 +185,7 @@ void PlayerEngine::sumToMaster(float *buffer, unsigned long numFrames, int outer
 
 bool PlayerEngine::pollMidiIn() {
     MidiMessage newMessage;
-    u_int8_t remappedCC = 0;
+    uint8_t remappedCC = 0;
     this->rackReceivingMidi = 1;
     if (this->rackReceivingMidi >= 0) {
         while (midiManager->getNextMessage(newMessage)) {
@@ -262,7 +193,7 @@ bool PlayerEngine::pollMidiIn() {
             if ((newMessage.cmd & 0xf0) == 0x90 && newMessage.param2 == 0) {
                 newMessage.cmd -= 0x10;
             }
-            const u_int8_t channel = static_cast<u_int8_t>(newMessage.cmd) & 0x03; // 0x03 for prototype - 4 racks..
+            const uint8_t channel = static_cast<uint8_t>(newMessage.cmd) & 0x03; // 0x03 for prototype - 4 racks..
             if (racks[channel].enabled) {
                 // if cc-cmd, see if it should be re-routed.
                 if ((newMessage.cmd & 0xf0) == 0xb0) { // note parenthesis!!

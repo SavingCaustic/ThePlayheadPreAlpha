@@ -19,6 +19,12 @@ Model::Model() {
     }
 }
 
+Model::~Model() {
+    std::cout << "destructing LUT's" << std::endl;
+    delete lut1;
+    delete lut2;
+}
+
 void Model::updateVoiceLUT(const audio::osc::LUT &lut, int no) {
     for (int i = 0; i < VOICE_COUNT; i++) {
         Voice &myVoice = voices[i];
@@ -28,7 +34,7 @@ void Model::updateVoiceLUT(const audio::osc::LUT &lut, int no) {
 
 // well maybe its not setting after all.. more like a factory needed here, but factory have no access to the model..
 // so this class should rather be called mountObject
-void Model::updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo) { //}, Constructor::Queue &constructorQueue) {
+void Model::updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Destructor::Record &recordDelete) {
     // Hash the key
     uint32_t keyFNV = Utils::Hash::fnv1a(type);
 
@@ -40,7 +46,8 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
             auto *lut = reinterpret_cast<audio::osc::LUT *>(object);
             // Push the current LUT to the destructor queue, or delete it directly
             if (lut1) {
-                delete lut1;
+                recordDelete.ptr = lut1;
+                recordDelete.deleter = [](void *ptr) { delete static_cast<audio::osc::LUT *>(ptr); }; // Create deleter for LUT
                 // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
             }
             // Assign the new LUT
@@ -58,7 +65,8 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
             auto *lut = reinterpret_cast<audio::osc::LUT *>(object);
             // Push the current LUT to the destructor queue, or delete it directly
             if (lut2) {
-                delete lut2;
+                recordDelete.ptr = lut2;
+                recordDelete.deleter = [](void *ptr) { delete static_cast<audio::osc::LUT *>(ptr); }; // Create deleter for LUT
                 // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
             }
             // Assign the new LUT

@@ -35,6 +35,7 @@ class Unit {
     static void synthParse(const std::string &key, const std::string &val, int rackID, Constructor::Queue &constructorQueue) {
         // Delegate to the appropriate synth factory
         // Yeah, hard to get around. We need the appropriate factory, that's it.
+        // but at the same time, maybe not all units (synths) have factories..
         Synth::Subreal::Factory::prepareSetting(key, val, rackID, constructorQueue);
     }
 };

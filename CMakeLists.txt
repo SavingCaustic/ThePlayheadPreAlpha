@@ -27,7 +27,11 @@ endif()
 file(GLOB_RECURSE SOURCES
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
-list(REMOVE_ITEM SOURCES "${PROJECT_SOURCE_DIR}/src/main.cpp" "${PROJECT_SOURCE_DIR}/src/mainDebug.cpp")
+
+# Get all files matching "main*.cpp"
+file(GLOB MAIN_FILES "${PROJECT_SOURCE_DIR}/src/main*.cpp")
+# Remove them from the SOURCES list
+list(REMOVE_ITEM SOURCES ${MAIN_FILES})
 list(APPEND SOURCES ${MAIN_FILE})
 
 # Add executable

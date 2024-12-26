@@ -1,13 +1,12 @@
-#include "./SynthInterface.h"
+#include "./EventorInterface.h"
 #include "core/player/ErrorWriter.h"
-#include <core/audio/AudioMath.h>
 #include <core/ext/nlohmann/json.hpp>
 #include <drivers/FileDriver.h>
 #include <iostream>
 
 // Initialize the static unordered_map
 
-void SynthInterface::logErr(int code, const std::string &message) {
+void EventorInterface::logErr(int code, const std::string &message) {
     if (errorWriter_) {
         errorWriter_->logError(code, message);
     } else {
@@ -17,7 +16,7 @@ void SynthInterface::logErr(int code, const std::string &message) {
 
 // CC-mapping stuff
 
-void SynthInterface::setupCCmapping(const std::string &synthName) {
+void EventorInterface::setupCCmapping(const std::string &synthName) {
     // setup for each rack right, event if same synth..
     // Construct path dynamically based on the synth name
     std::string path = "Synth/" + synthName + "/cc_mappings.json";
@@ -40,7 +39,7 @@ void SynthInterface::setupCCmapping(const std::string &synthName) {
     }
 }
 
-void SynthInterface::handleMidiCC(uint8_t ccNumber, float value) {
+void EventorInterface::handleMidiCC(uint8_t ccNumber, float value) {
     auto it = ccMappings.find(ccNumber);
     if (it != ccMappings.end()) {
         const std::string &paramName = it->second;

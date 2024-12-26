@@ -1,7 +1,8 @@
 #pragma once
-#include <Synth/SynthInterface.h>
-#include <core/ext/nlohmann/json.hpp>
-#include <core/parameters/params.h>
+#include "Synth/SynthInterface.h"
+#include "Unit/MidiReciever.h"
+#include "core/ext/nlohmann/json.hpp"
+#include "core/parameters/params.h"
 #include <iostream>
 #include <string>
 #include <unordered_map>

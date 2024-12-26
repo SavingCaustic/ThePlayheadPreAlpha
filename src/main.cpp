@@ -110,42 +110,14 @@ int main() {
     sPlayerEngine.bindMessageInBuffer(sMessageInBuffer);
     sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
     sPlayerEngine.bindErrorBuffer(sAudioErrorBuffer);
-    sPlayerEngine.bindDestructorBuffer(sDestructorQueue);
     sPlayerEngine.bindMidiManager(sMidiManager);
     sPlayerEngine.bindConstructorQueue(sConstructorQueue);
+    sPlayerEngine.bindDestructorBuffer(sDestructorQueue);
 
     sErrorHandler.start();
     sDestructorWorker.start();
     sPlayerEngine.initializeRacks();
 
-    // this should go, but debugging now..
-    if (true) {
-        // sPlayerEngine.setupRackWithSynth(0, "Monolith"); // this here only to force use of queue below.
-        // queue without RPC
-        // SynthBase *synth = nullptr;
-        // SynthFactory::setupSynth(synth, "Subreal");
-        // sConstructorQueue.push(synth, sizeof(synth), false, "rack.synth", 0);
-        // synth = nullptr;
-
-        // sConstructorQueue.push(synth, sizeof(synth), false, "rack.synth", 0);
-
-        // good bye beta: sPlayerEngine.loadSynth(synth, 0); // maybe return an nullptr from loadSynth?
-
-        /*
-        EffectBase *effect = nullptr;
-        EffectFactory::setupEffect(effect, "Delay");
-        sPlayerEngine.loadEffect(effect, 0, 1); // stupid to have 1 at effect..
-
-        // synth->parseMidi(0x90, 0x40, 0x050);
-        //  set up another synth..
-        SynthBase *synth2 = nullptr;
-        SynthFactory::setupSynth(synth2, "Monolith");
-        SynthFactory::patchLoad(synth2, "Portabello");
-        sPlayerEngine.loadSynth(synth2, 1);
-        // synth2->parseMidi(0x90, 0x44, 0x050);
-        //   set up another synth..
-        */
-    }
     // Start the audio driver
     sAudioManager.mountPreferedOrDefault(deviceSettings["audio_device"]);
     sStudioRunner.start();

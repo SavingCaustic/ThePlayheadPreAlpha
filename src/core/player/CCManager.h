@@ -7,10 +7,10 @@
 class CCManager {
   public:
     uint8_t scrollerCC;
-    u_int8_t subScrollerCC = 0;
-    u_int8_t ccScrollerDials[6];
-    u_int8_t ccScrollerPosition = 0;    // Current scroller position
-    u_int8_t ccSubScrollerPosition = 0; // Current scroller position
+    uint8_t subScrollerCC = 0;
+    uint8_t ccScrollerDials[6];
+    uint8_t ccScrollerPosition = 0;    // Current scroller position
+    uint8_t ccSubScrollerPosition = 0; // Current scroller position
 
     // uint8_t process(uint8_t param1, uint8_t param2) {
     // }
@@ -37,10 +37,10 @@ class CCManager {
         }
     }
 
-    u_int8_t remapCC(u_int8_t originalCC, u_int8_t param2) {
+    uint8_t remapCC(uint8_t originalCC, uint8_t param2) {
         // Check if the CC corresponds to a pot
         if (originalCC == scrollerCC) {
-            u_int8_t testScroller = round(param2 * (6.0f / 127.0f));
+            uint8_t testScroller = round(param2 * (6.0f / 127.0f));
             if ((testScroller & 0x01) == 0x00) {
                 // at value (not threshold), now shift.
                 testScroller = testScroller >> 1;
@@ -53,7 +53,7 @@ class CCManager {
         }
         // do the same for subscroller
         if (originalCC == subScrollerCC) {
-            u_int8_t testScroller = round(param2 * (6.0f / 127.0f));
+            uint8_t testScroller = round(param2 * (6.0f / 127.0f));
             if ((testScroller & 0x01) == 0x00) {
                 // at value (not threshold), now shift.
                 testScroller = testScroller >> 1;

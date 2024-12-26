@@ -44,7 +44,7 @@ int main() {
             // mySynth.pushStrParam("osc1_wf", v);
             // mySynth.handleMidiCC(74, 0.8);
         }
-        u_int8_t note = 40 + ((t * 5) % 26);
+        uint8_t note = 40 + ((t * 5) % 26);
         // note = 60;
         myRack.parseMidi(0x90, note, 0x70);
         // myRack.parseMidi(0x90, note + 3, 0x70);

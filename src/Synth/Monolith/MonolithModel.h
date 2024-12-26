@@ -8,6 +8,7 @@
 #include "core/audio/filter/MultiFilter.h"
 #include "core/audio/lfo/LFO.h"
 #include "core/audio/misc/Easer.h"
+#include "core/destructor/Queue.h"
 #include "core/parameters/params.h"
 #include <array>
 #include <cstdlib>
@@ -76,7 +77,7 @@ class Model : public SynthBase {
     void reset() override;
     void setupParams(int upCount);
 
-    void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo) override; //, Constructor::Queue &constructorQueue) override;
+    void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Destructor::Record &recordDelete) override; //, Constructor::Queue &constructorQueue) override;
 
     static std::unordered_map<int, ParamDefinition> SparamDefs;
     static std::unordered_map<std::string, int> SparamIndex;
@@ -96,8 +97,8 @@ class Model : public SynthBase {
     bool renderNextBlock() override;
 
     double getSample(Waveform wf, double idx);
-    KeyAction pressKey(u_int8_t key);
-    KeyAction releaseKey(u_int8_t key);
+    KeyAction pressKey(uint8_t key);
+    KeyAction releaseKey(uint8_t key);
 
     Waveform osc1type;
     Waveform osc2type;
@@ -122,7 +123,7 @@ class Model : public SynthBase {
     Waveform osc2wf = SQUARE;
     Waveform osc3wf = SAWTOOTH;
     float lastSample = 0;
-    u_int8_t keysPressed[8] = {0}; // 0 = no note
+    uint8_t keysPressed[8] = {0}; // 0 = no note
 
     // void initFilter();
 

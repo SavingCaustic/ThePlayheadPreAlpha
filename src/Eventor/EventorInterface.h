@@ -9,17 +9,17 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-class SynthInterface : public MidiRecieverInterface {
+class EventorInterface : public MidiRecieverInterface {
   public:
     // Constructor now takes a reference to ErrorWriter
-    virtual ~SynthInterface() = default;
+    virtual ~EventorInterface() = default;
     virtual void reset() = 0; // Reset the synth to its default state
+    virtual void setMidiTarget(MidiRecieverInterface *midiReciever) = 0;
+    virtual void setPosition(uint8_t position) = 0;
+
     // virtual void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) = 0; // Handle MIDI input
-    virtual bool renderNextBlock() = 0; // Process the next audio block
     virtual void pushStrParam(const std::string &name, float val) = 0;
     virtual nlohmann::json getParamDefsAsJSON() = 0;
-    virtual void bindBuffers(float *audioBuffer, std::size_t bufferSize) = 0;
-    // virtual void updateSetting(Constructor::Record::type, record.value, record.ptr, record.isStereo) = 0;
     virtual void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Destructor::Record &recordDelete) = 0;
 
     // non virtual (Base methods)
@@ -39,6 +39,4 @@ class SynthInterface : public MidiRecieverInterface {
     // belonging to instance, because they may be overridden by patch settings.
     std::unordered_map<int, std::string> ccMappings; // MIDI CC -> parameter name mappings
     ErrorWriter *errorWriter_ = nullptr;
-    float *buffer;          // Pointer to audio buffer
-    std::size_t bufferSize; // Size of the audio buffer
 };

@@ -8,6 +8,8 @@
 #include "Synth/Subreal/SubrealModel.h"
 #include "core/player/ErrorWriter.h"
 //
+#include "Eventor/EventorBase.h"
+#include "Eventor/EventorInterface.h"
 #include "Synth/SynthBase.h"
 #include "Synth/SynthInterface.h"
 #include "constants.h"
@@ -131,10 +133,14 @@ class Rack {
             }
         }
         // default stuff - run through eventors and synth..
-        if (!(this->hEventor1)) {
+        // it's two different functions. One is parseMidi (old).
+        // other is forwardMidi. Only available in eventor.
+        if (!(this->eventor1)) {
             this->synth->parseMidi(cmd, param1, param2);
         } else {
-            //$this->hEventor1->parseMidi($command, $param1, $param2);
+            // decide target, well eventor already know as it gets setup..
+            // i *think* that eventor2 is called from eventor1, and never really from here..
+            this->eventor1->parseMidi(cmd, param1, param2);
         }
     }
 
@@ -196,6 +202,8 @@ class Rack {
     // std::unique_ptr<SynthInterface> synth;
     // std::unique_ptr<EffectInterface> effect1;
     // std::unique_ptr<EffectInterface> effect2;
+    EventorInterface *eventor1 = nullptr;
+    EventorInterface *eventor2 = nullptr;
     SynthInterface *synth = nullptr;
     EffectInterface *effect1 = nullptr;
     EffectInterface *effect2 = nullptr;
@@ -257,7 +265,29 @@ class Rack {
         return *effectTarget != nullptr;
     }
 
+    bool setEventor(EventorBase *newEventor, int eventorSlot = 1) {
+        EventorInterface **eventorTarget = nullptr;
+        if (eventorSlot == 1) {
+            eventorTarget = &eventor1;
+            eventor1->setMidiTarget(synth);
+            eventor1->setPosition(1);
+        } else {
+            eventorTarget = &eventor2;
+        }
+        if (*eventorTarget) {
+            delete *eventorTarget;
+            *eventorTarget = nullptr; // Avoid dangling pointer
+        }
+
+        *eventorTarget = newEventor;
+
+        return *eventorTarget != nullptr;
+    }
+
+    /* stuff below should probably go.. */
+
     bool setSynthFromStr(const std::string &synthName) {
+        // meh - i guess this sohuld go..
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
         bool loadOK = true;
@@ -361,7 +391,4 @@ class Rack {
   private:
     PlayerEngine *playerEngine; // Reference to PlayerEngine
     ErrorWriter *errorWriter_ = nullptr;
-
-    // std::unique_ptr<SynthInterface> synth;
-    std::unique_ptr<SynthInterface> hEventor1; // TOFIX update to EventorInterface
 };

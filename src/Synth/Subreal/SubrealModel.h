@@ -9,6 +9,7 @@
 #include "core/audio/lfo/LFO.h"
 #include "core/audio/misc/Easer.h"
 #include "core/audio/osc/LUT.h"
+#include "core/destructor/Queue.h"
 #include "core/parameters/params.h"
 #include <array>
 #include <cstdlib>
@@ -135,12 +136,15 @@ class Model : public SynthBase {
   public:
     // Constructor
     Model();
+
+    ~Model();
+
     // Public methods. These should match interface right (contract)
     void reset() override;
     void initSettings();
     // void updateSetting(std::string key, std::string value);
     // void updateSetting(const std::string &key, const std::string &value, void *object, uint32_t size, bool isStereo);
-    void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo) override; //, Constructor::Queue &constructorQueue) override;
+    void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Destructor::Record &recordDelete) override; //, Constructor::Queue &constructorQueue) override;
 
     void bindBuffers(float *audioBuffer, std::size_t bufferSize);
 

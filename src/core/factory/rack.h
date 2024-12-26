@@ -1,5 +1,6 @@
 #pragma once
 #include "Effect/EffectFactory.h"
+#include "Eventor/EventorFactory.h"
 #include "Synth/SynthFactory.h"
 #include "core/constructor/Queue.h"
 #include <core/utils/FNV.h>
@@ -16,8 +17,12 @@ class Rack {
         std::string queueType = "rack." + key;
         switch (unitFNV) {
         case Utils::Hash::fnv1a_hash("eventor1"):
-        case Utils::Hash::fnv1a_hash("eventor2"):
+        case Utils::Hash::fnv1a_hash("eventor2"): {
+            EventorBase *eventor = nullptr;
+            EventorFactory::setupEventor(eventor, strValue);
+            constructorQueue.push(eventor, sizeof(eventor), false, queueType.c_str(), rackID); // add slot here..
             break;
+        }
         case Utils::Hash::fnv1a_hash("synth"): {
             SynthBase *synth = nullptr;
             SynthFactory::setupSynth(synth, strValue);

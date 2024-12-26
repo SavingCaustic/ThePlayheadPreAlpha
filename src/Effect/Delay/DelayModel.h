@@ -44,6 +44,8 @@ class Model : public EffectBase {
     }
 
   protected:
+    // oh this should be a pointer, set up offline..
+    // well actually - if there's a factory, the whoule effect is setup so keep design.
     std::vector<float> delayBuffer;
     int wrPointer = 0;
     int sampleGap = 0;

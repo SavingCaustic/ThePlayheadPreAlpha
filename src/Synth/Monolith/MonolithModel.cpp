@@ -128,7 +128,7 @@ void Model::setupParams(int upCount) {
     }
 }
 
-void Model::updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo) {} //, Constructor::Queue &constructorQueue) {}
+void Model::updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Destructor::Record &recordDelete) {} //, Constructor::Queue &constructorQueue) {}
 
 void Model::reset() {
 }
