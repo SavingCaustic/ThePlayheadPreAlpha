@@ -6,21 +6,30 @@ project(MyDAW2 VERSION 1.0)
 # Specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=auto")
-# set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "include-what-you-use")
 
 # Default to Release if no build type is specified
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Select main file based on build type and set flags
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(MAIN_FILE "${PROJECT_SOURCE_DIR}/src/mainDebug.cpp") # Use mainDebug.cpp in Debug
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0") # Enable debug symbols, disable optimizations
+# Select architecture-specific flags
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|x86")
+    set(ARCH_FLAGS "-march=x86-64 -mtune=native")
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "arm|aarch64")
+    message(STATUS "Configuring for ARM (Raspberry Pi or similar)")
+    set(ARCH_FLAGS "-march=armv8-a -mtune=cortex-a72")
 else()
-    set(MAIN_FILE "${PROJECT_SOURCE_DIR}/src/main.cpp") # Use main.cpp in Release
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=x86-64 -mtune=native -ftree-vectorize -flto") # Optimize for Release
+    message(WARNING "Unknown architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+    set(ARCH_FLAGS "")
+endif()
+
+# Select main file and build-specific flags
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(MAIN_FILE "${PROJECT_SOURCE_DIR}/src/mainDebug.cpp")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 ${ARCH_FLAGS}") # Debug symbols, no optimizations
+else()
+    set(MAIN_FILE "${PROJECT_SOURCE_DIR}/src/main.cpp")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${ARCH_FLAGS} -ftree-vectorize -flto") # Optimized Release
 endif()
 
 # Automatically collect all .cpp files in src/ except the main file
@@ -28,9 +37,8 @@ file(GLOB_RECURSE SOURCES
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
 
-# Get all files matching "main*.cpp"
+# Exclude main files from SOURCES and add the selected main file
 file(GLOB MAIN_FILES "${PROJECT_SOURCE_DIR}/src/main*.cpp")
-# Remove them from the SOURCES list
 list(REMOVE_ITEM SOURCES ${MAIN_FILES})
 list(APPEND SOURCES ${MAIN_FILE})
 
@@ -42,19 +50,6 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(ALSA REQUIRED alsa)
 pkg_check_modules(RTMIDI REQUIRED rtmidi)
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
-
-# SIMD optimization flags
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # Check for AVX2 and FMA for x86/x86_64
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|x86")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")
-    endif()
-
-    # Check for ARM architecture and add NEON flags
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm|aarch64")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon")
-    endif()
-endif()
 
 # Include directories for target
 target_include_directories(MyDAW2 PRIVATE
