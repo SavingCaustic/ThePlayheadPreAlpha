@@ -46,6 +46,7 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
             auto *lut = reinterpret_cast<audio::osc::LUT *>(object);
             // Push the current LUT to the destructor queue, or delete it directly
             if (lut1) {
+                std::cout << "i need to delete old LUT. Strange.. " << std::endl;
                 recordDelete.ptr = lut1;
                 recordDelete.deleter = [](void *ptr) { delete static_cast<audio::osc::LUT *>(ptr); }; // Create deleter for LUT
                 // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");

@@ -9,7 +9,7 @@ namespace Destructor {
 constexpr int bufferSize = 16; // Must be a power of 2
 
 struct Record {
-    void *ptr;               // Pointer to the object to be destroyed
+    void *ptr = nullptr;     // Pointer to the object to be destroyed
     void (*deleter)(void *); // Function pointer to the deleter
 };
 

@@ -63,8 +63,8 @@ class Factory {
 
     static void reset(int rackID, Constructor::Queue &constructorQueue) {
         // set some default values. maybe move to json later..
-        prepareSetting("lut1_overtones", "0.5,0.3,0.3,0.2,0.2,0.1", rackID, constructorQueue);
-        prepareSetting("lut2_overtones", "0.5,0.0,0.1", rackID, constructorQueue);
+        // prepareSetting("lut1_overtones", "0.5,0.3,0.3,0.2,0.2,0.1", rackID, constructorQueue);
+        // prepareSetting("lut2_overtones", "0.5,0.0,0.1", rackID, constructorQueue);
     }
 };
 

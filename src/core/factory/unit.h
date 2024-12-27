@@ -36,6 +36,7 @@ class Unit {
         // Delegate to the appropriate synth factory
         // Yeah, hard to get around. We need the appropriate factory, that's it.
         // but at the same time, maybe not all units (synths) have factories..
+        // well the thing here is really just that we need access to the project map, to adress the right synth.
         Synth::Subreal::Factory::prepareSetting(key, val, rackID, constructorQueue);
     }
 };
