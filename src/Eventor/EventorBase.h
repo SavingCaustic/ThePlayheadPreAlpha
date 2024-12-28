@@ -13,8 +13,13 @@ class EventorBase : public EventorInterface {
         this->position = position;
     }
 
+    void parseMidiAndForward(uint8_t cmd, uint8_t param1, uint8_t param2, MidiRecieverInterface &reciever) {
+        setMidiTarget(&reciever);
+        parseMidi(cmd, param1, param2);
+    }
+
     void setMidiTarget(MidiRecieverInterface *midiReciever) {
-        // this is called on any eventor load-change so we do NOT have to calculate target at sendMidi..
+        // meh, set every call..
         this->midiReciever = midiReciever;
     }
 

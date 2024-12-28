@@ -48,6 +48,11 @@ class ObjectManager {
                         std::cout << "mounting eventor1 now.. " << std::endl;
                         racks[rackID].setEventor(reinterpret_cast<EventorBase *>(record.ptr), 1);
                         break;
+                    case Utils::Hash::fnv1a_hash("eventor2"):
+                        destroyEventor(0, 2);
+                        std::cout << "mounting eventor2 now.. " << std::endl;
+                        racks[rackID].setEventor(reinterpret_cast<EventorBase *>(record.ptr), 2);
+                        break;
                     case Utils::Hash::fnv1a_hash("synth"):
                         std::cout << "mounting synth now.. " << std::endl;
                         destroySynth(0);

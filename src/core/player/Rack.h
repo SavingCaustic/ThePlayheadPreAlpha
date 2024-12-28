@@ -128,6 +128,7 @@ class Rack {
                 passParamToUnit(UnitType::Effect1, ccIdx, param2);
                 return;
             } else if (param1 >= 90 && param1 <= 95) {
+                // huh - what is this? old artifact?
                 passParamToUnit(UnitType::Effect2, "time", param2);
                 return;
             }
@@ -136,11 +137,16 @@ class Rack {
         // it's two different functions. One is parseMidi (old).
         // other is forwardMidi. Only available in eventor.
         if (!(this->eventor1)) {
+            // no eventors, straight to synth..
             this->synth->parseMidi(cmd, param1, param2);
         } else {
-            // decide target, well eventor already know as it gets setup..
-            // i *think* that eventor2 is called from eventor1, and never really from here..
-            this->eventor1->parseMidi(cmd, param1, param2);
+            // ok, eventor1 is on, now check if eventor2 or synth is target of output.
+            if (this->eventor2) {
+                this->eventor1->parseMidiAndForward(cmd, param1, param2, *this->eventor2);
+            } else {
+                this->eventor1->parseMidiAndForward(cmd, param1, param2, *this->synth);
+            }
+            // this->eventor1->parseMidi(cmd, param1, param2);
         }
     }
 
@@ -268,7 +274,6 @@ class Rack {
     bool setEventor(EventorBase *newEventor, int eventorSlot = 1) {
         EventorInterface **eventorTarget = nullptr;
         if (eventorSlot == 1) {
-            std::cout << "ok i got here at least" << std::endl;
             eventorTarget = &eventor1;
         } else {
             eventorTarget = &eventor2;
@@ -276,12 +281,6 @@ class Rack {
         newEventor->setMidiTarget(synth);
         newEventor->setPosition(1);
 
-        /*
-        if (*eventorTarget) {
-            delete *eventorTarget;
-            *eventorTarget = nullptr; // Avoid dangling pointer
-        }
-        */
         *eventorTarget = newEventor;
 
         return *eventorTarget != nullptr;

@@ -16,6 +16,7 @@ class EventorInterface : public MidiRecieverInterface {
     virtual void reset() = 0; // Reset the synth to its default state
     virtual void setMidiTarget(MidiRecieverInterface *midiReciever) = 0;
     virtual void setPosition(uint8_t position) = 0;
+    virtual void parseMidiAndForward(uint8_t cmd, uint8_t param1, uint8_t param2, MidiRecieverInterface &reciever) = 0;
 
     // virtual void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) = 0; // Handle MIDI input
     virtual void pushStrParam(const std::string &name, float val) = 0;

@@ -1,4 +1,5 @@
 #pragma once
+#include "Eventor/Fifth/FifthModel.h"
 #include "Eventor/Third/ThirdModel.h"
 #include <drivers/FileDriver.h>
 #include <nlohmann/json.hpp> // Include the JSON library
@@ -7,6 +8,7 @@ using json = nlohmann::json;
 
 enum class EventorType {
     Third,
+    Fifth,
     // Add other synth types here
     _unknown
 };
@@ -17,6 +19,8 @@ class EventorFactory {
         // i really don't know what i need this for..
         if (eventorName == "Third")
             return EventorType::Third;
+        if (eventorName == "Fifth")
+            return EventorType::Fifth;
         // Add other synth type checks here
         return EventorType::_unknown;
     }
@@ -31,6 +35,11 @@ class EventorFactory {
         case EventorType::Third:
             newEventor = new Eventor::Third::Model();
             newEventor->setPosition(1);
+            break;
+        case EventorType::Fifth:
+            newEventor = new Eventor::Fifth::Model();
+            // oh this sucks..
+            newEventor->setPosition(2);
             break;
         // Add cases for other synth types here
         default:
