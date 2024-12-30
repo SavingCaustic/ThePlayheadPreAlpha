@@ -1,4 +1,3 @@
-#pragma once
 #include <map>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -7,11 +6,11 @@
 namespace Storage {
 
 struct Param {
-    float val;
+    float val; // Parameters like "cutoff"
 };
 
 struct Setting {
-    std::string val;
+    std::string val; // Parameters like "mode"
 };
 
 struct Unit {
@@ -60,7 +59,7 @@ struct Rack {
     Unit synth;
     Unit effect1;
     Unit effect2;
-    // Unit emitter;
+    Unit emitter;
 
     nlohmann::json to_json() const {
         nlohmann::json json_settings = nlohmann::json::object();
@@ -75,7 +74,7 @@ struct Rack {
             {"synth", synth.to_json()},
             {"effect1", effect1.to_json()},
             {"effect2", effect2.to_json()},
-            //{"emitter", emitter.to_json()},
+            {"emitter", emitter.to_json()},
         };
     }
 
@@ -93,7 +92,7 @@ struct Rack {
         rack.synth = Unit::from_json(json.at("synth"));
         rack.effect1 = Unit::from_json(json.at("effect1"));
         rack.effect2 = Unit::from_json(json.at("effect2"));
-        // rack.emitter = Unit::from_json(json.at("emitter"));
+        rack.emitter = Unit::from_json(json.at("emitter"));
 
         return rack;
     }
@@ -156,34 +155,22 @@ class DataStore {
     void initProject() {
         // i could init a default project structure either from a default json,
         // or here - programatically..
-        data = Project{};
     }
 
-    void loadProject(std::string jsonDoc) {
-        try {
-            // Parse the JSON string
-            auto parsedJson = nlohmann::json::parse(jsonDoc);
-
-            // Pass the parsed JSON to Project::from_json
-            data = Project::from_json(parsedJson);
-        } catch (const nlohmann::json::exception &e) {
-            std::cerr << "Error parsing JSON: " << e.what() << std::endl;
-            throw; // Re-throw the exception or handle it as needed
-        }
+    void loadProject(std::string filename) {
+        // get file from persistant storage
+        // and then iterate somehow so player-engine is populated. Complicated..
+        // much easier if we could disengage playerEngine and work directly with that,
+        // but could be problematic with unit-model expecting object queues.
     }
 
     void saveProject(std::string filename) {
         // all data should already be here - nothing to aquire from racks/units. Just save it..
     }
-
-    /* std::vector<Storage::Rack> getRacks() {
-        // dunno really what to return here - we want to iterate over racks but how to interact with each?
-    } */
 };
 
 } // namespace Storage
 
-/*
 int main() {
     Storage::DataStore myDataStore;
     myDataStore.initProject();
@@ -193,4 +180,3 @@ int main() {
     myDataStore.data.masterReverb.type = "Freeverb";
     return 0;
 }
-*/

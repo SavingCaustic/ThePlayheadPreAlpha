@@ -2,6 +2,12 @@
 #include <fstream>
 #include <string>
 
+// having second thoughts regarding the statelessness here.
+// in a WEBDAV or SSH-scenario, this indeed would have a state.
+// worst case would be a separate thread..
+// But well, having WEBDAV or SSH like a transparent medium wouldn't work - too much latency.
+// project-factory could download to device.
+
 class FileDriver {
   public:
     // Static methods for file I/O

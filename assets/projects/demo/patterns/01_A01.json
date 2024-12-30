@@ -1,0 +1,18 @@
+{
+    "bars": 2,
+    "signature": "12/8",
+    "notes": {
+        "n0001": {
+            "note":64,
+            "velocity":100,
+            "start":53,
+            "length":120
+        },
+        "n0002": {
+            "note":48,
+            "velocity":90,
+            "start":53,
+            "length":110
+        }      
+    }
+}

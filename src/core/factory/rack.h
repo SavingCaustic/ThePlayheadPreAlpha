@@ -24,10 +24,11 @@ class Rack {
             break;
         }
         case Utils::Hash::fnv1a_hash("synth"): {
-            SynthBase *synth = nullptr;
-            SynthFactory::setupSynth(synth, strValue);
-            constructorQueue.push(synth, sizeof(synth), false, queueType.c_str(), rackID);
-            synth = nullptr;
+            synthSetup(strValue, rackID, constructorQueue);
+            // SynthBase *synth = nullptr;
+            // SynthFactory::setupSynth(synth, strValue);
+            // constructorQueue.push(synth, sizeof(synth), false, queueType.c_str(), rackID);
+            // synth = nullptr;
             break;
         }
         case Utils::Hash::fnv1a_hash("effect1"):
@@ -42,6 +43,23 @@ class Rack {
             std::cerr << "Unknown unit type: " << strMethod << std::endl;
             break;
         }
+    }
+
+    static void synthSetup(const std::string &strValue, int rackID, Constructor::Queue &constructorQueue) {
+        SynthBase *synth = nullptr;
+        SynthFactory::setupSynth(synth, strValue);
+        std::string queueType = "rack.synth";
+        constructorQueue.push(synth, sizeof(synth), false, queueType.c_str(), rackID);
+        synth = nullptr;
+    }
+
+    static void effectSetup(const std::string &strValue, int rackID, int slot, Constructor::Queue &constructorQueue) {
+        EffectBase *effect = nullptr;
+        EffectFactory::setupEffect(effect, strValue);
+        std::string queueType = "rack.effect" + slot;
+        std::cout << "setting up " << queueType << std::endl;
+        constructorQueue.push(effect, sizeof(effect), false, queueType.c_str(), rackID);
+        effect = nullptr;
     }
 };
 

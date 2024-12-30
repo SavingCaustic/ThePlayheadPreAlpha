@@ -1,0 +1,19 @@
+{
+    "note": "i guess this json is read into memory and ordered on rack, start. This is however *for later*",
+    "segments": [
+        {
+            "id":"seg_0001",
+            "rack":4,
+            "start": 0,
+            "length": 8,
+            "pattern":"A10"
+        },
+        {
+            "id":"seg_0002",
+            "rack":2,
+            "start": 2,
+            "length": 6,
+            "pattern":"B10"
+        }
+    ]
+}

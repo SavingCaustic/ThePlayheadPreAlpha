@@ -18,6 +18,7 @@
 #include "core/player/Rack.h"
 #include "core/rpc/rpcParser.h"
 #include "core/runner/StudioRunner.h"
+#include "core/storage/Project.h"
 #include "crow.h"
 #include "drivers/AudioDriver.h"
 #include "drivers/AudioManager.h"
@@ -62,8 +63,10 @@ MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr); // Initialize wi
 
 Constructor::Queue sConstructorQueue;
 // with factories being stateless, it's API and PlayerEngine that needs to know sConstructorQueue
+Storage::DataStore sDataStore;
 
-RPCParser rpcParser(sConstructorQueue);
+RPCParser rpcParser(sConstructorQueue, sDataStore);
+// data and serialization methods kept here:
 
 AudioDriver sAudioDriver;
 AudioManager sAudioManager(sAudioDriver, sPlayerEngine);

@@ -1,7 +1,9 @@
 #pragma once
+#include "core/factory/project.h"
 #include "core/factory/rack.h"
 #include "core/factory/server.h"
 #include "core/factory/unit.h"
+#include "core/storage/Project.h"
 #include <core/utils/FNV.h>
 #include <iostream>
 #include <string>
@@ -14,10 +16,11 @@ class Queue;
 class RPCParser {
     // Reference to Constructor::Queue
     Constructor::Queue &constructorQueue;
+    Storage::DataStore &dataStore;
 
   public:
     // Constructor with an initializer list to set the reference
-    explicit RPCParser(Constructor::Queue &queue) : constructorQueue(queue) {}
+    explicit RPCParser(Constructor::Queue &queue, Storage::DataStore &store) : constructorQueue(queue), dataStore(store) {}
 
     /* examples:
 
@@ -45,6 +48,8 @@ class RPCParser {
         case Utils::Hash::fnv1a_hash("device"):
             break;
         case Utils::Hash::fnv1a_hash("project"):
+            // might need the constructor queue for master effects (outside racks)
+            Factory::Project::parse(strMethod, strKey, strVal, constructorQueue, dataStore); // synth, set, monolith
             break;
         case Utils::Hash::fnv1a_hash("rack"):
             std::cout << "rack here we go.." << std::endl;
