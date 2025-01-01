@@ -5,7 +5,12 @@
 #include <iostream>
 #include <sstream>
 
-std::string FileDriver::readAssetFile(const std::string &filename) {
+bool FileDriver::assetFileExists(const std::string &filename) {
+    std::filesystem::path filePath = std::string(ASSETS_DIRECTORY) + "/" + filename;
+    return std::filesystem::exists(filePath);
+}
+
+std::string FileDriver::assetFileRead(const std::string &filename) {
     std::ifstream file(std::string(ASSETS_DIRECTORY) + "/" + filename);
     if (!file.is_open()) {
         std::cerr << "Error opening file: " << filename << " in /assets directory." << std::endl;
@@ -17,7 +22,12 @@ std::string FileDriver::readAssetFile(const std::string &filename) {
     return buffer.str();
 }
 
-std::string FileDriver::readUserFile(const std::string &filename) {
+bool FileDriver::userFileExists(const std::string &filename) {
+    std::filesystem::path filePath = std::string(ASSETS_DIRECTORY) + "/" + filename;
+    return std::filesystem::exists(filePath);
+}
+
+std::string FileDriver::userFileRead(const std::string &filename) {
     std::ifstream file(std::string(USER_DIRECTORY) + "/" + filename);
     if (!file.is_open()) {
         std::cerr << "Error opening file: " << filename << " in /user directory." << std::endl;
@@ -30,7 +40,7 @@ std::string FileDriver::readUserFile(const std::string &filename) {
     return buffer.str();
 }
 
-bool FileDriver::writeUserFile(const std::string &filename, const std::string &content) {
+bool FileDriver::userFileWrite(const std::string &filename, const std::string &content) {
     try {
         // Step 1: Construct the full path to the file
         std::string fullPath = std::string(USER_DIRECTORY) + "/" + filename;

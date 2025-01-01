@@ -2,6 +2,7 @@
 #include "./rack.h"
 #include "./unit.h"
 #include "core/constructor/Queue.h"
+#include "core/storage/DocMan.h"
 #include "core/storage/Project.h"
 #include "drivers/FileDriver.h"
 #include <core/utils/FNV.h>
@@ -36,7 +37,7 @@ class Project {
     static void loadProject(const std::string &strValue, Constructor::Queue &constructorQueue,
                             Storage::DataStore &dataStore) {
         std::string jsonDoc;
-        jsonDoc = FileDriver::readAssetFile("projects/" + strValue + "/project.json");
+        jsonDoc = FileDriver::assetFileRead("projects/" + strValue + "/project.json");
         // Storage::Project::from_json(jsonDoc);
         dataStore.loadProject(jsonDoc);
         //
@@ -48,7 +49,7 @@ class Project {
                 Rack::synthSetup(rack.synth.type, 0, constructorQueue);
                 for (const auto &setting : rack.synth.settings) {
                     // check with the synth-factory if object is to be created...
-                    Unit::parse("synth", setting.first, setting.second, 0, constructorQueue);
+                    Unit::parse("set", setting.first, setting.second, 0, "synth", constructorQueue);
                 }
                 for (const auto &params : rack.synth.params) {
                     // well this is feed to param-queue, not constructor queue..
@@ -62,7 +63,7 @@ class Project {
                 Rack::effectSetup(rack.effect1.type, 0, 1, constructorQueue);
                 for (const auto &setting : rack.synth.settings) {
                     // check with the synth-factory if object is to be created...
-                    Unit::parse("effect1", setting.first, setting.second, 0, constructorQueue);
+                    Unit::parse("set", setting.first, setting.second, 0, "effect1", constructorQueue);
                 }
             }
         }

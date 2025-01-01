@@ -65,7 +65,7 @@ class SynthFactory {
         synth->initParams();
 
         // Step 1: Get the file from the file system
-        std::string s = FileDriver::readAssetFile("/Synth/Monolith/Patches/" + patchName + ".json");
+        std::string s = FileDriver::assetFileRead("/Synth/Monolith/Patches/" + patchName + ".json");
         if (s.empty()) {
             std::cerr << "Error: Patch file not found or empty." << std::endl;
             return false;
@@ -141,7 +141,7 @@ class SynthFactory {
 
             // Step 5: Write the JSON string to a file
             std::string filename = "/Synth/Monolith/Patches/" + patchName + ".json";
-            if (!FileDriver::writeUserFile(filename, jsonString)) {
+            if (!FileDriver::userFileWrite(filename, jsonString)) {
                 std::cerr << "Error: Failed to write patch file to " << filename << std::endl;
                 return false;
             }

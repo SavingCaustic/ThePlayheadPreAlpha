@@ -4,7 +4,7 @@
 
 void SettingsManager::jsonRead(std::unordered_map<std::string, std::string> &settingsMap, const std::string &sFilename) {
     // Read the file in /assets (read-only)
-    std::string assetsContent = FileDriver::readAssetFile(sFilename); // Assuming this returns the file as a string
+    std::string assetsContent = FileDriver::assetFileRead(sFilename); // Assuming this returns the file as a string
     nlohmann::json assetsJson;
     try {
         assetsJson = nlohmann::json::parse(assetsContent); // Parse the string into JSON
@@ -23,7 +23,7 @@ void SettingsManager::jsonRead(std::unordered_map<std::string, std::string> &set
     }
 
     // Now read the optional file in /user (read/write)
-    std::string userContent = FileDriver::readUserFile(sFilename); // Assuming this also returns the file as a string
+    std::string userContent = FileDriver::userFileRead(sFilename); // Assuming this also returns the file as a string
     if (!userContent.empty()) {
         nlohmann::json userJson;
         try {
@@ -47,7 +47,7 @@ void SettingsManager::jsonRead(std::unordered_map<std::string, std::string> &set
 void SettingsManager::loadJsonToSettings(const std::string &sFilename, bool isUser, std::unordered_map<std::string, std::string> &settingsMap) {
     // NOT USED ANY MORE
     //  Read the JSON file (assuming FileDriver::readUserFile returns nlohmann::json)
-    std::string fileContent = FileDriver::readUserFile(sFilename); // Assuming this returns a string
+    std::string fileContent = FileDriver::userFileRead(sFilename); // Assuming this returns a string
     nlohmann::json jsonDoc;
     try {
         jsonDoc = nlohmann::json::parse(fileContent); // Parse the string into JSON

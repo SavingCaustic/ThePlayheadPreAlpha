@@ -1,5 +1,11 @@
 TODO
 ====
+* justera rpc.
+
+unit.set_setting
+unit.set_param (rpc - really?)
+
+
 FOSS-lansering
 
 * Load project

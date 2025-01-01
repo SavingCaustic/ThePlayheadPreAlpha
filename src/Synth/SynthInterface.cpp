@@ -22,7 +22,7 @@ void SynthInterface::setupCCmapping(const std::string &synthName) {
     // Construct path dynamically based on the synth name
     std::string path = "Synth/" + synthName + "/cc_mappings.json";
     std::cout << "cc-mapping setting up on " << path << std::endl;
-    std::string jsonData = FileDriver::readAssetFile(path);
+    std::string jsonData = FileDriver::assetFileRead(path);
     if (jsonData.empty()) {
         std::cerr << "Failed to read CC mapping file for " << synthName << std::endl;
         return;

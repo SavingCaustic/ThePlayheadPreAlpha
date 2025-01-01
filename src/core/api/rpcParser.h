@@ -24,19 +24,28 @@ class RPCParser {
 
     /* examples:
 
-    class.method		key			    value		    rack_id         >queuetype
+    class.method		key			    value		    rack_id         queuetype
     -----------------------------------------------------------------------------
     server.quit         X               X               X               ---
     project.load        name/latest     filename        X               ---
     project.save_as     name            filename        X               ---
     rack.mount			synth			Subreal		    Y               rack.synth
     rack.mount			effect1			Delay		    Y               rack.effect1
+    rack.load           synth           a_patch_name    Y
+
     unit.synth			lut1_overtones	0.5,0.3,0,1     Y               synth.lut1_overtones
     unit.synth			ch1_sample		filename	    Y               synth.ch1_sample
+    --
+    we need to extend, *could be that unit is passed as querystring so:
+    unit.setting_set    lut1_overtnoes 0.5,0.3,0.1      Y+unit
+    unit.param_set      vcf_cutoff      0.5
+    unit.reset
+    unit.load           no-key          patch-name      Y+unit
+
     */
 
     void parse(const std::string &strClass, const std::string &strMethod, const std::string &strKey,
-               const std::string &strVal, const std::string &rackID) {
+               const std::string &strVal, const std::string &rackID, const std::string &unit) {
         // ok. for simplicity.
         uint32_t classFNV = Utils::Hash::fnv1a(strClass);
         uint32_t methodFNV = Utils::Hash::fnv1a(strMethod);
@@ -57,7 +66,7 @@ class RPCParser {
             break;
         case Utils::Hash::fnv1a_hash("unit"):
             std::cout << "unit here we go.." << std::endl;
-            Factory::Unit::parse(strMethod, strKey, strVal, stoi(rackID), constructorQueue); // synth, "lut1_overtones", "blaha"
+            Factory::Unit::parse(strMethod, strKey, strVal, stoi(rackID), unit, constructorQueue); // synth, "lut1_overtones", "blaha"
             break;
         case Utils::Hash::fnv1a_hash("pattern"):
             break;

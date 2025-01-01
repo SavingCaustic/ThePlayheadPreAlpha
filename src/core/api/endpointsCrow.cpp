@@ -1,12 +1,12 @@
 #include "endpointsCrow.h"
 #include "constants.h"
+#include "core/api/rpcParser.h"
 #include "core/constructor/Queue.h"
 #include "core/errors/ErrorBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutReader.h"
 #include "core/parameters/SettingsManager.h"
 #include "core/player/PlayerEngine.h" // Include your relevant headers
-#include "core/rpc/rpcParser.h"
 #include "crow/json.h"
 #include "drivers/AudioManager.h"
 #include "drivers/FileDriver.h"
@@ -90,6 +90,7 @@ void crowSetupEndpoints(
             std::string key = req.url_params.get("key") ? req.url_params.get("key") : "";
             std::string value = req.url_params.get("value") ? req.url_params.get("value") : "";
             std::string rack_id = req.url_params.get("rack_id") ? req.url_params.get("rack_id") : "";
+            std::string unit = req.url_params.get("unit") ? req.url_params.get("unit") : "";
 
             // Check if any of the parameters are missing
             if (method.empty()) {
@@ -103,7 +104,7 @@ void crowSetupEndpoints(
                 std::string method_name = method.substr(dot_pos + 1); // Extract the part after the dot
 
                 // Call the RPC parser with the split values
-                rpcParser.parse(class_name, method_name, key, value, rack_id);
+                rpcParser.parse(class_name, method_name, key, value, rack_id, unit);
             } else {
                 // Handle the error when there is no dot in the method
                 // For example, you might want to send an error response

@@ -1,6 +1,6 @@
 #pragma once
 #include "Synth/SynthInterface.h"
-#include "Unit/MidiReciever.h"
+#include "core/Unit/MidiReciever.h"
 #include "core/ext/nlohmann/json.hpp"
 #include "core/parameters/params.h"
 #include <iostream>

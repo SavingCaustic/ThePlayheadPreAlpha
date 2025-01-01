@@ -1,0 +1,51 @@
+{
+    "settings": {},
+    "racks": [
+        {
+            "eventor1": {
+                "type": "Third",
+                "settings": {},
+                "params": {}
+                },
+            "eventor2": {
+                "type": "Fifth",
+                "settings": {},
+                "params": {}
+            },
+            "synth": {
+                "type": "Subreal",
+                "settings": {
+                    "lut1_overtones": "0.5,0.3,0.1",
+                    "lut2_overtones": "0.7,0.0,0.2"
+                },
+                "params": {
+                    "vcf_cutoff": 0.4,
+                    "vca_attack": 0.0
+                }
+            },
+            "effect1": {
+                "type": "Delay",
+                "settings": {},
+                "params": {}
+            },
+            "effect2": {
+                "type": "Chorus",
+                "settings": {},
+                "params": {}
+            }
+        },
+        {},
+        {},
+        {}
+    ],
+    "masterReverb": {
+        "type": "Freeverb",
+        "settings": {},
+        "params": {}
+    },
+    "masterDelay": {
+        "type": "dd8",
+        "settings": {},
+        "params": {}
+    }
+}

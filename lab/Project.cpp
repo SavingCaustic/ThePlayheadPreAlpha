@@ -1,3 +1,5 @@
+#include <fstream>
+#include <iostream>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -5,70 +7,49 @@
 
 namespace Storage {
 
+// Structures for Unit, Rack, and Project remain unchanged.
+
 struct Param {
-    float val; // Parameters like "cutoff"
+    float val;
 };
 
 struct Setting {
-    std::string val; // Parameters like "mode"
+    std::string val;
 };
 
 struct Unit {
-    std::string type;                            // e.g., "Monolith" or "Delay"
-    std::map<std::string, float> params;         // Contains float parameters
-    std::map<std::string, std::string> settings; // Contains string parameters
+    std::string type;
+    std::map<std::string, float> params;
+    std::map<std::string, std::string> settings;
 
     nlohmann::json to_json() const {
-        nlohmann::json json_params;
-        for (const auto &[key, param] : params) {
-            json_params[key] = param; // Using param.val for the value
+        nlohmann::json rounded_params;
+        for (const auto &[key, value] : params) {
+            rounded_params[key] = std::round(value * 1000.0) / 1000.0; // Round to 3 decimal places
         }
-
-        nlohmann::json json_settings;
-        for (const auto &[key, setting] : settings) {
-            json_settings[key] = setting; // Using setting.val for the value
-        }
-
-        return {{"type", type}, {"params", json_params}, {"settings", json_settings}};
+        return {{"type", type}, {"params", rounded_params}, {"settings", settings}};
     }
 
     static Unit from_json(const nlohmann::json &json) {
         Unit unit;
         unit.type = json.value("type", "");
-
         if (json.contains("params")) {
-            for (const auto &[key, value] : json["params"].items()) {
-                unit.params[key] = value; // Create Param from value
-            }
+            unit.params = json["params"].get<std::map<std::string, float>>();
         }
-
         if (json.contains("settings")) {
-            for (const auto &[key, value] : json["settings"].items()) {
-                unit.settings[key] = value; // Create Setting from value
-            }
+            unit.settings = json["settings"].get<std::map<std::string, std::string>>();
         }
-
         return unit;
     }
 };
 
 struct Rack {
-    std::map<std::string, std::string> settings; // Settings for the rack itself
-    Unit eventor1;
-    Unit eventor2;
-    Unit synth;
-    Unit effect1;
-    Unit effect2;
-    Unit emitter;
+    std::map<std::string, std::string> settings;
+    Unit eventor1, eventor2, synth, effect1, effect2, emitter;
 
     nlohmann::json to_json() const {
-        nlohmann::json json_settings = nlohmann::json::object();
-        for (const auto &[key, value] : settings) {
-            json_settings[key] = value;
-        }
-
         return {
-            {"settings", json_settings},
+            {"settings", settings},
             {"eventor1", eventor1.to_json()},
             {"eventor2", eventor2.to_json()},
             {"synth", synth.to_json()},
@@ -80,41 +61,41 @@ struct Rack {
 
     static Rack from_json(const nlohmann::json &json) {
         Rack rack;
-
         if (json.contains("settings")) {
-            for (const auto &[key, value] : json["settings"].items()) {
-                rack.settings[key] = value.get<std::string>();
-            }
+            rack.settings = json["settings"].get<std::map<std::string, std::string>>();
         }
-
-        rack.eventor1 = Unit::from_json(json.at("eventor1"));
-        rack.eventor2 = Unit::from_json(json.at("eventor2"));
-        rack.synth = Unit::from_json(json.at("synth"));
-        rack.effect1 = Unit::from_json(json.at("effect1"));
-        rack.effect2 = Unit::from_json(json.at("effect2"));
-        rack.emitter = Unit::from_json(json.at("emitter"));
-
+        if (json.contains("eventor1")) {
+            rack.eventor1 = Unit::from_json(json["eventor1"]);
+        }
+        if (json.contains("eventor1")) {
+            rack.eventor2 = Unit::from_json(json["eventor2"]);
+        }
+        if (json.contains("synth")) {
+            rack.synth = Unit::from_json(json["synth"]);
+        }
+        if (json.contains("effect1")) {
+            rack.effect1 = Unit::from_json(json["effect1"]);
+        }
+        if (json.contains("effect1")) {
+            rack.effect2 = Unit::from_json(json["effect2"]);
+        }
+        /*
+        rack.emitter = Unit::from_json(json["emitter"]);
+        */
         return rack;
     }
 };
 
-struct Master {
-    Unit reverb;
-    Unit chorus;
-};
-
 struct Project {
-    std::vector<std::string> settings; // Plain list of settings
+    std::map<std::string, std::string> settings;
     Rack racks[4];
-    Unit masterReverb;
-    Unit masterDelay;
+    Unit masterReverb, masterDelay;
 
     nlohmann::json to_json() const {
         nlohmann::json json_racks;
         for (const auto &rack : racks) {
             json_racks.push_back(rack.to_json());
         }
-
         return {
             {"settings", settings},
             {"racks", json_racks},
@@ -125,58 +106,146 @@ struct Project {
 
     static Project from_json(const nlohmann::json &json) {
         Project project;
-
-        if (json.contains("settings")) {
-            project.settings = json["settings"].get<std::vector<std::string>>();
+        project.settings = json["settings"].get<std::map<std::string, std::string>>();
+        for (size_t i = 0; i < 4 && i < json["racks"].size(); ++i) {
+            project.racks[i] = Rack::from_json(json["racks"][i]);
         }
-
-        size_t rack_index = 0;
-        if (json.contains("racks")) {
-            for (const auto &rack_json : json["racks"]) {
-                if (rack_index < 4) {
-                    project.racks[rack_index] = Rack::from_json(rack_json);
-                    ++rack_index;
-                }
-            }
-        }
-
-        project.masterReverb = Unit::from_json(json.at("masterReverb"));
-        project.masterDelay = Unit::from_json(json.at("masterDelay"));
-
+        project.masterReverb = Unit::from_json(json["masterReverb"]);
+        project.masterDelay = Unit::from_json(json["masterDelay"]);
         return project;
     }
 };
 
-class DataStore {
-    // should allow type-save getting and setting of all params and settings..
+// DocumentManager for JSON reading/writing
+class DocumentManager {
   public:
-    Project data;
-
-    void initProject() {
-        // i could init a default project structure either from a default json,
-        // or here - programatically..
+    static nlohmann::json loadFromFile(const std::string &filename) {
+        std::ifstream file(filename);
+        if (!file.is_open()) {
+            throw std::runtime_error("Failed to open file: " + filename);
+        }
+        nlohmann::json json;
+        file >> json;
+        return json;
     }
 
-    void loadProject(std::string filename) {
-        // get file from persistant storage
-        // and then iterate somehow so player-engine is populated. Complicated..
-        // much easier if we could disengage playerEngine and work directly with that,
-        // but could be problematic with unit-model expecting object queues.
+    static void saveToFile(const nlohmann::json &json, const std::string &filename) {
+        std::ofstream file(filename);
+        if (!file.is_open()) {
+            throw std::runtime_error("Failed to open file: " + filename);
+        }
+        file << json.dump(4); // Pretty print with 4 spaces
+    }
+};
+
+// Unit Factory for initialization
+class UnitFactory {
+  public:
+    static Unit initializeFromJson(const nlohmann::json &json) {
+        Unit unit = Unit::from_json(json);
+        setupUnit(unit);
+        return unit;
     }
 
-    void saveProject(std::string filename) {
-        // all data should already be here - nothing to aquire from racks/units. Just save it..
+    static void setupUnit(const Unit &unit) {
+        std::cout << "Setting up unit: " << unit.type << "\n";
+        for (const auto &[key, value] : unit.params) {
+            std::cout << "  Param: " << key << " = " << value << "\n";
+        }
+        for (const auto &[key, value] : unit.settings) {
+            std::cout << "  Setting: " << key << " = " << value << "\n";
+        }
+    }
+};
+
+// Rack Factory for initialization
+class RackFactory {
+  public:
+    static Rack initializeFromJson(const nlohmann::json &json) {
+        Rack rack = Rack::from_json(json);
+        UnitFactory::setupUnit(rack.eventor1);
+        UnitFactory::setupUnit(rack.eventor2);
+        UnitFactory::setupUnit(rack.synth);
+        UnitFactory::setupUnit(rack.effect1);
+        UnitFactory::setupUnit(rack.effect2);
+        return rack;
+    }
+};
+
+// DataStore for project and patch management
+class DataStore {
+  public:
+    Project project;
+    std::vector<Unit> synthPatches; // Store standalone patches
+
+    void loadProject(const std::string &filename) {
+        auto json = DocumentManager::loadFromFile(filename);
+        project = initializeProjectFromJson(json);
+    }
+
+    void saveProject(const std::string &filename) const {
+        DocumentManager::saveToFile(project.to_json(), filename);
+    }
+
+    void loadSynthPatch(const std::string &filename, size_t rackID) {
+        if (rackID >= 4) {
+            std::cerr << "Invalid rackID: " << rackID << "\n";
+            return;
+        }
+
+        auto &rack = project.racks[rackID];
+        auto json = DocumentManager::loadFromFile(filename);
+
+        if (!json.empty()) {
+            Unit patchUnit = Unit::from_json(json);
+
+            if (patchUnit.type == rack.synth.type) {
+                // Apply the patch settings and parameters to the existing synth
+                rack.synth.settings = patchUnit.settings;
+                rack.synth.params = patchUnit.params;
+
+                // UnitFactory::initialize(rack.synth); // Reinitialize the synth with new settings
+                std::cout << "Synth patch loaded and applied to Rack " << rackID << ".\n";
+            } else {
+                std::cerr << "Patch type (" << patchUnit.type
+                          << ") does not match the synth type (" << rack.synth.type
+                          << ") in Rack " << rackID << ".\n";
+            }
+        } else {
+            std::cerr << "Failed to load synth patch file: " << filename << "\n";
+        }
+    }
+
+  private:
+    Project initializeProjectFromJson(const nlohmann::json &json) {
+        Project project = Project::from_json(json);
+        for (auto &rack : project.racks) {
+            // rack = RackFactory::initializeFromJson(rack.to_json());
+        }
+        return project;
     }
 };
 
 } // namespace Storage
 
 int main() {
-    Storage::DataStore myDataStore;
-    myDataStore.initProject();
-    myDataStore.data.racks[3].synth.type = "Monolith";
-    myDataStore.data.racks[3].synth.settings["testSettting"] = "test-string";
-    myDataStore.data.racks[3].synth.params["cutoff"] = 0.4f;
-    myDataStore.data.masterReverb.type = "Freeverb";
-    return 0;
+    try {
+        Storage::DataStore myDataStore;
+
+        // Load a project file
+        std::cout << "Loading project.json...\n";
+        myDataStore.loadProject("project.json");
+
+        // Load a standalone synth-patch file
+        std::cout << "Loading synth-patch.json...\n";
+        myDataStore.loadSynthPatch("patch.json", 0);
+
+        // Save the project
+        myDataStore.saveProject("saved_project.json");
+
+        return 0;
+    } catch (const std::exception &e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 1;
+    }
 }

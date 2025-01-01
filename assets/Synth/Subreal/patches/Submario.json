@@ -1,6 +1,8 @@
 {
     "params": {
-        "vca_attack":0.5
+        "vca_attack":0.5,
+        "vcf_cutoff":0.3,
+        "osc_mix":0.7
     },
     "settings": {
         "lut1_overtones": "1.0,0.1,0.4",

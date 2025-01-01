@@ -1,0 +1,154 @@
+{
+    "masterDelay": {
+        "params": null,
+        "settings": {},
+        "type": "dd8"
+    },
+    "masterReverb": {
+        "params": null,
+        "settings": {},
+        "type": "Freeverb"
+    },
+    "racks": [
+        {
+            "effect1": {
+                "params": null,
+                "settings": {},
+                "type": "Delay"
+            },
+            "effect2": {
+                "params": null,
+                "settings": {},
+                "type": "Chorus"
+            },
+            "emitter": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "eventor1": {
+                "params": null,
+                "settings": {},
+                "type": "Third"
+            },
+            "eventor2": {
+                "params": null,
+                "settings": {},
+                "type": "Fifth"
+            },
+            "settings": {},
+            "synth": {
+                "params": {
+                    "osc_mix": 0.7,
+                    "vca_attack": 0.5,
+                    "vcf_cutoff": 0.3
+                },
+                "settings": {
+                    "lut1_overtones": "1.0,0.1,0.4",
+                    "lut2_overtones": "0.5,0.2,0.0,0.0,0.4"
+                },
+                "type": "Subreal"
+            }
+        },
+        {
+            "effect1": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "effect2": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "emitter": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "eventor1": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "eventor2": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "settings": {},
+            "synth": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            }
+        },
+        {
+            "effect1": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "effect2": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "emitter": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "eventor1": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "eventor2": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "settings": {},
+            "synth": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            }
+        },
+        {
+            "effect1": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "effect2": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "emitter": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "eventor1": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "eventor2": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            },
+            "settings": {},
+            "synth": {
+                "params": null,
+                "settings": {},
+                "type": ""
+            }
+        }
+    ],
+    "settings": {}
+}
