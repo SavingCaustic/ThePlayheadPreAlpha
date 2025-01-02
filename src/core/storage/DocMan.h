@@ -5,7 +5,8 @@
 
 namespace storage {
 
-// Document Manager
+// Document Manager. a bit unclear what this does. Helper functions..
+// some functions may be moved to
 class DocMan {
 
     static void synthPatchList(const std::string &synthName) {

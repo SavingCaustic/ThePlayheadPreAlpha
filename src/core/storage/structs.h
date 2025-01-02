@@ -1,4 +1,6 @@
 #pragma once
+#include <fstream>
+#include <iostream>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -15,107 +17,84 @@ struct Setting {
 };
 
 struct Unit {
-    std::string type;                            // e.g., "Monolith" or "Delay"
-    std::map<std::string, float> params;         // Contains float parameters
-    std::map<std::string, std::string> settings; // Contains string parameters
+    std::string type;
+    std::map<std::string, float> params;
+    std::map<std::string, std::string> settings;
 
     nlohmann::json to_json() const {
-        nlohmann::json json_params;
-        for (const auto &[key, param] : params) {
-            json_params[key] = param; // Using param.val for the value
+        nlohmann::json rounded_params;
+        for (const auto &[key, value] : params) {
+            rounded_params[key] = std::round(value * 1000.0) / 1000.0; // Round to 3 decimal places
         }
-
-        nlohmann::json json_settings;
-        for (const auto &[key, setting] : settings) {
-            json_settings[key] = setting; // Using setting.val for the value
-        }
-
-        return {{"type", type}, {"params", json_params}, {"settings", json_settings}};
+        return {{"type", type}, {"params", rounded_params}, {"settings", settings}};
     }
 
     static Unit from_json(const nlohmann::json &json) {
         Unit unit;
         unit.type = json.value("type", "");
-
         if (json.contains("params")) {
-            for (const auto &[key, value] : json["params"].items()) {
-                unit.params[key] = value; // Create Param from value
-            }
+            unit.params = json["params"].get<std::map<std::string, float>>();
         }
-
         if (json.contains("settings")) {
-            for (const auto &[key, value] : json["settings"].items()) {
-                unit.settings[key] = value; // Create Setting from value
-            }
+            unit.settings = json["settings"].get<std::map<std::string, std::string>>();
         }
-
         return unit;
     }
 };
 
 struct Rack {
-    std::map<std::string, std::string> settings; // Settings for the rack itself
-    Unit eventor1;
-    Unit eventor2;
-    Unit synth;
-    Unit effect1;
-    Unit effect2;
-    // Unit emitter;
+    std::map<std::string, std::string> settings;
+    Unit eventor1, eventor2, synth, effect1, effect2, emitter;
 
     nlohmann::json to_json() const {
-        nlohmann::json json_settings = nlohmann::json::object();
-        for (const auto &[key, value] : settings) {
-            json_settings[key] = value;
-        }
-
         return {
-            {"settings", json_settings},
+            {"settings", settings},
             {"eventor1", eventor1.to_json()},
             {"eventor2", eventor2.to_json()},
             {"synth", synth.to_json()},
             {"effect1", effect1.to_json()},
             {"effect2", effect2.to_json()},
-            //{"emitter", emitter.to_json()},
+            {"emitter", emitter.to_json()},
         };
     }
 
     static Rack from_json(const nlohmann::json &json) {
         Rack rack;
-
         if (json.contains("settings")) {
-            for (const auto &[key, value] : json["settings"].items()) {
-                rack.settings[key] = value.get<std::string>();
-            }
+            rack.settings = json["settings"].get<std::map<std::string, std::string>>();
         }
-
-        rack.eventor1 = Unit::from_json(json.at("eventor1"));
-        rack.eventor2 = Unit::from_json(json.at("eventor2"));
-        rack.synth = Unit::from_json(json.at("synth"));
-        rack.effect1 = Unit::from_json(json.at("effect1"));
-        rack.effect2 = Unit::from_json(json.at("effect2"));
-        // rack.emitter = Unit::from_json(json.at("emitter"));
-
+        if (json.contains("eventor1")) {
+            rack.eventor1 = Unit::from_json(json["eventor1"]);
+        }
+        if (json.contains("eventor1")) {
+            rack.eventor2 = Unit::from_json(json["eventor2"]);
+        }
+        if (json.contains("synth")) {
+            rack.synth = Unit::from_json(json["synth"]);
+        }
+        if (json.contains("effect1")) {
+            rack.effect1 = Unit::from_json(json["effect1"]);
+        }
+        if (json.contains("effect1")) {
+            rack.effect2 = Unit::from_json(json["effect2"]);
+        }
+        /*
+        rack.emitter = Unit::from_json(json["emitter"]);
+        */
         return rack;
     }
 };
 
-struct Master {
-    Unit reverb;
-    Unit chorus;
-};
-
 struct Project {
-    std::vector<std::string> settings; // Plain list of settings
+    std::map<std::string, std::string> settings;
     Rack racks[4];
-    Unit masterReverb;
-    Unit masterDelay;
+    Unit masterReverb, masterDelay;
 
     nlohmann::json to_json() const {
         nlohmann::json json_racks;
         for (const auto &rack : racks) {
             json_racks.push_back(rack.to_json());
         }
-
         return {
             {"settings", settings},
             {"racks", json_racks},
@@ -126,24 +105,14 @@ struct Project {
 
     static Project from_json(const nlohmann::json &json) {
         Project project;
-
-        if (json.contains("settings")) {
-            project.settings = json["settings"].get<std::vector<std::string>>();
+        project.settings = json["settings"].get<std::map<std::string, std::string>>();
+        for (size_t i = 0; i < 4 && i < json["racks"].size(); ++i) {
+            project.racks[i] = Rack::from_json(json["racks"][i]);
         }
-
-        size_t rack_index = 0;
-        if (json.contains("racks")) {
-            for (const auto &rack_json : json["racks"]) {
-                if (rack_index < 4) {
-                    project.racks[rack_index] = Rack::from_json(rack_json);
-                    ++rack_index;
-                }
-            }
-        }
-
-        project.masterReverb = Unit::from_json(json.at("masterReverb"));
-        project.masterDelay = Unit::from_json(json.at("masterDelay"));
-
+        project.masterReverb = Unit::from_json(json["masterReverb"]);
+        project.masterDelay = Unit::from_json(json["masterDelay"]);
         return project;
     }
 };
+
+}

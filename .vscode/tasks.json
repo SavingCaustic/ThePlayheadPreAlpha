@@ -7,7 +7,8 @@
             "command": "cmake",
             "args": [
                 "--build", "${workspaceFolder}/build_debug",
-                "--config", "Debug"
+                "--config", "Debug",
+                "-j"
             ],
             "group": "build",
             "problemMatcher": ["$gcc"]
@@ -18,7 +19,8 @@
             "command": "cmake",
             "args": [
                 "--build", "${workspaceFolder}/build_release",
-                "--config", "Release"
+                "--config", "Release",
+                "-j"
             ],
             "group": "build",
             "problemMatcher": ["$gcc"]

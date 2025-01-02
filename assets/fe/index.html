@@ -2,9 +2,19 @@
 <html>
 <head>
     <style>
-        pre {
-            font-size:14px;
-            line-height:1.5em;
+        h2 {
+            margin:0px;
+            font-size:1rem;
+            margin-top:0.8rem;
+        }
+
+        a {
+            border:2px solid #999;
+            border-radius:5px;
+            padding:2px 5px; 
+            margin:3px;
+            display: inline-block;
+            text-decoration: none;
         }
     </style>
     <script>
@@ -48,29 +58,37 @@
 <body>
     <p><img src="tph.png"></p>
 
-    <h2>Constructor queue</h2>
-    <pre>
-      <a href="/rpc?method=rack.mount&key=synth&value=Subreal&rack_id=0" target="if">Subreal to zero</a>
-      <a href="/rpc?method=unit.synth&key=lut1_overtones&value=0.4,0.3,0.2&rack_id=0" target="if">Setup LUT0</a>
-    </pre>
+    <h2>Server</h2>
+    <a href="/rpc?method=server.quit" target="if">Shut down server</a>
 
-    <h2>Start- and shop</h2>
-    <pre>
-      <a href="/startup" target="if">Start devices</a>
-      <a href="/test/pe/ping" target="if">PE ping</a>
-      <a href="/test/pe/rackSetup" target="if">PE load synth</a>
-      <a href="/shutdown" target="if">Shutdown (stops server)</a>
-    </pre>
+    <h2>Device</h2>
+    need some example here..
+    
+    <h2>Project</h2>
+    <a href="/rpc?method=project.load&value=demo" target="if">Load demo project</a>
 
+    <h2>Rack</h2>
+    <a href="/rpc?method=rack.mount&key=synth&value=Subreal&rack_id=0" target="if">Mount Subreal to zero</a>
+    <a href="/rpc?method=rack.mount&key=effect1&value=Delay&rack_id=0" target="if">Mount Delay to effect1</a>
+    <a href="/rpc?method=rack.mount&key=effect2&value=Chorus&rack_id=0" target="if">Mount Chorus to effect2</a>
+    <a href="/rpc?method=rack.mount&key=eventor1&value=Third&rack_id=0" target="if">Mount Third to eventor1</a>
+    <a href="/rpc?method=rack.mount&key=eventor1&value=Third&rack_id=0" target="if">Mount Fifth to eventor2</a>
+    <a href="/rpc?method=rack.mount&key=effect1&value=&rack_id=0" target="if">un-mount effect1</a>
+    <a href="/rpc?method=rack.mount&key=eventor1&value=&rack_id=0" target="if">un-mount eventor1</a>
+    
+    <h2>Unit</h2>
+    <a href="/rpc?method=unit.set&unit=synth&key=lut1_overtones&value=0.4,0.3,0.2&rack_id=0" target="if">Setup LUT0</a>
+    <a href="/rpc?method=unit.set&unit=synth&key=lut2_overtones&value=0.4,0,0,0,0,0.5&rack_id=0" target="if">Setup LUT1</a>
+    <a href="/rpc?method=unit.load&unit=synth&value=Submarino&rack_id=0" target="if">Load patch Submarino (not working)</a>
+
+    <h2>(old stuff below..)</h2>
     <h2>Synth-parameters</h2>
-    <pre>
       <a href="/setRackUnitParam?rack=0&unit=synth&name=pan&value=43" target="if">pan to left</a>
       <a href="/setRackUnitParam?rack=0&unit=synth&name=cutoff&value=88" target="if">set cutoff</a>
       <a href="/rack/getFakeSynthParams" target="if">gets parameters as JSON</a>
       TBA
       <a href="/rack/0/synth/patchLoad?name=default" target="if">load patch into a synth</a>
       <a href="/rack/0/synth/patchSave?new_name=false" target="if">saves parameters as a patch</a>
-    </pre>
 
     <h2>Rack - load and save (TBA)</h2>
 

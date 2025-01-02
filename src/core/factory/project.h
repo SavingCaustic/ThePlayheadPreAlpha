@@ -60,7 +60,7 @@ class Project {
                 }
             }
             if (!rack.effect1.type.empty()) {
-                Rack::effectSetup(rack.effect1.type, 0, 1, constructorQueue);
+                Rack::effectSetup(rack.effect1.type, 0, "rack.effect1", constructorQueue);
                 for (const auto &setting : rack.synth.settings) {
                     // check with the synth-factory if object is to be created...
                     Unit::parse("set", setting.first, setting.second, 0, "effect1", constructorQueue);

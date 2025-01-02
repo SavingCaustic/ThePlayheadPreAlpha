@@ -112,7 +112,7 @@ class ObjectManager {
         }
 
         if (*effectTarget != nullptr) {
-            std::cout << "hey i should not destroy eventor yet" << std::endl;
+            std::cout << "hey i should not destroy effect yet" << std::endl;
             Destructor::Record record;
             record.ptr = *effectTarget;
             record.deleter = [](void *ptr) { delete static_cast<EffectBase *>(ptr); }; // Create deleter for SynthBase

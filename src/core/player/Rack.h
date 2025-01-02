@@ -260,13 +260,11 @@ class Rack {
         } else {
             effectTarget = &effect2;
         }
-        // should already be deleted by ObjectManager
-        /*if (*effectTarget) {
-            delete *effectTarget;
-            *effectTarget = nullptr; // Avoid dangling pointer
-        }*/
+
         *effectTarget = newEffect;
-        (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size());
+        if (*effectTarget != nullptr) {
+            (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size()); // Only call bindBuffers if effectTarget is not nullptr
+        }
 
         return *effectTarget != nullptr;
     }
@@ -278,116 +276,14 @@ class Rack {
         } else {
             eventorTarget = &eventor2;
         }
-        newEventor->setMidiTarget(synth);
-        newEventor->setPosition(1);
 
         *eventorTarget = newEventor;
+        if (*eventorTarget != nullptr) {
+            newEventor->setMidiTarget(synth);
+            newEventor->setPosition(1);
+        }
 
         return *eventorTarget != nullptr;
-    }
-
-    /* stuff below should probably go.. */
-
-    bool setSynthFromStr(const std::string &synthName) {
-        // meh - i guess this sohuld go..
-        std::cout << "we're setting up synth: " << synthName << std::endl;
-        SynthType type = getSynthType(synthName);
-        bool loadOK = true;
-        if (synth) {
-            delete synth;
-            synth = nullptr; // Avoid dangling pointer
-        }
-        switch (type) {
-        case SynthType::Monolith:
-            synth = new Synth::Monolith::Model();
-            synth->bindBuffers(audioBuffer.data(), audioBuffer.size());
-            break;
-        case SynthType::Subreal:
-            synth = new Synth::Subreal::Model();
-            synth->bindBuffers(audioBuffer.data(), audioBuffer.size());
-            break;
-        case SynthType::Sketch:
-            // synth = new Synth::Sketch::Model(audioBuffer.data(), audioBuffer.size());
-            break;
-        // Add cases for other synth types here
-        default:
-            std::cerr << "Unknown synth type: " << synthName << std::endl;
-            loadOK = false;
-        }
-        if (loadOK) {
-            synth->setErrorWriter(errorWriter_);
-            this->enabled = true;
-        }
-        return (loadOK);
-    }
-
-    bool setEffectFromStr(const std::string &effectName, int effectSlot = 1) {
-        std::cout << "we're setting up effect: " << effectName << std::endl;
-        EffectType type = getEffectType(effectName);
-        EffectInterface **effectTarget = nullptr;
-        if (effectSlot == 1) {
-            effectTarget = &effect1;
-        } else {
-            // a bit sloppy handling..
-            effectTarget = &effect2;
-        }
-
-        // Delete the existing effect in the slot, if any
-        // and here, the old effect should be enqued for destruction by studio runner.
-        if (*effectTarget) {
-            delete *effectTarget;
-            *effectTarget = nullptr; // Avoid dangling pointer
-        }
-
-        bool loadOK = true;
-        switch (type) {
-        case EffectType::Delay:
-            *effectTarget = new Effect::Delay::Model();
-            (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size());
-            break;
-        // Add cases for other synth types here
-        case EffectType::Chorus:
-            *effectTarget = new Effect::Chorus::Model();
-            (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size());
-            break;
-        case EffectType::Chorus2:
-            *effectTarget = new Effect::Chorus2::Model();
-            (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size());
-            break;
-        // Add cases for other synth types here
-        default:
-            std::cerr << "Unknown effect type: " << effectName << std::endl;
-            loadOK = false;
-        }
-        if (loadOK) {
-            synth->setErrorWriter(errorWriter_);
-            this->enabled = true;
-        }
-        return (loadOK);
-    }
-
-    SynthType getSynthType(const std::string &synthName) {
-        // i really don't know what i need this for..
-        if (synthName == "Monolith")
-            return SynthType::Monolith;
-        if (synthName == "Subreal")
-            return SynthType::Subreal;
-        if (synthName == "Sketch")
-            return SynthType::Sketch;
-        // Add other synth type checks here
-        return SynthType::Unknown;
-    }
-
-    EffectType getEffectType(const std::string &effectName) {
-        // i really don't know what i need this for..
-        if (effectName == "Delay")
-            return EffectType::Delay;
-        if (effectName == "Chorus")
-            return EffectType::Chorus;
-        if (effectName == "Chorus2")
-            return EffectType::Chorus2;
-        // Add other synth type checks here
-        return EffectType::Unknown;
     }
 
   private:

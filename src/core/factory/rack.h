@@ -13,30 +13,21 @@ class Rack {
   public:
     static void parse(const std::string &strMethod, const std::string &key, const std::string &strValue, int rackID, Constructor::Queue &constructorQueue) {
         // strMethod is rack.mount.  key = synth, effect0, etc.
-        uint32_t unitFNV = Utils::Hash::fnv1a(key);
+        uint32_t unitMethodFNV = Utils::Hash::fnv1a(key + "." + strMethod);
         std::string queueType = "rack." + key;
-        switch (unitFNV) {
-        case Utils::Hash::fnv1a_hash("eventor1"):
-        case Utils::Hash::fnv1a_hash("eventor2"): {
-            EventorBase *eventor = nullptr;
-            EventorFactory::setupEventor(eventor, strValue);
-            constructorQueue.push(eventor, sizeof(eventor), false, queueType.c_str(), rackID); // add slot here..
+        switch (unitMethodFNV) {
+        case Utils::Hash::fnv1a_hash("eventor1.mount"):
+        case Utils::Hash::fnv1a_hash("eventor2.mount"): {
+            eventorSetup(strValue, rackID, queueType, constructorQueue);
             break;
         }
-        case Utils::Hash::fnv1a_hash("synth"): {
+        case Utils::Hash::fnv1a_hash("synth.mount"): {
             synthSetup(strValue, rackID, constructorQueue);
-            // SynthBase *synth = nullptr;
-            // SynthFactory::setupSynth(synth, strValue);
-            // constructorQueue.push(synth, sizeof(synth), false, queueType.c_str(), rackID);
-            // synth = nullptr;
             break;
         }
-        case Utils::Hash::fnv1a_hash("effect1"):
-        case Utils::Hash::fnv1a_hash("effect2"): {
-            EffectBase *effect = nullptr;
-            EffectFactory::setupEffect(effect, strValue);
-            constructorQueue.push(effect, sizeof(effect), false, queueType.c_str(), rackID);
-            effect = nullptr;
+        case Utils::Hash::fnv1a_hash("effect1.mount"):
+        case Utils::Hash::fnv1a_hash("effect2.mount"): {
+            effectSetup(strValue, rackID, queueType, constructorQueue);
             break;
         }
         default:
@@ -47,17 +38,29 @@ class Rack {
 
     static void synthSetup(const std::string &strValue, int rackID, Constructor::Queue &constructorQueue) {
         SynthBase *synth = nullptr;
-        SynthFactory::setupSynth(synth, strValue);
+        // no synthName = unmount
+        if (strValue != "") {
+            SynthFactory::setupSynth(synth, strValue);
+        }
         std::string queueType = "rack.synth";
         constructorQueue.push(synth, sizeof(synth), false, queueType.c_str(), rackID);
         synth = nullptr;
     }
 
-    static void effectSetup(const std::string &strValue, int rackID, int slot, Constructor::Queue &constructorQueue) {
+    static void eventorSetup(const std::string &strValue, int rackID, const std::string &queueType, Constructor::Queue &constructorQueue) {
+        EventorBase *eventor = nullptr;
+        if (strValue != "") {
+            EventorFactory::setupEventor(eventor, strValue);
+        }
+        constructorQueue.push(eventor, sizeof(eventor), false, queueType.c_str(), rackID); // add slot here..
+        eventor = nullptr;
+    }
+
+    static void effectSetup(const std::string &strValue, int rackID, const std::string &queueType, Constructor::Queue &constructorQueue) {
         EffectBase *effect = nullptr;
-        EffectFactory::setupEffect(effect, strValue);
-        std::string queueType = "rack.effect" + slot;
-        std::cout << "setting up " << queueType << std::endl;
+        if (strValue != "") {
+            EffectFactory::setupEffect(effect, strValue);
+        }
         constructorQueue.push(effect, sizeof(effect), false, queueType.c_str(), rackID);
         effect = nullptr;
     }

@@ -7,8 +7,6 @@
 
 namespace Storage {
 
-// Structures for Unit, Rack, and Project remain unchanged.
-
 struct Param {
     float val;
 };
@@ -176,7 +174,7 @@ class RackFactory {
 class DataStore {
   public:
     Project project;
-    std::vector<Unit> synthPatches; // Store standalone patches
+    // std::vector<Unit> synthPatches; // Store standalone patches
 
     void loadProject(const std::string &filename) {
         auto json = DocumentManager::loadFromFile(filename);

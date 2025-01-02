@@ -11,7 +11,7 @@
                 "type": "Subreal",
                 "settings": {
                     "lut1_overtones": "0.5,0.3,0.1",
-                    "lut2_overtones": "0.7,0.0,0.2"
+                    "lut2_overtones": "0.7,0.0,0.2,0,0.7"
                 },
                 "params": {
                     "vcf_cutoff": 0.4,
