@@ -45,4 +45,14 @@ cd ..
 # if you get "illegal instruction",
 # disable SIMD in CMakeLists.txt and other cpu optimizations..
 
+# remember to always run the exec from the parent directory.
+# you need to load a project so open a browser and go to
+# http://localhost:18080/fe/api-ref.html
+# click "load project".
+
+# have fun with the controllers. Copy the device.json from
+# assets to /user and update cc_pager and subpager to your midi keyboard.
+
+# have fun!
+
 
