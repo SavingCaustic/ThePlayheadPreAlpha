@@ -20,7 +20,7 @@ class Model : public EventorBase {
         case 0x90:
             // clone note +12
             this->sendMidi(cmd, param1, param2);
-            this->sendMidi(cmd, param1 + 3, param2);
+            this->sendMidi(cmd, param1 + 4, param2);
             break;
         default:
             this->sendMidi(cmd, param1, param2);
