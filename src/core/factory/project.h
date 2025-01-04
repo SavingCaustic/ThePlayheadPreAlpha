@@ -3,7 +3,7 @@
 #include "./unit.h"
 #include "core/constructor/Queue.h"
 #include "core/storage/DocMan.h"
-#include "core/storage/Project.h"
+// #include "core/storage/Project.h"
 #include "drivers/FileDriver.h"
 #include <core/utils/FNV.h>
 #include <iostream>
@@ -34,40 +34,36 @@ class Project {
         }
     }
 
-    static void loadProject(const std::string &strValue, Constructor::Queue &constructorQueue,
-                            Storage::DataStore &dataStore) {
-        std::string jsonDoc;
-        jsonDoc = FileDriver::assetFileRead("projects/" + strValue + "/project.json");
-        // Storage::Project::from_json(jsonDoc);
-        dataStore.loadProject(jsonDoc);
-        //
-        for (const auto &rack : dataStore.data.racks) {
+    static void loadProject(const std::string &strValue, Constructor::Queue &constructorQueue, Storage::DataStore &dataStore) {
+        // Step 1: Load the project into the DataStore
+        dataStore.loadProject(strValue);
+        int rackID = 0;
+
+        // Step 2: Iterate over each rack in the project
+        for (const auto &rack : dataStore.project.racks) {
             std::cout << "Rack Synth Type: " << rack.synth.type << std::endl;
+
+            // Step 3: Handle Synth Setup
             if (!rack.synth.type.empty()) {
-                // create the synth and pass on constructor queue..
-                // this should be move from here to the synth-constructor really..
-                Rack::synthSetup(rack.synth.type, 0, constructorQueue);
+                Rack::synthSetup(rack.synth.type, rackID, constructorQueue, rack.synth.params);
+
+                // Apply settings for the synth
                 for (const auto &setting : rack.synth.settings) {
-                    // check with the synth-factory if object is to be created...
-                    Unit::parse("set", setting.first, setting.second, 0, "synth", constructorQueue);
-                }
-                for (const auto &params : rack.synth.params) {
-                    // well this is feed to param-queue, not constructor queue..
-                    // Unit::parse("synth", setting.first, setting.second, 0, constructorQueue);
-                    // std::string name_str(name ? name : "");
-                    // MessageIn msg{rack, "synth", name_str.c_str(), value};
-                    // messageInBuffer.push(msg);
+                    Unit::parse("set", setting.first, setting.second, rackID, "synth", constructorQueue, dataStore);
                 }
             }
+
+            // Step 4: Handle Effect1 Setup
             if (!rack.effect1.type.empty()) {
-                Rack::effectSetup(rack.effect1.type, 0, "rack.effect1", constructorQueue);
-                for (const auto &setting : rack.synth.settings) {
-                    // check with the synth-factory if object is to be created...
-                    Unit::parse("set", setting.first, setting.second, 0, "effect1", constructorQueue);
+                Rack::effectSetup(rack.effect1.type, rackID, "rack.effect1", constructorQueue);
+
+                // Apply settings for the effect
+                for (const auto &setting : rack.effect1.settings) {
+                    Unit::parse("set", setting.first, setting.second, rackID, "effect1", constructorQueue, dataStore);
                 }
             }
+            rackID++;
         }
-        // iterate over collection racks and print each rack syth type as example..
     }
 };
 } // namespace Factory

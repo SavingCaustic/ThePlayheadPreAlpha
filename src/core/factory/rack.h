@@ -22,6 +22,7 @@ class Rack {
             break;
         }
         case Utils::Hash::fnv1a_hash("synth.mount"): {
+            // sorry but we need the patch-name *here*
             synthSetup(strValue, rackID, constructorQueue);
             break;
         }
@@ -36,11 +37,11 @@ class Rack {
         }
     }
 
-    static void synthSetup(const std::string &strValue, int rackID, Constructor::Queue &constructorQueue) {
+    static void synthSetup(const std::string &strValue, int rackID, Constructor::Queue &constructorQueue, const std::map<std::string, float> &params = {}) {
         SynthBase *synth = nullptr;
         // no synthName = unmount
         if (strValue != "") {
-            SynthFactory::setupSynth(synth, strValue);
+            SynthFactory::setupSynth(synth, strValue, params);
         }
         std::string queueType = "rack.synth";
         constructorQueue.push(synth, sizeof(synth), false, queueType.c_str(), rackID);

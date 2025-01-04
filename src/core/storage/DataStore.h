@@ -10,9 +10,9 @@ class DataStore {
     Project project;
     // std::vector<Unit> synthPatches; // Store standalone patches
 
-    void loadProject(const std::string &filename) {
-        auto json = DocumentManager::loadFromFile(filename);
-        project = initializeProjectFromJson(json);
+    void loadProject(const std::string &projectName) {
+        auto json = DocumentManager::loadProjectFromFile(projectName);
+        project = Project::from_json(json);
     }
 
     void saveProject(const std::string &filename) const {
@@ -26,7 +26,8 @@ class DataStore {
         }
 
         auto &rack = project.racks[rackID];
-        auto json = DocumentManager::loadFromFile(filename);
+        auto json = DocumentManager::loadSynthPatchFromFile(filename);
+        // maybe i could skip or simplify below, using stuff in structs.h
 
         if (!json.empty()) {
             Unit patchUnit = Unit::from_json(json);
@@ -46,15 +47,6 @@ class DataStore {
         } else {
             std::cerr << "Failed to load synth patch file: " << filename << "\n";
         }
-    }
-
-  private:
-    Project initializeProjectFromJson(const nlohmann::json &json) {
-        Project project = Project::from_json(json);
-        for (auto &rack : project.racks) {
-            // rack = RackFactory::initializeFromJson(rack.to_json());
-        }
-        return project;
     }
 };
 

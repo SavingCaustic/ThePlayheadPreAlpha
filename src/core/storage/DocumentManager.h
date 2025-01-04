@@ -1,8 +1,9 @@
 #pragma once
-#include <fstream>
+#include "drivers/FileDriver.h"
 #include <iostream>
 #include <map>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -11,13 +12,30 @@ namespace Storage {
 // DocumentManager for JSON reading/writing
 class DocumentManager {
   public:
-    static nlohmann::json loadFromFile(const std::string &filename) {
-        std::ifstream file(filename);
-        if (!file.is_open()) {
-            throw std::runtime_error("Failed to open file: " + filename);
+    static nlohmann::json loadProjectFromFile(const std::string &projectName) {
+        // Check if the file exists
+        std::string filename = "projects/" + projectName + "/project.json";
+        if (!FileDriver::assetFileExists(filename)) {
+            throw std::runtime_error("File does not exist: " + filename);
+        }
+
+        // Read the file content as a string
+        std::string fileContent = FileDriver::assetFileRead(filename);
+        // Parse the content into JSON
+        nlohmann::json json;
+        try {
+            json = nlohmann::json::parse(fileContent);
+        } catch (const nlohmann::json::parse_error &e) {
+            throw std::runtime_error("Failed to parse JSON from file: " + filename + " (" + e.what() + ")");
+        }
+        return json;
+    }
+
+    static nlohmann::json loadSynthPatchFromFile(const std::string &filename) {
+        if (FileDriver::assetFileExists(filename)) {
+            return FileDriver::assetFileRead(filename);
         }
         nlohmann::json json;
-        file >> json;
         return json;
     }
 

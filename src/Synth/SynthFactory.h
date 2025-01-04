@@ -1,5 +1,7 @@
 #pragma once
+#include "Synth/Monolith/MonolithFactory.h"
 #include "Synth/Monolith/MonolithModel.h"
+#include "Synth/Subreal/SubrealFactory.h"
 #include "Synth/Subreal/SubrealModel.h"
 #include <Synth/SynthBase.h>
 #include <drivers/FileDriver.h>
@@ -30,7 +32,7 @@ class SynthFactory {
         return SynthType::Unknown;
     }
 
-    static bool setupSynth(SynthBase *&newSynth, const std::string &synthName) {
+    static bool setupSynth(SynthBase *&newSynth, const std::string &synthName, const std::map<std::string, float> &params) {
         std::cout << "we're setting up synth: " << synthName << std::endl;
         SynthType type = getSynthType(synthName);
 
@@ -52,6 +54,19 @@ class SynthFactory {
             return false; // Indicate failure
             loadOK = false;
         }
+        newSynth->reset();
+        if (newSynth && !params.empty()) {
+            for (const auto &[key, value] : params) {
+                int paramEnum = newSynth->resolveUPenum(key);
+                if (paramEnum == -1) {
+                    std::cerr << "Warning: Parameter " << key << " not recognized. Skipping." << std::endl;
+                    continue;
+                }
+                newSynth->paramVals[paramEnum] = value;
+            }
+            newSynth->pushAllParams();
+        }
+
         return true;
         /*if (loadOK) {
             synth->setErrorWriter(errorWriter_);

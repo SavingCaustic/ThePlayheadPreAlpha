@@ -27,7 +27,7 @@ class Queue {
 
         destructorQueue[wrIdx.load(std::memory_order_relaxed)] = destRec;
         wrIdx.store(nextWrIdx, std::memory_order_release); // Atomically update wrIdx
-        cv_.notify_one();                                  // Notify the worker
+        cv_.notify_one();                                  // Notify the worker: TOFIX: Maybe this should be moved to end of processing?
         return true;
     }
 

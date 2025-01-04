@@ -1,20 +1,9 @@
 TODO
 ====
-* justera rpc.
-
-unit.set_setting
-unit.set_param (rpc - really?)
 
 
 FOSS-lansering
 
-* Load project
-1) skapa yta för projectManager - OK!
-2) RPC-endpoint för att ladda project - OK!
-3) Läs in fil - metod i file-driver? readAsset, readUserAsset, readUser - OK!
-4) Iterera över rack och units och objekt.
-5) Sätt alla parametrar också. (!)
-yeah..
 
 * beatnik. ladda patch (samples) och lämna över till player
 
@@ -26,10 +15,6 @@ yeah..
 * kunna ladda parametrar som patch.
 
 * Kunna skicka disableRack så att vi kan göra operationer som ladda synth m.m.
-
-
-
-
 
 
 POST
@@ -51,6 +36,13 @@ Denna är ju synkron. Bara en tråd.
 
 
 FIXAT:
+
+* Load project
+1) skapa yta för projectManager - OK!
+2) RPC-endpoint för att ladda project - OK!
+3) Läs in fil - metod i file-driver? readAsset, readUserAsset, readUser - OK!
+4) Iterera över rack och units och objekt.
+5) Sätt alla parametrar också. (!)
 
 * Flera egenskaper *rack* sätts från endpoint. Risk för race.
 

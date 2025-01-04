@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace Storage {
-
+/*
 struct Param {
     float val;
 };
@@ -147,7 +147,8 @@ struct Project {
         return project;
     }
 };
-
+*/
+/*
 class DataStore {
     // should allow type-save getting and setting of all params and settings..
   public:
@@ -176,11 +177,8 @@ class DataStore {
         // all data should already be here - nothing to aquire from racks/units. Just save it..
     }
 
-    /* std::vector<Storage::Rack> getRacks() {
-        // dunno really what to return here - we want to iterate over racks but how to interact with each?
-    } */
 };
-
+*/
 } // namespace Storage
 
 /*

@@ -106,13 +106,15 @@ struct Project {
     static Project from_json(const nlohmann::json &json) {
         Project project;
         project.settings = json["settings"].get<std::map<std::string, std::string>>();
+
         for (size_t i = 0; i < 4 && i < json["racks"].size(); ++i) {
             project.racks[i] = Rack::from_json(json["racks"][i]);
         }
+
         project.masterReverb = Unit::from_json(json["masterReverb"]);
         project.masterDelay = Unit::from_json(json["masterDelay"]);
         return project;
     }
 };
 
-}
+} // namespace Storage

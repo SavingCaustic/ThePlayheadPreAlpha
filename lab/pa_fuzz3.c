@@ -14,7 +14,7 @@
 #define SAMPLE_RATE (48000)
 #define PA_SAMPLE_TYPE paFloat32
 #define FRAMES_PER_BUFFER (64)
-#define DEVICE_ID (5)
+#define DEVICE_ID (6)
 #define A_SPEED 1.1f
 #define D_SPEED .9999f
 #define MIX 1

@@ -3,8 +3,9 @@
 #include <portaudio.h>
 
 #define SAMPLE_RATE 48000
-#define FRAMES_PER_BUFFER 128
-#define AMPLITUDE 0.2f // Weak sine wave amplitude
+#define FRAMES_PER_BUFFER 256 // CPU usage sky-rockets on 128 or 64 and audio-in. !?
+#define AMPLITUDE 0.5f        // Weak sine wave amplitude
+// we could add parameter to select device here - currently only default..
 
 // Global variables
 bool audioInActive = false;
@@ -84,14 +85,16 @@ int main() {
 
     // Start the audio stream
     startAudioStream();
-    std::cout << "Press 't' to toggle audio input. Press 'q' to quit." << std::endl;
 
     char input;
+    std::cout << "Warning! Be kind to your ears - check sound-level before proceeeding. Press enter to continue" << std::endl;
+    std::cin >> input;
     while (true) {
+        std::cout << "Press 't' to toggle audio input. Press 'q' to quit." << std::endl;
         std::cin >> input;
         if (input == 't') {
             audioInActive = !audioInActive;
-            std::cout << (audioInActive ? "Audio input activated!" : "Audio input deactivated!") << std::endl;
+            std::cout << (audioInActive ? "Audio input activated - snap your fingers!" : "Audio input deactivated!") << std::endl;
         } else if (input == 'q') {
             break;
         }

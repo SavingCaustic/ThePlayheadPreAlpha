@@ -33,6 +33,7 @@ class Factory {
     }
 
     static void createLUT(std::string &key, std::string value, int rackID, Constructor::Queue &constructorQueue) {
+        // a 64k LUT to avoid alias on lower frequencies without interpolation.
         std::cout << "creating lut1 now.." << std::endl;
         audio::osc::LUT *lutTmp = new audio::osc::LUT();
         buildLUT(lutTmp, value);

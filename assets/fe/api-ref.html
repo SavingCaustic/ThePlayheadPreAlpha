@@ -1,7 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>The Playhead audio server</title>
     <style>
+
+        #logo {
+            position: absolute;
+            right:40px;
+            top:20px;
+        }
+
         h2 {
             margin:0px;
             font-size:1rem;
@@ -56,7 +64,7 @@
     </script>
 </head>
 <body>
-    <p><img src="tph.png"></p>
+    <div id="logo"><img src="tph.png"></div>
 
     <h2>Server</h2>
     <a href="/rpc?method=server.quit" target="if">Shut down server</a>
@@ -72,7 +80,7 @@
     <a href="/rpc?method=rack.mount&key=effect1&value=Delay&rack_id=0" target="if">Mount Delay to effect1</a>
     <a href="/rpc?method=rack.mount&key=effect2&value=Chorus&rack_id=0" target="if">Mount Chorus to effect2</a>
     <a href="/rpc?method=rack.mount&key=eventor1&value=Third&rack_id=0" target="if">Mount Third to eventor1</a>
-    <a href="/rpc?method=rack.mount&key=eventor1&value=Third&rack_id=0" target="if">Mount Fifth to eventor2</a>
+    <a href="/rpc?method=rack.mount&key=eventor2&value=Fifth&rack_id=0" target="if">Mount Fifth to eventor2</a>
     <a href="/rpc?method=rack.mount&key=effect1&value=&rack_id=0" target="if">un-mount effect1</a>
     <a href="/rpc?method=rack.mount&key=eventor1&value=&rack_id=0" target="if">un-mount eventor1</a>
     

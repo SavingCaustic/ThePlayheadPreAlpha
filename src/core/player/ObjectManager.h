@@ -44,27 +44,27 @@ class ObjectManager {
                     // maybe it's here we deal with the units?
                     switch (methodFNV) {
                     case Utils::Hash::fnv1a_hash("eventor1"):
-                        destroyEventor(0, 1);
+                        destroyEventor(rackID, 1);
                         std::cout << "mounting eventor1 now.. " << std::endl;
                         racks[rackID].setEventor(reinterpret_cast<EventorBase *>(record.ptr), 1);
                         break;
                     case Utils::Hash::fnv1a_hash("eventor2"):
-                        destroyEventor(0, 2);
+                        destroyEventor(rackID, 2);
                         std::cout << "mounting eventor2 now.. " << std::endl;
                         racks[rackID].setEventor(reinterpret_cast<EventorBase *>(record.ptr), 2);
                         break;
                     case Utils::Hash::fnv1a_hash("synth"):
                         std::cout << "mounting synth now.. " << std::endl;
-                        destroySynth(0);
+                        destroySynth(rackID);
                         racks[rackID].setSynth(reinterpret_cast<SynthBase *>(record.ptr));
                         break;
                     case Utils::Hash::fnv1a_hash("effect1"):
-                        destroyEffect(0, 1);
+                        destroyEffect(rackID, 1);
                         std::cout << "mounting effect1 now.. " << std::endl;
                         racks[rackID].setEffect(reinterpret_cast<EffectBase *>(record.ptr), 1);
                         break;
                     case Utils::Hash::fnv1a_hash("effect2"):
-                        destroyEffect(0, 2);
+                        destroyEffect(rackID, 2);
                         std::cout << "mounting effect2 now.. " << std::endl;
                         racks[rackID].setEffect(reinterpret_cast<EffectBase *>(record.ptr), 2);
                         break;
@@ -148,16 +148,6 @@ class ObjectManager {
         }
         return true;
     }
-
-    /*void processRack() {
-        // say i set up a new synth. I would like to call its model, right?
-    }
-
-    void processUnit() {
-        // i'm getting the pointer to the sub-resource, will pass it and may run the model..
-    }*/
-
-    // all for now..
 
     Rack (&racks)[TPH_RACK_COUNT]; // Reference to the racks array
     Constructor::Queue *constructorQueue = nullptr;
