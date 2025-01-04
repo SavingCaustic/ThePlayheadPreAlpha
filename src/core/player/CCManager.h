@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <string>
+#include <cstdint>
 
 class CCManager {
   public:

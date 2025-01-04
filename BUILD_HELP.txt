@@ -1,0 +1,48 @@
+#make a dir for your c++ stuff
+mkdir cplus
+cd cplus
+sudo apt install git
+
+#now get the source
+git clone https://github.com/SavingCaustic/ThePlayheadPreAlpha.git
+cd ThePlayheadPreAlpha
+#set up build directories
+mkdir build_release
+mkdir build_debug
+cd build_release
+
+#test (wont work)
+cmake ..
+sudo apt install cmake
+#install other stuff needed
+sudo apt install libasound2-dev portaudio19-dev librtmidi-dev nlohman-json3-dev
+
+#install stuff needed for crow
+sudo apt install libasio-dev
+
+#build crow-library 
+# (according to https://crowcpp.org/master/getting_started/setup/linux/)
+
+cd ~/cplus
+mkdir crow
+cd crow
+git clone https://github.com/CrowCpp/Crow.git
+cd Crow
+mkdir build
+cd build
+cmake .. -DCROW_BUILD_EXAMPLES=OFF -DCROW_BUILD_TESTS=OFF
+sudo make install
+
+#all now set for build!
+cd ~/cplus/ThePlayheadPreAlpha
+cd build_release
+make -j
+# may take a while
+ls -h
+# you should not see a tiny exec called MyDAW2
+cd ..
+./build_release/MyDAW2
+# if you get "illegal instruction",
+# disable SIMD in CMakeLists.txt and other cpu optimizations..
+
+

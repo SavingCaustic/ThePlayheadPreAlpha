@@ -3,6 +3,7 @@
 #include "./CCManager.h"
 #include "./ObjectManager.h"
 #include "ErrorWriter.h"
+#include <cstdint>
 #include "Synth/SynthBase.h"
 #include "chrono"
 #include "core/destructor/Queue.h"

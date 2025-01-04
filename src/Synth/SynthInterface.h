@@ -6,6 +6,7 @@
 #include "core/parameters/params.h"
 #include "core/player/ErrorWriter.h" // Include ErrorWriter (or forward declare it) to use its methods
 #include <iostream>
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>

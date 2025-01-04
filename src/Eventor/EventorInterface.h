@@ -7,6 +7,7 @@
 #include "core/player/ErrorWriter.h" // Include ErrorWriter (or forward declare it) to use its methods
 #include <iostream>
 #include <string>
+#include <cstdint>
 #include <unordered_map>
 #include <vector>
 class EventorInterface : public MidiRecieverInterface {
