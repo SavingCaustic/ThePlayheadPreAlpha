@@ -6,7 +6,7 @@
 
 #define FRAMES_PER_BUFFER 64
 #define SAMPLE_RATE 48000
-#define DEVICE_ID 5
+#define DEVICE_ID 6
 
 // use /lab/portlist to find devices for machine
 
@@ -16,12 +16,30 @@ int noiseSeed = 235325325;
 int noiseA = 1664525;
 int noiseB = 1013904223;
 int noiseC = 1 << 24; // 2^24, replaced with constexpr.
+float noiseEMA = 0.0f;
+float gain = 0.0f;
+bool gainup = true;
 
 float noise() {
     // noiseSeed = (noiseA * noiseSeed + noiseB) % noiseC;
     noiseSeed = (noiseA * noiseSeed + noiseB) & (noiseC - 1);
     constexpr float invNoiseC = (1.0f / (1 << 24));
-    return noiseSeed * invNoiseC * 2.0f - 1.0f;
+    float sample = noiseSeed * invNoiseC * 2.0f - 1.0f;
+    //testing use of EMA as EQ..
+    noiseEMA = noiseEMA * 0.95f + sample * 0.05f;
+    if (gainup) {
+      gain += 0.00001f;
+      if (gain > 0.999) {
+        gainup = false;
+      }
+    } else {
+      gain -= 0.0001f;
+      if (gain < -0.999) {
+        gainup = true;
+      }
+    }
+    
+    return sample + noiseEMA * gain;
 }
 
 // Callback function to generate white noise
@@ -36,8 +54,8 @@ static int noiseCallback(const void *inputBuffer,
 
     for (unsigned long i = 0; i < framesPerBuffer; i++) {
         // Generate random noise for stereo output
-        *out++ = volume * noise() * 0.25;
-        *out++ = volume * noise() * 0.25;
+        *out++ = volume * noise() * 0.5f;
+        *out++ = volume * noise() * 0.5f;
     }
 
     return paContinue; // Continue streaming

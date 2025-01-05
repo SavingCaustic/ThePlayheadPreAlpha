@@ -1,0 +1,3 @@
+#!/bin/bash
+g++ -o cdep main.cpp parent.cpp child.cpp
+

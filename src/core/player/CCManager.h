@@ -1,9 +1,9 @@
 #pragma once
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <string>
-#include <cstdint>
 
 class CCManager {
   public:

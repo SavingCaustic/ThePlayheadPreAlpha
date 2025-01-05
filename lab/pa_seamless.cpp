@@ -3,8 +3,9 @@
 #include <portaudio.h>
 
 #define SAMPLE_RATE 48000
-#define FRAMES_PER_BUFFER 256 // CPU usage sky-rockets on 128 or 64 and audio-in. !?
+#define FRAMES_PER_BUFFER 64 // CPU usage sky-rockets on 128 or 64 and audio-in. !?
 #define AMPLITUDE 0.5f        // Weak sine wave amplitude
+#define DEVICE_ID 5           // Weak sine wave amplitude
 // we could add parameter to select device here - currently only default..
 
 // Global variables
@@ -51,14 +52,14 @@ void startAudioStream() {
     PaStreamParameters outputParameters, inputParameters;
 
     // Output (speaker) parameters
-    outputParameters.device = Pa_GetDefaultOutputDevice();
+    outputParameters.device = DEVICE_ID; //Pa_GetDefaultOutputDevice();
     outputParameters.channelCount = 2; // Stereo output
     outputParameters.sampleFormat = paFloat32;
     outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
     outputParameters.hostApiSpecificStreamInfo = NULL;
 
     // Input (microphone) parameters
-    inputParameters.device = Pa_GetDefaultInputDevice();
+    inputParameters.device = DEVICE_ID; //Pa_GetDefaultInputDevice();
     inputParameters.channelCount = 1; // Mono input
     inputParameters.sampleFormat = paFloat32;
     inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
@@ -88,7 +89,7 @@ int main() {
 
     char input;
     std::cout << "Warning! Be kind to your ears - check sound-level before proceeeding. Press enter to continue" << std::endl;
-    std::cin >> input;
+    //std::cin >> input;
     while (true) {
         std::cout << "Press 't' to toggle audio input. Press 'q' to quit." << std::endl;
         std::cin >> input;
