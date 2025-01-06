@@ -2,6 +2,8 @@
 #include <iostream>
 #include <string>
 
+// I THINK THIS CLASS SHOULD GO. Artifact from problems with CD between PE and rack.
+
 class PlayerEngine; // Forward declaration
 
 class ErrorWriter {

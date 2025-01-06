@@ -1,7 +1,16 @@
 #make a dir for your c++ stuff
 mkdir cplus
 cd cplus
+
+#update avail packages..
+sudo apt updadate
+sudo apt upgrade
+
+#make sure you've got basic stuff for building c++ programs with:
+sudo apt install build-essential
+sudo apt install pkg-config 
 sudo apt install git
+
 
 #now get the source
 git clone https://github.com/SavingCaustic/ThePlayheadPreAlpha.git
@@ -15,7 +24,7 @@ cd build_release
 cmake ..
 sudo apt install cmake
 #install other stuff needed
-sudo apt install libasound2-dev portaudio19-dev librtmidi-dev nlohman-json3-dev
+sudo apt install libasound2-dev portaudio19-dev librtmidi-dev nlohmann-json3-dev
 
 #install stuff needed for crow
 sudo apt install libasio-dev
@@ -36,6 +45,7 @@ sudo make install
 #all now set for build!
 cd ~/cplus/ThePlayheadPreAlpha
 cd build_release
+cmake ..
 make -j
 # may take a while
 ls -h

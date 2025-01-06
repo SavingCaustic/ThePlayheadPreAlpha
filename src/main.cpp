@@ -16,7 +16,7 @@
 #include "core/messages/MessageOutReader.h"
 #include "core/parameters/SettingsManager.h"
 #include "core/player/PlayerEngine.h"
-#include "core/player/Rack.h"
+#include "core/player/Rack/Rack.h"
 #include "core/runner/StudioRunner.h"
 // #include "core/storage/Project.h"
 #include "crow.h"

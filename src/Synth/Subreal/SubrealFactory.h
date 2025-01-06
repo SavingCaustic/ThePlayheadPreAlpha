@@ -2,7 +2,7 @@
 #include "Synth/Subreal/SubrealModel.h"
 #include "core/audio/envelope/ADSFR.h"
 #include "core/audio/osc/LUT.h"
-#include "core/constructor/Queue.h"
+#include "core/factory/constructor/Queue.h"
 #include <array>
 #include <cmath>
 #include <core/utils/FNV.h>

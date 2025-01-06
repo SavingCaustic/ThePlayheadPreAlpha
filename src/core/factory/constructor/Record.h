@@ -26,24 +26,5 @@ struct Record {
     Record() : ptr(nullptr), size(0), isStereo(false), rackID(-1) {
         std::fill(std::begin(type), std::end(type), '\0');
     }
-
-    /*
-        // Copy constructor
-        Record(const Record &other)
-            : ptr(other.ptr), size(other.size), isStereo(other.isStereo) {
-            std::memcpy(type, other.type, sizeof(type));
-        }
-
-        // Assignment operator
-        Record &operator=(const Record &other) {
-            if (this != &other) {
-                ptr = other.ptr;
-                size = other.size;
-                isStereo = other.isStereo;
-                std::memcpy(type, other.type, sizeof(type));
-            }
-            return *this;
-        }
-        */
 };
 } // namespace Constructor

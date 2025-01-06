@@ -4,7 +4,7 @@
 #include "core/utils/FNV.h"
 
 PlayerEngine::PlayerEngine()
-    : noiseVolume(0.2f), isWritingMessage(false), hRotator(), errorWriter_(*this), objectManager(racks) {
+    : noiseVolume(0.2f), isWritingMessage(false), hRotator(), errorWriter_(*this), objectManager(racks), ccManager(*this) {
     this->rackReceivingMidi = 0; // meh
     this->loadAvg = 0.0f;
 }

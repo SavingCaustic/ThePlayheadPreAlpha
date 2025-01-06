@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/constructor/Record.h"
+#include "./Record.h"
 #include <array>
 #include <atomic>
 #include <condition_variable>

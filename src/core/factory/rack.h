@@ -2,7 +2,7 @@
 #include "Effect/EffectFactory.h"
 #include "Eventor/EventorFactory.h"
 #include "Synth/SynthFactory.h"
-#include "core/constructor/Queue.h"
+#include "constructor/Queue.h"
 #include <core/utils/FNV.h>
 #include <iostream>
 #include <string>

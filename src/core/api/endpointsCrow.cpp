@@ -1,7 +1,6 @@
 #include "endpointsCrow.h"
 #include "constants.h"
 #include "core/api/rpcParser.h"
-#include "core/constructor/Queue.h"
 #include "core/errors/ErrorBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutReader.h"

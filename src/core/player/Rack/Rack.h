@@ -1,5 +1,5 @@
 #pragma once
-#include "./RackEmittor.h"
+#include "./RackEmitter.h"
 #include "Effect/Chorus/ChorusModel.h"
 #include "Effect/Chorus2/Chorus2Model.h"
 #include "Effect/Delay/DelayModel.h"
@@ -28,10 +28,10 @@ class Rack {
 
     alignas(32) std::array<float, TPH_RACK_BUFFER_SIZE> audioBuffer;
     bool audioIsStereo;
-    RackEmittor emittor;
+    RackEmitter emitter;
 
     Rack() : audioIsStereo(false),
-             emittor(audioBuffer.data(), TPH_RACK_BUFFER_SIZE) {}
+             emitter(audioBuffer.data(), TPH_RACK_BUFFER_SIZE) {}
 
     ~Rack() {
         delete synth;
@@ -54,7 +54,7 @@ class Rack {
         Eventor2,
         Effect1,
         Effect2,
-        Emittor,
+        Emitter,
         _unknown // Handle cases where the unit type is invalid
     };
 
@@ -109,7 +109,7 @@ class Rack {
                 isStereo = effect2->renderNextBlock(isStereo);
             }
         }
-        isStereo = emittor.process(isStereo);
+        isStereo = emitter.process(isStereo);
         //  uhm - maybe always stereo when rack is done..
         this->audioIsStereo = isStereo;
     }
@@ -154,8 +154,8 @@ class Rack {
     static UnitType stringToUnitType(const char *unit) {
         if (std::strcmp(unit, "synth") == 0) {
             return UnitType::Synth;
-        } else if (std::strcmp(unit, "emittor") == 0) {
-            return UnitType::Emittor;
+        } else if (std::strcmp(unit, "emitter") == 0) {
+            return UnitType::Emitter;
         } else if (std::strcmp(unit, "eventor1") == 0) {
             return UnitType::Eventor1;
         } else if (std::strcmp(unit, "eventor2") == 0) {
@@ -175,7 +175,7 @@ class Rack {
         case UnitType::Synth:
             synth->pushStrParam(name, fVal);
             break;
-        case UnitType::Emittor:
+        case UnitType::Emitter:
             // Do something else
             break;
         case UnitType::Eventor1:

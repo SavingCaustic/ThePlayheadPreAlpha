@@ -1,15 +1,15 @@
 #pragma once
 
-#include "./CCManager.h"
-#include "./ObjectManager.h"
+#include "CCManager/CCManager.h"
 #include "ErrorWriter.h"
+#include "ObjectManager/ObjectManager.h"
 #include "Synth/SynthBase.h"
 #include "chrono"
 #include "core/destructor/Queue.h"
 #include "core/errors/AudioErrorBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutBuffer.h"
-#include "core/player/Rack.h"
+#include "core/player/Rack/Rack.h"
 #include "core/timing/Rotator.h"
 #include "drivers/MidiManager.h"
 #include <array>

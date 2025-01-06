@@ -1,8 +1,9 @@
 #pragma once
+
 // buffer-len is given in stereo.
-class RackEmittor {
+class RackEmitter {
   public:
-    RackEmittor(float *audioBuffer, int bufferLen)
+    RackEmitter(float *audioBuffer, int bufferLen)
         : bufferPtr(audioBuffer), bufferLen(bufferLen) {}
 
     bool process(bool isStereo) {
