@@ -5,6 +5,11 @@
 
 namespace audio::osc {
 
+constexpr float LUT_SIZE_FLOAT = static_cast<float>(LUT_SIZE);     // Float variant
+constexpr float TPH_DSP_SR_FLOAT = static_cast<float>(TPH_DSP_SR); // Float variant
+
+constexpr float LUT_RATIO = LUT_SIZE_FLOAT / TPH_DSP_SR_FLOAT; // Precomputed ratio
+
 class LUT {
   public:
     LUT(); // Constructor
@@ -47,12 +52,13 @@ class LUTosc {
     }
 
     void reset() {
+        // should never be called..
         lutIdx = 0.0f;
     }
 
     void setAngle(float hz) {
         // Set oscillator angle (frequency related logic)
-        angle = hz;
+        angle = hz * LUT_RATIO;
     }
 
   private:

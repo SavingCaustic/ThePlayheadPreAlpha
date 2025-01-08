@@ -65,4 +65,12 @@ cd ..
 
 # have fun!
 
+## STEP DEBUGGING
+# go get step debugging working in vs-code you need to change build type and prepare directory with:
+cd build_debug
+cmake .. --DCMAKE_BUILD_TYPE=Debug
+make -j
+
+
+
 

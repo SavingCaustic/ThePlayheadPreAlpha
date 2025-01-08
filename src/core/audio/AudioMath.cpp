@@ -3,7 +3,7 @@
 
 // Initialize static members
 std::array<float, AudioMath::sineLutSize> AudioMath::sineLut{};
-float AudioMath::masterTune = 440.0f; // 432.0f;
+float AudioMath::masterTune = 440.0f; // 500.0f; // 440.0f; // 432.0f;
 int AudioMath::noiseSeed = 235325325;
 int AudioMath::noiseA = 1664525;
 int AudioMath::noiseB = 1013904223;

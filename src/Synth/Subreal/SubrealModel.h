@@ -352,16 +352,18 @@ class Voice { //: public VoiceInterface {
                     chunkSample[j] = y1 * (1 - oscMixEaseOut) + chunkSample[j] * oscMixEaseOut;
                 }
                 // VCF (100Hz is appropirate for lpf - maybe not for others..)
+                vcfEaserVal = vcfEaser.getValue();
                 if (modelRef.vcfInverse) {
-                    filter.setCutoff(100 + modelRef.filterCutoff * (1.0f - vcfARslope.currVal));
+                    filter.setCutoff(100 + modelRef.filterCutoff * (1.0f - vcfEaserVal));
                 } else {
-                    filter.setCutoff(100 + modelRef.filterCutoff * vcfARslope.currVal);
+                    filter.setCutoff(100 + modelRef.filterCutoff * vcfEaserVal);
                 }
                 filter.setResonance(modelRef.filterResonance);
                 filter.setPoles(modelRef.filterPoles);
                 filter.setFilterType(modelRef.filterType);
-                filter.initFilter();
-                filter.processBlock(chunkSample, chunkSize);
+                filter.initFilter(); //??
+                // disabled while debugging:
+                filter.processBlock(chunkSample, chunkSize); //, vcfEaserVal);
                 // VCA
                 for (std::size_t j = 0; j < chunkSize; j++) {
                     vcaEaserVal = vcaEaser.getValue();
@@ -398,6 +400,7 @@ class Voice { //: public VoiceInterface {
     float noteVelocity;
     float velocityLast = 0;
     float vcaEaserVal;
+    float vcfEaserVal;
     float tracking;
 
   private:

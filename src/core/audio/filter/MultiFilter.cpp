@@ -34,7 +34,7 @@ void MultiFilter::setPoles(FilterPoles inPoles) {
 }
 
 void MultiFilter::initFilter() {
-    // all dependent on cutoff, half of resonance..
+    // all dependent on cutoff, half of resonance.. ..maybe this doesn't work with chunks..
     const double w = (filterCutoff / TPH_DSP_SR);                    // cutoff freq [ 0 <= w <= 0.5 ]
     const double r = std::max(0.001, 2.0 * (1.0 - filterResonance)); // r is 1/Q (sqrt(2) for a butterworth response)
 

@@ -22,8 +22,8 @@ enum UP {
     mix,
     feedback,
     highcut,
-    lowcut,
     noise,
+    lowcut,
     up_count
 };
 

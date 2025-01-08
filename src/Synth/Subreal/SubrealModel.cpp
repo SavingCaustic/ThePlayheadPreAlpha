@@ -112,7 +112,7 @@ void Model::setupParams(int upCount) {
             {UP::osc1_wf, {"osc1_wf", 0.0f, OSC1::WF::_count, false, 0, OSC1::WF::_count - 1, [this](float v) {
                                std::cout << "setting osc1 wf to" << v << std::endl;
                            }}},
-            {UP::osc1_fmsens, {"osc1_fmsens", 0.2f, 0, false, 0, 1, [this](float v) {
+            {UP::osc1_fmsens, {"osc1_fmsens", 0.0f, 0, false, 0, 1, [this](float v) {
                                    fmSens = v;
                                }}},
             /*{UP::osc1_amsens, {"osc1_amsens", 0.0f, 0, false, 0, 1, [this](float v) {
@@ -141,7 +141,7 @@ void Model::setupParams(int upCount) {
             {UP::osc2_freqtrack, {"osc2_freqtrack", 1.0f, 0, false, 0, 1, [this](float v) {
                                       osc2freqTrack = v;
                                   }}},
-            {UP::vcf_cutoff, {"vcf_cutoff", 0.5f, 0, true, 100, 8, [this](float v) {
+            {UP::vcf_cutoff, {"vcf_cutoff", 0.8f, 0, true, 100, 8, [this](float v) {
                                   filterCutoff = v;
                                   // filter.setCutoff(v);
                                   // filter.initFilter();
@@ -163,10 +163,10 @@ void Model::setupParams(int upCount) {
                                  vcfInverse = (i > 1);
                                  // filter.initFilter();
                              }}},
-            {UP::vcf_attack, {"vcf_attack", 0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
-                                  vcfAR.setTime(audio::envelope::ADSFRState::ATTACK, v);
+            {UP::vcf_attack, {"vcf_attack", 0.0f, 0, true, 2, 11, [this](float v) { // 8192 max
+                                  vcfAR.setTime(audio::envelope::ADSFRState::ATTACK, v - 1.5f);
                               }}},
-            {UP::vcf_decay, {"vcf_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
+            {UP::vcf_decay, {"vcf_decay", 0.8f, 0, true, 5, 7, [this](float v) { // 8192 max
                                  vcfAR.setTime(audio::envelope::ADSFRState::DECAY, v);
                              }}},
             {UP::vcf_sustain, {"vcf_sustain", 0.8f, 0, false, 0, 1, [this](float v) {
@@ -178,7 +178,8 @@ void Model::setupParams(int upCount) {
             {UP::vcf_release, {"vcf_release", 0.2f, 0, true, 10, 8, [this](float v) {
                                    vcfAR.setTime(audio::envelope::ADSFRState::RELEASE, v);
                                }}},
-            {UP::vca_attack, {"vca_attack", 0.1f, 0, true, 2, 11, [this](float v) { // 8192 max
+            {UP::vca_attack, {"vca_attack", 0.0f, 0, true, 2, 11, [this](float v) { // 8192 max
+                                  std::cout << "setting vca_attack to " << v << std::endl;
                                   vcaAR.setTime(audio::envelope::ADSFRState::ATTACK, v - 1.5f);
                               }}},
             {UP::vca_decay, {"vca_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
@@ -193,7 +194,7 @@ void Model::setupParams(int upCount) {
                                 vcaAR.setLeak(audio::envelope::ADSFRState::FADE, v);
                                 std::cout << "setting fade to " << v << std::endl;
                             }}},
-            {UP::vca_release, {"vca_release", 0.2f, 0, true, 10, 8, [this](float v) {
+            {UP::vca_release, {"vca_release", 0.7f, 0, true, 10, 8, [this](float v) { //!!
                                    vcaAR.setTime(audio::envelope::ADSFRState::RELEASE, v);
                                    std::cout << "setting release to " << v << " ms" << std::endl;
                                }}},
