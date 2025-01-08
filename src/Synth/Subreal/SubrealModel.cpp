@@ -141,7 +141,7 @@ void Model::setupParams(int upCount) {
             {UP::osc2_freqtrack, {"osc2_freqtrack", 1.0f, 0, false, 0, 1, [this](float v) {
                                       osc2freqTrack = v;
                                   }}},
-            {UP::vcf_cutoff, {"vcf_cutoff", 0.8f, 0, true, 100, 8, [this](float v) {
+            {UP::vcf_cutoff, {"vcf_cutoff", 1.0f, 0, true, 100, 8, [this](float v) {
                                   filterCutoff = v;
                                   // filter.setCutoff(v);
                                   // filter.initFilter();
