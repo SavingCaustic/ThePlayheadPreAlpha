@@ -5,16 +5,16 @@ namespace audio::envelope {
 
 void ADSFR::setTime(ADSFRState state, float time) {
     switch (state) {
-    case ATTACK:
+    case ADSFRState::ATTACK:
         aFactor = calcDelta(time);
         break;
-    case DECAY:
+    case ADSFRState::DECAY:
         dFactor = calcDelta(time);
         break;
-    case FADE:
+    case ADSFRState::FADE:
         fFactor = calcDelta(time);
         break;
-    case RELEASE:
+    case ADSFRState::RELEASE:
         rFactor = calcDelta(time);
         break;
     default:
@@ -27,30 +27,30 @@ void ADSFR::setLevel(ADSFRState state, float level) {
 }
 
 void ADSFR::setLeak(ADSFRState state, float level) {
-    fFactor = level / 1000;
+    fFactor = level * 0.001f;
 }
 
 void ADSFR::triggerSlope(ADSFRSlope &slope, ADSFRCmd cmd) {
     switch (cmd) {
-    case NOTE_ON:
-        setSlopeState(slope, ATTACK);
+    case ADSFRCmd::NOTE_ON:
+        setSlopeState(slope, ADSFRState::ATTACK);
         break;
-    case NOTE_OFF:
-        setSlopeState(slope, RELEASE);
+    case ADSFRCmd::NOTE_OFF:
+        setSlopeState(slope, ADSFRState::RELEASE);
         break;
-    case NOTE_REON:
-        setSlopeState(slope, FADE);
+    case ADSFRCmd::NOTE_REON:
+        setSlopeState(slope, ADSFRState::FADE);
         break;
     }
 }
 
 void ADSFR::updateDelta(ADSFRSlope &slope) {
-    if (slope.state == ATTACK) {
+    if (slope.state == ADSFRState::ATTACK) {
         if (slope.currVal > slope.goalVal) {
             stateChange(slope);
         }
     } else {
-        if (slope.state == FADE) {
+        if (slope.state == ADSFRState::FADE) {
             // Not working and incorrect
             // slope.goalVal = sLevel;
             // slope.currVal = sLevel;
@@ -68,39 +68,39 @@ void ADSFR::commit(ADSFRSlope &slope) {
 
 float ADSFR::calcDelta(float time) const {
     float totalSamples = time * TPH_DSP_SR * 0.001f;
-    return TPH_RACK_RENDER_SIZE / (totalSamples + 40);
+    return TPH_RACK_RENDER_SIZE / (totalSamples + 40); //+40??
 }
 
 void ADSFR::setSlopeState(ADSFRSlope &slope, ADSFRState state) {
     switch (state) {
-    case ATTACK:
-        slope.state = ATTACK;
+    case ADSFRState::ATTACK:
+        slope.state = ADSFRState::ATTACK;
         slope.goalVal = 1.0f;
         slope.targetVal = 1.3f;
         slope.factor = aFactor;
         break;
-    case DECAY:
-        slope.state = DECAY;
+    case ADSFRState::DECAY:
+        slope.state = ADSFRState::DECAY;
         slope.goalVal = sLevel;
         slope.targetVal = sLevel * 0.62f;
         slope.factor = dFactor;
         break;
-    case SUSTAIN:
+    case ADSFRState::SUSTAIN:
         break;
-    case FADE:
-        slope.state = FADE;
+    case ADSFRState::FADE:
+        slope.state = ADSFRState::FADE;
         slope.goalVal = 0;
         slope.targetVal = slope.currVal * -0.1f;
         slope.factor = fFactor;
         break;
-    case RELEASE:
-        slope.state = RELEASE;
+    case ADSFRState::RELEASE:
+        slope.state = ADSFRState::RELEASE;
         slope.goalVal = 0;
         slope.targetVal = slope.currVal * -0.01f;
         slope.factor = rFactor;
         break;
-    case OFF:
-        slope.state = OFF;
+    case ADSFRState::OFF:
+        slope.state = ADSFRState::OFF;
         slope.currVal = 0;
         slope.goalVal = 0;
         slope.targetVal = 0;
@@ -111,17 +111,17 @@ void ADSFR::setSlopeState(ADSFRSlope &slope, ADSFRState state) {
 
 void ADSFR::stateChange(ADSFRSlope &slope) {
     switch (slope.state) {
-    case ATTACK:
-        setSlopeState(slope, DECAY);
+    case ADSFRState::ATTACK:
+        setSlopeState(slope, ADSFRState::DECAY);
         break;
-    case DECAY:
-        setSlopeState(slope, FADE);
+    case ADSFRState::DECAY:
+        setSlopeState(slope, ADSFRState::FADE);
         break;
-    case FADE:
-        setSlopeState(slope, OFF);
+    case ADSFRState::FADE:
+        setSlopeState(slope, ADSFRState::OFF);
         break;
-    case RELEASE:
-        setSlopeState(slope, OFF);
+    case ADSFRState::RELEASE:
+        setSlopeState(slope, ADSFRState::OFF);
         break;
     default:
         break;

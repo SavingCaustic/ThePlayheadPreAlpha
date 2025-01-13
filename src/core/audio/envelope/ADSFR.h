@@ -5,19 +5,19 @@
 
 namespace audio::envelope {
 
-enum ADSFRState { OFF,
-                  ATTACK,
-                  DECAY,
-                  SUSTAIN,
-                  FADE,
-                  RELEASE };
+enum class ADSFRState { OFF,
+                        ATTACK,
+                        DECAY,
+                        SUSTAIN,
+                        FADE,
+                        RELEASE };
 
-enum ADSFRCmd { NOTE_ON,
-                NOTE_OFF,
-                NOTE_REON };
+enum class ADSFRCmd { NOTE_ON,
+                      NOTE_OFF,
+                      NOTE_REON };
 
 struct ADSFRSlope {
-    ADSFRState state = OFF;
+    ADSFRState state = ADSFRState::OFF;
     float currVal = 0;
     float targetVal = 0; // used for saturated ramping
     float goalVal = 0;   // real goal

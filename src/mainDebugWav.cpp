@@ -4,25 +4,34 @@
 #include <iostream>
 #include <signal.h>
 
-std::atomic<bool> shutdown_flag(false);
-
-// Custom signal handler. Working well.
-void signal_handler(int signal) {
-    if (signal == SIGINT) {
-        std::cout << "Caught SIGINT (Ctrl+C), setting shutdown flag..." << std::endl;
-        shutdown_flag = true;
-    }
-}
-
 Utils::WavReader reader;
 Utils::WavWriter writer;
 
-int main() {
-    reader.open("snare-l.wav");
+int debugWav() {
+    reader.open("assets/Synth/Beatnik/lm-2/snare-l.wav");
     writer.open("snare-copy.wav", 48000, 1);
+
+    // Reserve memory for data based on the WAV file's header information
+    Utils::WavHeader header;
+    if (!reader.getFileInfo(header)) {
+        std::cerr << "Failed to read WAV file info" << std::endl;
+        return -1;
+    }
+
+    // Calculate total samples
+    int totalSamples = header.data_length / header.block_align * header.num_channels;
+
+    // Preallocate memory for efficiency
     std::vector<float> data;
-    reader.returnWavAsFloat(data);
+    data.reserve(totalSamples);
+
+    // Read data and write to the new file
+    if (!reader.returnWavAsFloat(data)) {
+        std::cerr << "Failed to load WAV data" << std::endl;
+        return -1;
+    }
     writer.write(data.data(), data.size());
+
     reader.close();
     writer.close();
     std::cout << "ok" << std::endl;

@@ -98,12 +98,12 @@ class Voice {
         rightAtt = 1.0f;
         noteVelocity = velocity;
         // it's all in the voice. no AR in model.
-        vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_ON);
+        vcaAR.triggerSlope(vcaARslope, audio::envelope::ADSFRCmd::NOTE_ON);
     }
 
     void noteOff() {
         // enter release state in all envelopes.
-        vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_OFF);
+        vcaAR.triggerSlope(vcaARslope, audio::envelope::ADSFRCmd::NOTE_OFF);
     }
 
     audio::envelope::ADSFRState getVCAstate() {
@@ -120,7 +120,7 @@ class Voice {
 
     bool renderNextVoiceBlock(std::size_t bufferSize) {
         constexpr int chunkSize = 16;
-        if (vcaARslope.state != audio::envelope::OFF) {
+        if (vcaARslope.state != audio::envelope::ADSFRState::OFF) {
             for (std::size_t i = 0; i < bufferSize; i += chunkSize) {
                 for (std::size_t j = 0; j < chunkSize; j = j + 2) {
                     float y2 = osc2.getNextSample(0);

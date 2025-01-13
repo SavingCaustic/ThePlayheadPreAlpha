@@ -1,4 +1,7 @@
 #include "mainDebugSubreal.cpp"
+#include "mainDebugSubrealKV.cpp"
+#include "mainDebugWav.cpp"
+#include "mainDebugWavLoad.cpp"
 #include <atomic>
 #include <iostream>
 #include <signal.h>
@@ -16,8 +19,8 @@ void signal_handler(int signal) {
 int main() {
     std::cout << "Enter a number: ";
     int number;
-    // std::cin >> number;
-    number = 1;
+    std::cin >> number;
+    // number = 2;
 
     if (!std::cin) {
         std::cerr << "Invalid input!" << std::endl;
@@ -25,6 +28,15 @@ int main() {
         switch (number) {
         case 1:
             debugSubreal();
+            break;
+        case 2:
+            debugWav();
+            break;
+        case 3:
+            debugWavLoad();
+            break;
+        case 4:
+            debugSubrealKV();
             break;
         default:
             std::cout << "illegal option" << std::endl;

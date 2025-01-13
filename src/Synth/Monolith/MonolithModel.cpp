@@ -109,19 +109,19 @@ void Model::setupParams(int upCount) {
                              }}},
             {vca_attack, {"vca_attack", 0.0f, 0, true, 2, 11, [this](float v) { // 8192 max
                               logErr(100, "setting attack to " + std::to_string(v));
-                              vcaAR.setTime(audio::envelope::ATTACK, v);
+                              vcaAR.setTime(audio::envelope::ADSFRState::ATTACK, v);
                           }}},
             {vca_decay, {"vca_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
-                             vcaAR.setTime(audio::envelope::DECAY, v);
+                             vcaAR.setTime(audio::envelope::ADSFRState::DECAY, v);
                          }}},
             {vca_sustain, {"vca_sustain", 0.7f, 0, false, 0, 1, [this](float v) {
-                               vcaAR.setLevel(audio::envelope::SUSTAIN, v);
+                               vcaAR.setLevel(audio::envelope::ADSFRState::SUSTAIN, v);
                            }}},
             {vca_fade, {"vca_fade", 0.0f, 0, false, 0, 1, [this](float v) {
-                            vcaAR.setLeak(audio::envelope::FADE, v);
+                            vcaAR.setLeak(audio::envelope::ADSFRState::FADE, v);
                         }}},
             {vca_release, {"vca_release", 0.1f, 0, true, 10, 8, [this](float v) {
-                               vcaAR.setTime(audio::envelope::RELEASE, v);
+                               vcaAR.setTime(audio::envelope::ADSFRState::RELEASE, v);
                            }}}};
         // important stuff..
         SynthBase::indexParams(upCount);
@@ -147,7 +147,7 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
             fNotePlaying = static_cast<float>(param1); // skip portamento
             noteVelocity = fParam2 + 0.1f;
             // calculate inv. freq to avoid division later.
-            vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_ON);
+            vcaAR.triggerSlope(vcaARslope, audio::envelope::ADSFRCmd::NOTE_ON);
             break;
         case NEW_NOTE:
             notePlaying = param1;
@@ -160,7 +160,7 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
         keyAction = releaseKey(param1);
         switch (keyAction) {
         case TRIGGER:
-            vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_OFF);
+            vcaAR.triggerSlope(vcaARslope, audio::envelope::ADSFRCmd::NOTE_OFF);
             break;
         case NEW_NOTE:
             notePlaying = keysPressed[0];
@@ -290,7 +290,7 @@ bool Model::renderNextBlock() {
     osc2angle = AudioMath::fnoteToHz(fNotePlaying + bendSemis + osc2detune) * (1.0f / TPH_DSP_SR) * osc2rangeFactor;
 
     vcaAR.updateDelta(vcaARslope);
-    if (vcaARslope.state != audio::envelope::OFF) {
+    if (vcaARslope.state != audio::envelope::ADSFRState::OFF) {
         vcaEaser.setTarget(vcaARslope.currVal + vcaARslope.gap); // + lfo1.getLFOval());
         for (std::size_t i = 0; i < bufferSize; i++) {
             if (i % chunkSize == 0) {

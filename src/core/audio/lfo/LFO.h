@@ -63,7 +63,7 @@ class Standard {
             break;
         case LFOShape::RND:
             // on, <0.5 => load, on >0.5 => fire
-            if (phase < 0.5f && stateSNH == FIRED) {
+            if (phase < 0.5f && stateSNH != LOADED) {
                 stateSNH = LOADED;
             }
             if (phase >= 0.5f && stateSNH == LOADED) {

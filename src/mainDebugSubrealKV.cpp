@@ -18,7 +18,7 @@
 //  cmake .. -DCMAKE_BUILD_TYPE=Debug
 //  verify binary contains debug-info using "file MyExe"
 
-int debugSubreal() {
+int debugSubrealKV() {
     // instead of mocking the whole contructor-queue, we're working directly with a rack..
     std::unordered_map<std::string, std::string> deviceSettings;
     SettingsManager::loadJsonToSettings("device.json", true, deviceSettings);
@@ -46,30 +46,23 @@ int debugSubreal() {
     int blockSize = 128; // rack-render-size always 64 samples, so in stereo = 128
     Utils::WavWriter writer;
     writer.open("echo.wav", 48000, 2);
-    for (int t = 0; t < 20; t++) {
-        if (t % 10 == 0) {
-            float v = t;
-            v = t / 50.0f;
-            // mySynth.pushStrParam("osc1_wf", v);
-            // mySynth.handleMidiCC(74, 0.8);
-        }
-        uint8_t note = 50 + ((t * 5) % 26);
-        // note = 69;
-        myRack.parseMidi(0x90, note, note + 30);
-        // myRack.parseMidi(0x90, note + 3, 0x70);
-        // myRack.parseMidi(0x90, note + 7, 0x70);
-        for (int i = 0; i < 50; i++) {
-            myRack.render(blockSize);
-            writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
-        }
-        // myRack.parseMidi(0x80, note + 7, 0x00);
-        // myRack.parseMidi(0x80, note + 3, 0x00);
-        myRack.parseMidi(0x80, note, 0x00);
-        for (int i = 0; i < 50; i++) {
-            myRack.render(blockSize);
-            writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
-        }
+    int notes[9] = {44, 64, 84, 45, 65, 85, 43, 63, 83};
+    int vel[9] = {64, 64, 64, 84, 84, 84, 44, 44, 44};
+    for (int i = 0; i < 9; i++) {
+        myRack.parseMidi(0x90, notes[i], vel[i]);
     }
+    for (int i = 0; i < 30; i++) {
+        myRack.render(blockSize);
+        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+    }
+    for (int i = 0; i < 9; i++) {
+        myRack.parseMidi(0x80, notes[i], 0);
+    }
+    for (int i = 0; i < 30; i++) {
+        myRack.render(blockSize);
+        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+    }
+
     writer.close();
 
     return 0;

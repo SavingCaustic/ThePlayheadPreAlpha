@@ -61,17 +61,16 @@ class WavReader {
         if (!file)
             return false;
 
-        // Seek to the start of the data section
-        std::fseek(file, sizeof(WavHeader), SEEK_SET);
-
-        // Allocate buffer for PCM data
+        // Calculate sample count and preallocate memory
         int sampleCount = header.data_length / header.block_align;
-        output.resize(sampleCount * header.num_channels);
+        output.reserve(sampleCount * header.num_channels);
 
+        // Buffer to hold PCM data temporarily
         std::vector<int16_t> buffer(sampleCount * header.num_channels);
         std::fread(buffer.data(), sizeof(int16_t), buffer.size(), file);
 
         // Convert PCM to float
+        output.resize(buffer.size()); // Now set the size to match the reserved memory
         for (size_t i = 0; i < buffer.size(); ++i) {
             output[i] = buffer[i] / 32768.0f; // Normalize to [-1.0, 1.0]
         }

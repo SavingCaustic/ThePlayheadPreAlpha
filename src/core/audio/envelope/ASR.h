@@ -26,8 +26,6 @@ struct ASRSlope {
 class ASR {
   public:
     void setTime(ASRState state, float time);
-    void setLevel(ASRState state, float level);
-    void setLeak(ASRState state, float level);
     void triggerSlope(ASRSlope &slope, ASRCmd cmd);
     void updateDelta(ASRSlope &slope);
     void commit(ASRSlope &slope);
