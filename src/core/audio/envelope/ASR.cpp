@@ -31,15 +31,17 @@ void ASR::triggerSlope(ASRSlope &slope, ASRCmd cmd) {
 }
 
 void ASR::updateDelta(ASRSlope &slope) {
+    // this needs to be updated - never overshoot..
     if (slope.state == ASRState::ATTACK) {
-        if (slope.currVal > slope.goalVal) {
+        if (slope.currVal >= slope.goalVal) {
             stateChange(slope);
         }
-    } else {
+    } else if (slope.state == ASRState::RELEASE) {
         if (slope.currVal < slope.goalVal) {
             stateChange(slope);
         }
     }
+    // here is the error!
     slope.gap = (slope.targetVal - slope.currVal) * slope.factor;
 }
 
@@ -61,6 +63,9 @@ void ASR::setSlopeState(ASRSlope &slope, ASRState state) {
         slope.factor = aFactor;
         break;
     case ASRState::SUSTAIN:
+        slope.state = ASRState::SUSTAIN;
+        slope.currVal = slope.goalVal; // 1
+        slope.targetVal = 1;
         break;
     case ASRState::RELEASE:
         slope.state = ASRState::RELEASE;

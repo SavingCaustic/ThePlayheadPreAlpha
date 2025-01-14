@@ -290,10 +290,10 @@ void Model::setupParams(int upCount) {
             {UP::peg_rtime, {"peg_rtime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max
                                  pegAR.setTime(audio::envelope::ASRState::RELEASE, v);
                              }}},
-            {UP::peg_asemis, {"peg_asemis", 0.0f, 0, false, -12, 12, [this](float v) { // +/- 12 semis
+            {UP::peg_asemis, {"peg_asemis", 0.5f, 0, false, -12, 12, [this](float v) { // +/- 12 semis
                                   peg_asemis = round(v);
                               }}},
-            {UP::peg_rsemis, {"peg_rsemis", 1.0f, 0, false, -12, 12, [this](float v) { // +/- 12 semis
+            {UP::peg_rsemis, {"peg_rsemis", 0.5f, 0, false, -12, 12, [this](float v) { // +/- 12 semis
                                   peg_rsemis = round(v);
                               }}}
 

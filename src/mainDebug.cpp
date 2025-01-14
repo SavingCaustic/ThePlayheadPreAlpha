@@ -1,5 +1,6 @@
 #include "mainDebugSubreal.cpp"
 #include "mainDebugSubrealKV.cpp"
+#include "mainDebugSubrealPEG.cpp"
 #include "mainDebugWav.cpp"
 #include "mainDebugWavLoad.cpp"
 #include <atomic>
@@ -37,6 +38,9 @@ int main() {
             break;
         case 4:
             debugSubrealKV();
+            break;
+        case 5:
+            debugSubrealPEG();
             break;
         default:
             std::cout << "illegal option" << std::endl;

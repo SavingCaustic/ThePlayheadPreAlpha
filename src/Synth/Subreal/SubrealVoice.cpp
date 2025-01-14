@@ -129,6 +129,8 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
         modelRef.vcfAR.updateDelta(vcfARslope);
         float vcfTarget = vcfARslope.currVal + vcfARslope.gap;
 
+        modelRef.pegAR.updateDelta(pegARslope);
+
         if (modelRef.lfo1_routing == LFO1::Routing::vca) {
             vcaTarget *= (modelRef.lfo1.getLFOval() * modelRef.lfo1_depth) + 1.0f;
         }
@@ -181,7 +183,6 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
                 modelRef.addToSample(i + j * 2 + 1, chunkSample[j] * (1 - rightAtt));
             }
         }
-        modelRef.pegAR.updateDelta(pegARslope);
 
         // copy local voice-buffer to synth-buffer
         modelRef.vcaAR.commit(vcaARslope);
