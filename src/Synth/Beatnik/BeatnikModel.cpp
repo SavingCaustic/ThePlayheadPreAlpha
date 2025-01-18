@@ -1,7 +1,4 @@
 #include "./BeatnikModel.h"
-#include <cmath>
-#include <iostream>
-#include <vector>
 
 namespace Synth::Beatnik {
 constexpr int VOICE_COUNT = 12;
@@ -19,6 +16,13 @@ Model::Model() {
 }
 
 void Model::reset() {
+}
+
+// well maybe its not setting after all.. more like a factory needed here, but factory have no access to the model..
+// so this class should rather be called mountObject
+void Model::updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Destructor::Record &recordDelete) {
+    // Hash the key
+    uint32_t keyFNV = Utils::Hash::fnv1a(type);
 }
 
 void Model::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
@@ -59,13 +63,7 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
         }
         break;
     case 0x80:
-        // scan all voices for matching note, if no match, ignore
-        for (Voice &myVoice : voices) {
-            if (myVoice.notePlaying == param1) {
-                // well really, we should set the ARstate to release
-                myVoice.noteOff();
-            }
-        }
+        // One-shot samples so no action..
         break;
     case 0xb0:
         SynthInterface::handleMidiCC(param1, fParam2);
@@ -104,7 +102,7 @@ int8_t Model::findVoiceToAllocate(uint8_t note) {
             // ok try to overtake..
             if (myVoice.getVCAstate() == audio::envelope::ADSFRState::RELEASE) {
                 // candidate, see if amp lower than current.
-                float temp = myVoice.getVCALevel();
+                float temp = myVoice.getVCAlevel();
                 if (temp < releasedVoiceAmp) {
                     // candidate!
                     releasedVoice = i;
@@ -132,8 +130,8 @@ bool Model::renderNextBlock() {
     for (uint8_t i = 0; i < bufferSize; i++) {
         // we could add some sweet dist here..
         dist = synthBuffer[i];
-        dist = dist * dist; // skip polarity..
-        buffer[i] = synthBuffer[i] * (5 - dist) * 0.1f;
+        dist = dist * dist;         // skip polarity..
+        buffer[i] = synthBuffer[i]; // * (5 - dist) * 0.1f;
     }
 
     // debugging
@@ -149,7 +147,7 @@ bool Model::renderNextBlock() {
 
 void Model::addToSample(std::size_t sampleIdx, float val) {
     // use local buffer for spead. Possibly double..
-    // this->synthBuffer[sampleIdx] += val;
+    this->synthBuffer[sampleIdx] += val;
 }
 
 } // namespace Synth::Beatnik

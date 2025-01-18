@@ -1,8 +1,8 @@
+#include "mainDebugBeatnik.cpp"
 #include "mainDebugSubreal.cpp"
 #include "mainDebugSubrealKV.cpp"
 #include "mainDebugSubrealPEG.cpp"
 #include "mainDebugWav.cpp"
-#include "mainDebugWavLoad.cpp"
 #include <atomic>
 #include <iostream>
 #include <signal.h>
@@ -20,8 +20,10 @@ void signal_handler(int signal) {
 int main() {
     std::cout << "Enter a number: ";
     int number;
-    std::cin >> number;
-    // number = 2;
+
+    // comment either row there to get the selction stop or not
+    // std::cin >> number;
+    number = 3;
 
     if (!std::cin) {
         std::cerr << "Invalid input!" << std::endl;
@@ -34,7 +36,7 @@ int main() {
             debugWav();
             break;
         case 3:
-            debugWavLoad();
+            debugBeatnik();
             break;
         case 4:
             debugSubrealKV();

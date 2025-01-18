@@ -8,7 +8,7 @@ Utils::WavReader reader;
 Utils::WavWriter writer;
 
 int debugWav() {
-    reader.open("assets/Synth/Beatnik/lm-2/snare-l.wav");
+    reader.open("assets/Synth/Beatnik/samples/lm-2/conga-h.wav");
     writer.open("snare-copy.wav", 48000, 1);
 
     // Reserve memory for data based on the WAV file's header information
@@ -21,19 +21,20 @@ int debugWav() {
     // Calculate total samples
     int totalSamples = header.data_length / header.block_align * header.num_channels;
 
-    // Preallocate memory for efficiency
-    std::vector<float> data;
-    data.reserve(totalSamples);
+    float *data = new float[totalSamples];
 
-    // Read data and write to the new file
-    if (!reader.returnWavAsFloat(data)) {
+    // Load WAV data directly into the allocated memory
+    if (!reader.returnWavAsFloat(data, totalSamples)) {
         std::cerr << "Failed to load WAV data" << std::endl;
+        delete[] data; // Free memory on failure
         return -1;
     }
-    writer.write(data.data(), data.size());
+
+    writer.write(data, totalSamples);
 
     reader.close();
     writer.close();
+    delete data;
     std::cout << "ok" << std::endl;
     return 0;
 }

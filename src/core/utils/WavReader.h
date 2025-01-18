@@ -56,8 +56,29 @@ class WavReader {
         return true;
     }
 
+    bool returnWavAsFloat(float *output, uint32_t totalSamples) {
+        if (!file || totalSamples == 0) {
+            return false;
+        }
+
+        // Buffer to hold PCM data temporarily
+        std::vector<int16_t> buffer(totalSamples);
+        size_t readCount = std::fread(buffer.data(), sizeof(int16_t), buffer.size(), file);
+
+        if (readCount != totalSamples) {
+            return false; // Ensure the correct number of samples is read
+        }
+
+        // Convert PCM to float
+        for (size_t i = 0; i < totalSamples; ++i) {
+            output[i] = buffer[i] / 32768.0f; // Normalize to [-1.0, 1.0]
+        }
+
+        return true;
+    }
+
     // Read the entire WAV file as float
-    bool returnWavAsFloat(std::vector<float> &output) {
+    bool returnWavAsFloatOld(std::vector<float> &output, uint32_t &totalSamples) {
         if (!file)
             return false;
 
@@ -69,7 +90,7 @@ class WavReader {
         std::vector<int16_t> buffer(sampleCount * header.num_channels);
         std::fread(buffer.data(), sizeof(int16_t), buffer.size(), file);
 
-        // Convert PCM to float
+        // Convert PCM to float - should really check wav format here!
         output.resize(buffer.size()); // Now set the size to match the reserved memory
         for (size_t i = 0; i < buffer.size(); ++i) {
             output[i] = buffer[i] / 32768.0f; // Normalize to [-1.0, 1.0]

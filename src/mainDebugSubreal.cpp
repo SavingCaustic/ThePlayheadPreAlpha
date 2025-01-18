@@ -28,6 +28,7 @@ int debugSubreal() {
     // can i setup Subreal here? And pass it to rack?
     Synth::Subreal::Model *mySubreal = new Synth::Subreal::Model();
 
+    // hm. not using createLUT but buildLUT. No queue.
     audio::osc::LUT *lutTmp = new audio::osc::LUT();
     Synth::Subreal::Factory::buildLUT(lutTmp, "0.8,0.1,0.1");
     mySubreal->lut1 = lutTmp;
