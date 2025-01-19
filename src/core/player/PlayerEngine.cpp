@@ -123,7 +123,8 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
                 Rack::stringToUnitType(newMessage.target),
                 newMessage.paramName,
                 newMessage.paramValue);
-            sendMessage(1, "synth", newMessage.paramValue, newMessage.paramName, "yaba daba");
+            // This echoes back to WS-client, but needs to be elaborated
+            // sendMessage(1, "synth", newMessage.paramValue, newMessage.paramName, "yaba daba");
         }
     }
 

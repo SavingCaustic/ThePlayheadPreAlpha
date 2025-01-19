@@ -17,6 +17,11 @@ class SimpleSample {
         data = samplePtr;
     }
 
+    // New method to expose the data pointer
+    const float *getDataPointer() const {
+        return data;
+    }
+
     void unmountSample() {
         data = nullptr; // Clear the pointer; ownership is external
         length = 0;

@@ -32,6 +32,7 @@ void Voice::noteOn(uint8_t midiNote, float velocity) {
     //
     osc_mix_kv = ((midiNote * 0.02f - 1) * modelRef.osc_mix_kt + 1.0f) *
                  ((velocity * 2.0f - 1) * modelRef.osc_mix_vt + 1.0f);
+    std::cout << "osc_mix_kv:" << osc_mix_kv << std::endl;
 
     osc1_fmsens_kv = ((midiNote * 0.02f - 1) * modelRef.osc1_fmsens_kt + 1.0f) *
                      ((velocity * 2.0f - 1) * modelRef.osc1_fmsens_kt + 1.0f);

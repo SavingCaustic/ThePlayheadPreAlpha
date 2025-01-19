@@ -29,16 +29,13 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
     int sampleID = firstChar - 'a';
     std::cout << "sample id extracted to : " << sampleID << std::endl;
     auto *sample = reinterpret_cast<audio::sample::SimpleSample *>(object);
-    // Push the current LUT to the destructor queue, or delete it directly
-    /* TO BE IMPLEMENTED!!
-    if (samples[sampleID]) {
-        std::cout << "i need to delete old sample.. " << std::endl;
-        recordDelete.ptr = lut1;
-        recordDelete.deleter = [](void *ptr) { delete static_cast<audio::osc::LUT *>(ptr); }; // Create deleter for LUT
-        // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
+    if (samples[sampleID].getDataPointer()) {
+        std::cout << "deleting sample.. " << std::endl;
+        recordDelete.ptr = const_cast<float *>(samples[sampleID].getDataPointer());
+        recordDelete.deleter = [](void *ptr) { delete[] static_cast<float *>(ptr); }; // Delete sample - not simplesample.
+        samples[sampleID].unmountSample();
     }
-    */
-    // Assign the new LUT
+    // Assign the new sample
     std::cout << "sample length is: " << sample->length << std::endl;
     samples[sampleID] = *sample;
 }

@@ -23,7 +23,7 @@ int main() {
 
     // comment either row there to get the selction stop or not
     // std::cin >> number;
-    number = 3;
+    number = 2;
 
     if (!std::cin) {
         std::cerr << "Invalid input!" << std::endl;

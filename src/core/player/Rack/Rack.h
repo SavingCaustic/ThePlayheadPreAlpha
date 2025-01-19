@@ -184,6 +184,7 @@ class Rack {
             break;
         case UnitType::Effect1:
             if (effect1) {
+                std::cout << "here at least" << std::endl;
                 effect1->pushStrParam(name, fVal);
             }
             break;

@@ -24,7 +24,7 @@ struct WavHeader {
 
 class WavReader {
   public:
-    WavReader() {}
+    WavReader() : file(nullptr) {}
     ~WavReader() { close(); }
 
     // Open a file and validate its header
@@ -37,6 +37,7 @@ class WavReader {
             close();
             return false; // Invalid WAV file
         }
+
         return true;
     }
 
@@ -56,44 +57,45 @@ class WavReader {
         return true;
     }
 
+    // Return WAV file as float array
     bool returnWavAsFloat(float *output, uint32_t totalSamples) {
         if (!file || totalSamples == 0) {
             return false;
         }
 
-        // Buffer to hold PCM data temporarily
-        std::vector<int16_t> buffer(totalSamples);
-        size_t readCount = std::fread(buffer.data(), sizeof(int16_t), buffer.size(), file);
+        if (header.bits_per_sample == 16) {
+            // Handle 16-bit PCM
+            std::vector<int16_t> buffer(totalSamples);
+            size_t readCount = std::fread(buffer.data(), sizeof(int16_t), buffer.size(), file);
 
-        if (readCount != totalSamples) {
-            return false; // Ensure the correct number of samples is read
-        }
+            if (readCount != totalSamples) {
+                return false; // Ensure the correct number of samples is read
+            }
 
-        // Convert PCM to float
-        for (size_t i = 0; i < totalSamples; ++i) {
-            output[i] = buffer[i] / 32768.0f; // Normalize to [-1.0, 1.0]
-        }
+            // Convert PCM to float
+            for (size_t i = 0; i < totalSamples; ++i) {
+                output[i] = buffer[i] / 32768.0f; // Normalize to [-1.0, 1.0]
+            }
+        } else if (header.bits_per_sample == 24) {
+            // Handle 24-bit PCM
+            std::vector<uint8_t> buffer(totalSamples * 3); // 3 bytes per sample
+            size_t readCount = std::fread(buffer.data(), 3, totalSamples, file);
 
-        return true;
-    }
+            if (readCount != totalSamples) {
+                return false; // Ensure the correct number of samples is read
+            }
 
-    // Read the entire WAV file as float
-    bool returnWavAsFloatOld(std::vector<float> &output, uint32_t &totalSamples) {
-        if (!file)
-            return false;
-
-        // Calculate sample count and preallocate memory
-        int sampleCount = header.data_length / header.block_align;
-        output.reserve(sampleCount * header.num_channels);
-
-        // Buffer to hold PCM data temporarily
-        std::vector<int16_t> buffer(sampleCount * header.num_channels);
-        std::fread(buffer.data(), sizeof(int16_t), buffer.size(), file);
-
-        // Convert PCM to float - should really check wav format here!
-        output.resize(buffer.size()); // Now set the size to match the reserved memory
-        for (size_t i = 0; i < buffer.size(); ++i) {
-            output[i] = buffer[i] / 32768.0f; // Normalize to [-1.0, 1.0]
+            // Convert PCM to float
+            for (size_t i = 0; i < totalSamples; ++i) {
+                int32_t sample = (buffer[i * 3 + 2] << 16) | (buffer[i * 3 + 1] << 8) | buffer[i * 3];
+                // Sign-extend 24-bit to 32-bit
+                if (sample & 0x800000) {
+                    sample |= ~0xFFFFFF;
+                }
+                output[i] = sample / 8388608.0f; // Normalize to [-1.0, 1.0]
+            }
+        } else {
+            return false; // Unsupported format
         }
 
         return true;
@@ -104,19 +106,41 @@ class WavReader {
         if (!file)
             return false;
 
-        // Allocate buffer for requested PCM data
         output.resize(samples * header.num_channels);
-        std::vector<int16_t> buffer(samples * header.num_channels);
 
-        // Read from the file
-        size_t readCount = std::fread(buffer.data(), sizeof(int16_t), buffer.size(), file);
-        if (readCount < buffer.size()) {
-            output.resize(readCount); // Trim the output vector
-        }
+        if (header.bits_per_sample == 16) {
+            // Handle 16-bit PCM
+            std::vector<int16_t> buffer(samples * header.num_channels);
+            size_t readCount = std::fread(buffer.data(), sizeof(int16_t), buffer.size(), file);
 
-        // Convert PCM to float
-        for (size_t i = 0; i < readCount; ++i) {
-            output[i] = buffer[i] / 32768.0f; // Normalize to [-1.0, 1.0]
+            if (readCount < buffer.size()) {
+                output.resize(readCount); // Trim the output vector
+            }
+
+            // Convert PCM to float
+            for (size_t i = 0; i < readCount; ++i) {
+                output[i] = buffer[i] / 32768.0f; // Normalize to [-1.0, 1.0]
+            }
+        } else if (header.bits_per_sample == 24) {
+            // Handle 24-bit PCM
+            std::vector<uint8_t> buffer(samples * header.num_channels * 3); // 3 bytes per sample
+            size_t readCount = std::fread(buffer.data(), 3, samples * header.num_channels, file);
+
+            if (readCount < samples * header.num_channels) {
+                output.resize(readCount / 3); // Trim the output vector
+            }
+
+            // Convert PCM to float
+            for (size_t i = 0; i < readCount / 3; ++i) {
+                int32_t sample = (buffer[i * 3 + 2] << 16) | (buffer[i * 3 + 1] << 8) | buffer[i * 3];
+                // Sign-extend 24-bit to 32-bit
+                if (sample & 0x800000) {
+                    sample |= ~0xFFFFFF;
+                }
+                output[i] = sample / 8388608.0f; // Normalize to [-1.0, 1.0]
+            }
+        } else {
+            return false; // Unsupported format
         }
 
         return true;

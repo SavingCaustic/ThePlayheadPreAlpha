@@ -9,6 +9,7 @@ Utils::WavWriter writer;
 
 int debugWav() {
     reader.open("assets/Synth/Beatnik/samples/lm-2/conga-h.wav");
+    // reader.open("assets/Synth/Beatnik/samples/HR16A/Alesis_HR16A_43.wav");
     writer.open("snare-copy.wav", 48000, 1);
 
     // Reserve memory for data based on the WAV file's header information

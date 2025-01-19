@@ -46,10 +46,10 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
             auto *lut = reinterpret_cast<audio::osc::LUT *>(object);
             // Push the current LUT to the destructor queue, or delete it directly
             if (lut1) {
-                std::cout << "i need to delete old LUT. Strange.. " << std::endl;
+                std::cout << "deleting LUT1.. " << std::endl;
                 recordDelete.ptr = lut1;
                 recordDelete.deleter = [](void *ptr) { delete static_cast<audio::osc::LUT *>(ptr); }; // Create deleter for LUT
-                // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
+                // moved to ObjectManager: destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
             }
             // Assign the new LUT
             std::cout << "setting new lut-1 wave" << std::endl;
@@ -68,7 +68,7 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
             if (lut2) {
                 recordDelete.ptr = lut2;
                 recordDelete.deleter = [](void *ptr) { delete static_cast<audio::osc::LUT *>(ptr); }; // Create deleter for LUT
-                // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
+                // moved to ObjectManager: destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
             }
             // Assign the new LUT
             std::cout << "setting new lut-2 wave" << std::endl;

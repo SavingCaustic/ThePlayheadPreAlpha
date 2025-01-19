@@ -146,7 +146,7 @@ void crowSetupEndpoints(
         // std::cout << "value:" << value << std::endl;
 
         std::string name_str(name ? name : "");
-        MessageIn msg{rack, "synth", name_str.c_str(), value};
+        MessageIn msg{rack, unit, name_str.c_str(), value};
         if (messageInBuffer.push(msg)) {
             // Return success message
             return crow::response(200, "Pushed message to the queue");

@@ -9,6 +9,7 @@
 #include "core/audio/misc/Easer.h"
 #include "core/audio/osc/LUT.h"
 #include "core/audio/sample/SimpleSample.h"
+#include "core/destructor/Queue.h"
 #include "core/parameters/params.h"
 #include <array>
 #include <cmath>
