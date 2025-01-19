@@ -3,3 +3,4 @@ build_debug/
 build_release/
 user/*
 /*.wav
+TODO.txt
