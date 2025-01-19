@@ -23,33 +23,6 @@ class SimpleSample {
         isStereo = false;
     }
 
-    /*
-        float getSamplesToBuffer(float *stereoBuffer, int bufferSize, float currPos, float rate) {
-            if (!data) {
-                throw std::runtime_error("Sample data is not mounted.");
-            }
-
-            uint32_t intPos = 0;
-
-            int rightOffset = (isStereo) ? 1 : 0;
-            for (int i = 0; i < bufferSize; i = i + 2) {
-                intPos = static_cast<uint32_t>(currPos);
-                if (isStereo)
-                    intPos *= 2;
-                stereoBuffer[i] = data[intPos];
-                stereoBuffer[i + 1] = data[intPos + rightOffset];
-                currPos += rate;
-
-                // Simple looping logic, we should really never get here..
-                if (currPos >= length) {
-                    currPos = 0.0f;
-                }
-            }
-
-            return currPos;
-        }
-    */
-
     float getSamplesToBuffer(float *stereoBuffer, int bufferSize, float currPos, float rate) {
         if (!data) {
             throw std::runtime_error("Sample data is not mounted.");
@@ -59,12 +32,13 @@ class SimpleSample {
         int rightOffset = (isStereo) ? 1 : 0;
 
         // Calculate the number of samples that can be safely read before padding
-        int samplesToFill = std::min(bufferSize / 2, static_cast<int>((length - currPos) / rate));
+        // should be called stereoSamplesToFill
+        int stereoSamplesToFill = std::min(bufferSize / 2, static_cast<int>((length / (isStereo + 1) - currPos) / rate));
         int i = 0;
 
         // Fill the buffer with actual sample data
         // This could be SIMD-optimized by calculating an array of currPos i guess..
-        for (; i < samplesToFill * 2; i += 2) {
+        for (i = 0; i < stereoSamplesToFill * 2; i += 2) {
             intPos = static_cast<uint32_t>(currPos);
             if (isStereo)
                 intPos *= 2;

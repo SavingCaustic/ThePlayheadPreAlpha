@@ -75,12 +75,12 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
         // calc lfo1 ramp
         lfo1_ramp_avg = modelRef.lfo1_depth * modelRef.lfo1_ramp + lfo1_ramp_avg * (1 - modelRef.lfo1_ramp);
         float lfo1cents = modelRef.lfo1.getLFOval() * lfo1_ramp_avg * 200.0f;
-        if (modelRef.mw_routing == MW::Routing::lfo1depth) {
+        if (modelRef.lfo1_mw_control == MW::LFOcontrol::depth) {
             lfo1cents *= modelRef.modwheel;
         }
         // calc lfo2
         float lfo2amp = modelRef.lfo2_depth;
-        if (modelRef.mw_routing == MW::Routing::lfo2depth) {
+        if (modelRef.lfo2_mw_control == MW::LFOcontrol::depth) {
             lfo2amp *= modelRef.modwheel;
         }
 

@@ -56,6 +56,10 @@ class Unit {
             // Use Monolith's factory to handle specific operations
             Synth::Monolith::Factory::prepareSetting(key, val, rackID, constructorQueue);
             break;
+        case SynthType::Beatnik:
+            // Use Monolith's factory to handle specific operations
+            Synth::Beatnik::Factory::prepareSetting(key, val, rackID, constructorQueue);
+            break;
         case SynthType::Sketch:
             // If you have a Sketch factory, handle it here
             break;

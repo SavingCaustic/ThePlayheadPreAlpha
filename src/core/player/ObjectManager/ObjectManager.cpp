@@ -61,7 +61,7 @@ void ObjectManager::process() {
                 break;
             case Utils::Hash::fnv1a_hash("synth"): {
                 Destructor::Record recordDelete;
-                std::cout << "updating synth-setting now.. " << std::endl;
+                std::cout << "updating synth-setting now.. (" + methodName + ")" << std::endl;
                 // hmm.. tricky to call destroy here since we don't know the name of the property. Better to provide destructor queue?
                 racks[rackID].synth->updateSetting(methodName, record.ptr, record.size, record.isStereo, recordDelete);
                 // if recordDelete has a set pointer, add it to the queue

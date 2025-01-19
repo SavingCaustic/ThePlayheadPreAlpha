@@ -30,11 +30,13 @@ int debugBeatnik() {
     audio::sample::SimpleSample *sampleTmp = new audio::sample::SimpleSample();
     Synth::Beatnik::Factory::buildSample(sampleTmp, "lm-2/conga-h.wav");
     myBeatnik->samples[0] = *sampleTmp;
+    std::cout << "sample length is: " << sampleTmp->length << std::endl;
     sampleTmp = nullptr;
     //
     sampleTmp = new audio::sample::SimpleSample();
     Synth::Beatnik::Factory::buildSample(sampleTmp, "lm-2/snare-m.wav");
     myBeatnik->samples[1] = *sampleTmp;
+    std::cout << "sample length is: " << sampleTmp->length << std::endl;
     sampleTmp = nullptr;
     //
     myRack.setSynth(myBeatnik);
@@ -43,21 +45,23 @@ int debugBeatnik() {
     int blockSize = 128; // rack-render-size always 64 samples, so in stereo = 128
     Utils::WavWriter writer;
     writer.open("echo.wav", 48000, 2);
-    int notes[9] = {60, 61, 62, 63, 64, 65, 66, 67};
-    for (int i = 0; i < 1; i++) {
-        myRack.parseMidi(0x90, notes[i], 100);
+    myRack.parseMidi(0x90, 60, 40);
+    for (int i = 0; i < 100; i++) {
+        myRack.render(blockSize);
+        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
     }
+    myRack.parseMidi(0x90, 60, 100);
     for (int i = 0; i < 100; i++) {
         myRack.render(blockSize);
         writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
     }
     myRack.parseMidi(0x90, 61, 100);
-    for (int i = 0; i < 300; i++) {
+    for (int i = 0; i < 6000; i++) {
         myRack.render(blockSize);
         writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
     }
     for (int i = 0; i < 1; i++) {
-        myRack.parseMidi(0x80, notes[i], 0);
+        myRack.parseMidi(0x80, 60, 0);
     }
     for (int i = 0; i < 100; i++) {
         myRack.render(blockSize);

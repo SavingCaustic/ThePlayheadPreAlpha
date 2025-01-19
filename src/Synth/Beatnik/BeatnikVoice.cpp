@@ -16,11 +16,14 @@ void Beatnik::Voice::reset() {
 
 void Beatnik::Voice::noteOn(uint8_t midiNote, float velocity) {
     notePlaying = midiNote;
-    sampleID = (midiNote - 60) % 12;
-    leftAtt = 0.0f;
-    rightAtt = 0.0f;
+    sampleID = (midiNote - 60 + 12) % 12;
     currSamplePos = 0;
-    noteVelocity = velocity;
+    noteVelocity = velocity * velocity; // use x2 for now instead of log20.
+    float pan = 0.0f + (60 - midiNote) * 0.2f;
+    float angle = (pan + 1.0f) * 0.125;
+    leftGain = AudioMath::ccos(angle) * noteVelocity * 0.25;
+    rightGain = AudioMath::csin(angle) * noteVelocity * 0.25;
+
     // it's all in the voice. no AR in model.
     vcaAR.triggerSlope(vcaARslope, audio::envelope::ADSFRCmd::NOTE_ON);
 }
@@ -44,6 +47,11 @@ bool Beatnik::Voice::checkVoiceActive() {
 
 bool Beatnik::Voice::renderNextVoiceBlock(std::size_t bufferSize) {
     float stereoBuffer[bufferSize]; // Stereo buffer for both L and R channels
+    if (modelRef.samples[sampleID].length == 0) {
+        std::cout << "sample has not been setup - leaving.";
+        vcaARslope.state = audio::envelope::ADSFRState::OFF;
+        return false;
+    }
 
     currSamplePos = modelRef.samples[sampleID].getSamplesToBuffer(stereoBuffer, bufferSize, currSamplePos, 1.0f);
     if (currSamplePos == 0.0f) {
@@ -54,8 +62,8 @@ bool Beatnik::Voice::renderNextVoiceBlock(std::size_t bufferSize) {
     // Process stereo samples
     for (std::size_t j = 0; j < bufferSize; j = j + 2) {
         // Attenuate and assign stereo channels
-        modelRef.addToSample(j, stereoBuffer[j] * (1 - leftAtt));          // Left channel
-        modelRef.addToSample(j + 1, stereoBuffer[j + 1] * (1 - rightAtt)); // Right channel
+        modelRef.addToSample(j, stereoBuffer[j] * leftGain);          // Left channel
+        modelRef.addToSample(j + 1, stereoBuffer[j + 1] * rightGain); // Right channel
     }
 
     return true;

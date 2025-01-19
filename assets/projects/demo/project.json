@@ -44,6 +44,22 @@
         },
         {
             "synth": {
+                "type": "Beatnik",
+                "settings": {
+                    "a_sample":"lm-2/kick.wav",
+                    "b_sample":"lm-2/stick-m.wav",
+                    "c_sample":"lm-2/snare-m.wav",
+                    "d_sample":"lm-2/hihat-closed.wav",
+                    "e_sample":"lm-2/hihat-open.wav",
+                    "f_sample":"lm-2/clap.wav",
+                    "g_sample":"lm-2/cowb.wav"
+                },
+                "params": {
+                }
+            }
+        },
+        {
+            "synth": {
                 "type": "Monolith",
                 "settings": {
                 },

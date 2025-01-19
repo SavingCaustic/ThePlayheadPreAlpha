@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Project name and version
-project(MyDAW2 VERSION 1.0)
+project(ThePlayhead VERSION 1.0)
 
 # Specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -43,7 +43,7 @@ list(REMOVE_ITEM SOURCES ${MAIN_FILES})
 list(APPEND SOURCES ${MAIN_FILE})
 
 # Add executable
-add_executable(MyDAW2 ${SOURCES})
+add_executable(ThePlayhead ${SOURCES})
 
 # Find PortAudio, ALSA, and RtMidi
 find_package(PkgConfig REQUIRED)
@@ -52,7 +52,7 @@ pkg_check_modules(RTMIDI REQUIRED rtmidi)
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
 
 # Include directories for target
-target_include_directories(MyDAW2 PRIVATE
+target_include_directories(ThePlayhead PRIVATE
     ${PORTAUDIO_INCLUDE_DIRS}
     ${RTMIDI_INCLUDE_DIR}
     ${ALSA_INCLUDE_DIRS}
@@ -64,7 +64,7 @@ target_include_directories(MyDAW2 PRIVATE
 link_directories(${PORTAUDIO_LIBRARY_DIRS})
 
 # Link libraries (proper linking order)
-target_link_libraries(MyDAW2
+target_link_libraries(ThePlayhead
     ${PORTAUDIO_LIBRARIES}
     ${RTMIDI_LIBRARIES}
     ${ALSA_LIBRARIES}

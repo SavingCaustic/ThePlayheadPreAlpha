@@ -41,8 +41,7 @@ class Voice {
     audio::envelope::ADSFRSlope vcaARslope;
     audio::misc::Easer oscMixEaser;
     audio::misc::Easer vcaEaser;
-    float leftAtt;
-    float rightAtt;
+    float pan;
     int sampleID;
     float currSamplePos = 0;
     float noteVelocity;
@@ -52,6 +51,7 @@ class Voice {
 
   private:
     Model &modelRef; // Use reference to Model
+    float leftGain, rightGain;
 };
 
 } // namespace Synth::Beatnik

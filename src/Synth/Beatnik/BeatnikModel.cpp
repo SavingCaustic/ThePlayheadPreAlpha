@@ -22,7 +22,25 @@ void Model::reset() {
 // so this class should rather be called mountObject
 void Model::updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Destructor::Record &recordDelete) {
     // Hash the key
+    std::cout << "at update setting in Beatnik!" << std::endl;
     uint32_t keyFNV = Utils::Hash::fnv1a(type);
+    // Extract the first character
+    char firstChar = type[0];
+    int sampleID = firstChar - 'a';
+    std::cout << "sample id extracted to : " << sampleID << std::endl;
+    auto *sample = reinterpret_cast<audio::sample::SimpleSample *>(object);
+    // Push the current LUT to the destructor queue, or delete it directly
+    /* TO BE IMPLEMENTED!!
+    if (samples[sampleID]) {
+        std::cout << "i need to delete old sample.. " << std::endl;
+        recordDelete.ptr = lut1;
+        recordDelete.deleter = [](void *ptr) { delete static_cast<audio::osc::LUT *>(ptr); }; // Create deleter for LUT
+        // destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
+    }
+    */
+    // Assign the new LUT
+    std::cout << "sample length is: " << sample->length << std::endl;
+    samples[sampleID] = *sample;
 }
 
 void Model::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
@@ -31,6 +49,8 @@ void Model::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
 }
 
 void Model::setupParams(int upCount) {
+    // um. we need something clever here to route parameter to sample-setting.
+    // not clear yet the routing here. maybe samples <-> voices
     if (SynthBase::paramDefs.empty()) {
         // after declaration, indexation requested, see below..
         SynthBase::paramDefs = {

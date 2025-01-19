@@ -24,19 +24,34 @@ namespace Synth::Subreal {
 
 enum UP {
     modwheel,
+
     osc_mix,
     osc1_fmsens,
     osc1_detune,
-    osc_mix_kt,
-    osc1_fmsens_kt,
-    osc1_fmsens_vt,
-
     osc2_oct,
     osc2_semi,
     osc2_detune,
-    osc2_freq_kt,
+
+    osc_mix_kt,
+    osc1_fmsens_kt,
+    vca_pan_kt,
     osc_mix_vt,
-    osc_noise,
+    osc1_fmsens_vt,
+    osc2_freq_kt,
+
+    peg_atime,
+    peg_rtime,
+    pb_range,
+    peg_asemis,
+    peg_rsemis,
+    vcf_noise,
+
+    lfo1_speed,
+    lfo1_depth,
+    lfo1_shape,
+    lfo1_routing,
+    lfo1_ramp,
+    lfo1_mw_control,
 
     vcf_cutoff,
     vcf_resonance,
@@ -59,26 +74,12 @@ enum UP {
     vca_fade,
     vca_rate_kt,
 
-    lfo1_speed,
-    lfo1_depth,
-    lfo1_shape,
-    lfo1_routing,
-    lfo1_ramp,
-    lfo1_depth_vt,
-
     lfo2_speed,
     lfo2_depth,
     lfo2_shape,
     lfo2_routing,
-    pb_range,
-    mw_routing,
-
-    peg_atime,
-    peg_rtime,
-    peg_asemis,
-    peg_rsemis,
-    not_used1,
-    vca_pan_kt,
+    not_used_1,
+    lfo2_mw_control,
 
     up_count
 };
@@ -106,14 +107,14 @@ enum Routing {
 }
 
 namespace MW {
-enum Routing {
-    lfo1depth,
-    lfo1speed,
-    lfo2depth,
-    lfo2speed,
+
+enum LFOcontrol {
+    off,
+    depth,
+    speed,
     _count
 };
-}
+} // namespace MW
 
 namespace OSC1 {
 // curr not used..
@@ -214,7 +215,8 @@ class Model : public SynthBase {
     int peg_rsemis;
 
     int pb_range;
-    MW::Routing mw_routing;
+    MW::LFOcontrol lfo1_mw_control;
+    MW::LFOcontrol lfo2_mw_control;
 
     // more complex stuff here. May be modified by params..
     float lfo1_speed = 0;

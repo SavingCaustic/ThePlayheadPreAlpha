@@ -1,4 +1,6 @@
 #pragma once
+#include "Synth/Beatnik/BeatnikFactory.h"
+#include "Synth/Beatnik/BeatnikModel.h"
 #include "Synth/Monolith/MonolithFactory.h"
 #include "Synth/Monolith/MonolithModel.h"
 #include "Synth/Subreal/SubrealFactory.h"
@@ -13,6 +15,7 @@ using json = nlohmann::json;
 enum class SynthType {
     Monolith,
     Subreal,
+    Beatnik,
     Sketch,
     // Add other synth types here
     Unknown
@@ -26,6 +29,8 @@ class SynthFactory {
             return SynthType::Monolith;
         if (synthName == "Subreal")
             return SynthType::Subreal;
+        if (synthName == "Beatnik")
+            return SynthType::Beatnik;
         if (synthName == "Sketch")
             return SynthType::Sketch;
         // Add other synth type checks here
@@ -44,6 +49,9 @@ class SynthFactory {
             break;
         case SynthType::Subreal:
             newSynth = new Synth::Subreal::Model(); // audioBuffer.data(), audioBuffer.size());
+            break;
+        case SynthType::Beatnik:
+            newSynth = new Synth::Beatnik::Model(); // audioBuffer.data(), audioBuffer.size());
             break;
         case SynthType::Sketch:
             // synth = new Synth::Sketch::Model(audioBuffer.data(), audioBuffer.size());

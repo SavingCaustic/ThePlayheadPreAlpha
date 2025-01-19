@@ -17,32 +17,48 @@ namespace Synth::Beatnik {
 class Factory {
   public:
     static void prepareSetting(std::string key, std::string value, int rackID, Constructor::Queue &constructorQueue) {
-        // ok so this bascially pushes the record onto the injector queue..
-        std::cout << key << std::endl;
-        uint32_t keyFNV = Utils::Hash::fnv1a(key);
-        switch (keyFNV) {
-        case Utils::Hash::fnv1a_hash("A_sample"): {
-            createSample(key, value, rackID, constructorQueue);
-            break;
+        // Split the key using "_" as the delimiter
+        size_t delimiterPos = key.find('_');
+        if (delimiterPos != std::string::npos) {
+            std::string firstPart = key.substr(0, delimiterPos);
+            std::string secondPart = key.substr(delimiterPos + 1);
+
+            // Check if the second part is "sample"
+            if (secondPart == "sample") {
+                // Process the sample using the first part
+                std::cout << "Loading sample: " << firstPart << std::endl;
+                createSample(key, value, rackID, constructorQueue);
+                return;
+            }
         }
-        }
+
+        // Fallback or additional cases
+        std::cout << "Unrecognized key: " << key << std::endl;
     }
 
     static void createSample(std::string &key, std::string value, int rackID, Constructor::Queue &constructorQueue) {
         // check if file exists, if it's stereo and load it into a object, and pass it to the constructor
-        std::cout << "loading sample now.." << std::endl;
+        std::cout << "loading beatnik sample now.." << std::endl;
         uint32_t sampleSize = 0;
-        audio::sample::SimpleSample *wavTmp = new audio::sample::SimpleSample(); // value, sampleSize);
+        audio::sample::SimpleSample *sampleTmp = new audio::sample::SimpleSample(); // value, sampleSize);
+        buildSample(sampleTmp, value);
+
+        sampleSize = sampleTmp->length * sizeof(float);
+        if (sampleTmp->isStereo)
+            sampleSize *= 2;
+
+        sampleSize = sampleTmp->length; // not sure this is correct - for stereo etc...
+        std::cout << "caclulating sample size to:" << sampleSize << std::endl;
         std::string prefixedKey = "synth." + key;
 
         // Push the LUT into the Constructor Queue
-        if (!constructorQueue.push(wavTmp, sampleSize, false, prefixedKey.c_str(), rackID)) {
+        if (!constructorQueue.push(sampleTmp, sampleSize, false, prefixedKey.c_str(), rackID)) {
             std::cerr << "Failed to push sample into Constructor Queue. Queue is full!" << std::endl;
-            delete wavTmp; // Clean up if the push fails
+            delete sampleTmp; // Clean up if the push fails
         }
 
         // Clear the local pointer
-        wavTmp = nullptr;
+        sampleTmp = nullptr;
     }
 
     static int buildSample(audio::sample::SimpleSample *sample, const std::string &filename) {
@@ -66,7 +82,7 @@ class Factory {
         }
 
         // Calculate total samples
-        uint32_t totalSamples = header.data_length / header.block_align;
+        uint32_t totalSamples = header.data_length / header.block_align * header.num_channels;
 
         // Allocate memory for the raw sample data.
         // here we should add some end-silence to avoid constant range check when playing..
