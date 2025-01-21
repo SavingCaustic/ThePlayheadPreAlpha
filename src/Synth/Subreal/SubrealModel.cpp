@@ -140,71 +140,6 @@ void Model::setupParams(int upCount) {
                                    osc2_detune = v;
                                }}},
 
-            {UP::osc_mix_kt, {"osc_mix_kt", 0.5f, 0, false, -1, 1, [this](float v) {
-                                  osc_mix_kt = v;
-                              }}},
-            {UP::osc1_fmsens_kt, {"osc1_fmsens_kt", 0.5f, 0, false, -1, 1, [this](float v) {
-                                      osc1_fmsens_kt = v;
-                                  }}},
-            {UP::vca_pan_kt, {"vca_pan_kt", 0.2f, 0, false, 0, 1, [this](float v) {
-                                  vca_pan_kt = v;
-                              }}},
-            {UP::osc_mix_vt, {"osc_mix_vt", 0.5f, 0, false, -1, 1, [this](float v) {
-                                  osc_mix_vt = v;
-                              }}},
-            {UP::osc1_fmsens_vt, {"osc1_fmsens_vt", 0.5f, 0, false, -1, 1, [this](float v) {
-                                      osc1_fmsens_vt = v;
-                                  }}},
-            {UP::osc2_freq_kt, {"osc2_freq_kt", 0.5f, 11, false, 0, 12, [this](float v) {
-                                    osc2_freq_kt = v / 6.0f;
-                                }}},
-
-            {UP::peg_atime, {"peg_atime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max
-                                 pegAR.setTime(audio::envelope::ASRState::ATTACK, v);
-                             }}},
-            {UP::peg_rtime, {"peg_rtime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max
-                                 pegAR.setTime(audio::envelope::ASRState::RELEASE, v);
-                             }}},
-            {UP::pb_range, {"pb_range", 0.0f, 0, false, 2, 12, [this](float v) {
-                                // of what really..
-                                pb_range = v;
-                            }}},
-            {UP::peg_asemis, {"peg_asemis", 0.5f, 0, false, -12, 12, [this](float v) { // +/- 12 semis
-                                  peg_asemis = round(v);
-                              }}},
-            {UP::peg_rsemis, {"peg_rsemis", 0.5f, 0, false, -12, 12, [this](float v) { // +/- 12 semis
-                                  peg_rsemis = round(v);
-                              }}},
-
-            {UP::lfo1_speed, {"lfo1_speed", 0.5f, 0, true, 100, 9, [this](float v) {
-                                  std::cout << "setting lfo1-speed (mHz) to " << v << std::endl;
-                                  lfo1_speed = v;
-                                  setLFO1speed();
-                              }}},
-            {UP::lfo1_depth, {"lfo1_depth", 0.0f, 0, false, 0, 7, [this](float v) {
-                                  // of what really..
-                                  std::cout << "setting lfo1-depth to " << v << std::endl;
-                                  lfo1_depth = v;
-                              }}},
-            {UP::lfo1_shape, {"lfo1_shape", 0.0f, audio::lfo::LFOShape::_count, false, 0, audio::lfo::LFOShape::_count - 1, [this](float v) {
-                                  // of what really..
-                                  std::cout << "setting lfo1-shape to " << v << std::endl;
-                                  lfo1.setShape(static_cast<audio::lfo::LFOShape>(static_cast<int>(v)));
-                              }}},
-            {UP::lfo1_routing, {"lfo1_routing", 0.3f, 6, false, 0, 5, [this](float v) {
-                                    lfo1_routing = static_cast<LFO1::Routing>(static_cast<int>(v));
-                                    std::cout << "setting lfo1-routing to " << v << std::endl;
-                                }}},
-            {UP::lfo1_ramp, {"lfo1_ramp", 0.0f, 0, true, 2, 10, [this](float v) {
-                                 lfo1_ramp = v * 0.0004; // lo val = ramp
-                                 // lfo1_routing = static_cast<LFO1::Routing>(static_cast<int>(v));
-                                 std::cout << "setting lfo1-ramp to " << lfo1_ramp << std::endl;
-                             }}},
-            {UP::lfo1_mw_control, {"lfo1_mw_control", 0.0f, MW::LFOcontrol::_count, false, 0, MW::LFOcontrol::_count - 1, [this](float v) {
-                                       // of what really..
-                                       lfo1_mw_control = static_cast<MW::LFOcontrol>(static_cast<int>(v));
-                                   }}},
-
             {UP::vcf_cutoff, {"vcf_cutoff", 1.0f, 0, true, 100, 8, [this](float v) {
                                   vcf_cutoff = v;
                                   // filter.setCutoff(v);
@@ -233,6 +168,71 @@ void Model::setupParams(int upCount) {
             {UP::vcf_cutoff_vt, {"osc1_fmsens_vt", 0.5f, 0, false, -1, 1, [this](float v) {
                                      vcf_cutoff_vt = v;
                                  }}},
+
+            {UP::peg_atime, {"peg_atime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max
+                                 pegAR.setTime(audio::envelope::ASRState::ATTACK, v);
+                             }}},
+            {UP::peg_rtime, {"peg_rtime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max
+                                 pegAR.setTime(audio::envelope::ASRState::RELEASE, v);
+                             }}},
+            {UP::pb_range, {"pb_range", 0.0f, 0, false, 2, 12, [this](float v) {
+                                // of what really..
+                                pb_range = v;
+                            }}},
+            {UP::peg_asemis, {"peg_asemis", 0.5f, 0, false, -12, 12, [this](float v) { // +/- 12 semis
+                                  peg_asemis = round(v);
+                              }}},
+            {UP::peg_rsemis, {"peg_rsemis", 0.5f, 0, false, -12, 12, [this](float v) { // +/- 12 semis
+                                  peg_rsemis = round(v);
+                              }}},
+
+            {UP::lfo1_speed, {"lfo1_speed", 0.5f, 0, true, 100, 9, [this](float v) {
+                                  std::cout << "setting lfo1-speed (mHz) to " << v << std::endl;
+                                  lfo1_speed = v;
+                                  setLFO1speed();
+                              }}},
+            {UP::lfo1_depth, {"lfo1_depth", 0.0f, 0, false, 0, 1, [this](float v) {
+                                  // of what really..
+                                  std::cout << "setting lfo1-depth to " << v << std::endl;
+                                  lfo1_depth = v;
+                              }}},
+            {UP::lfo1_shape, {"lfo1_shape", 0.0f, audio::lfo::LFOShape::_count, false, 0, audio::lfo::LFOShape::_count - 1, [this](float v) {
+                                  // of what really..
+                                  std::cout << "setting lfo1-shape to " << v << std::endl;
+                                  lfo1.setShape(static_cast<audio::lfo::LFOShape>(static_cast<int>(v)));
+                              }}},
+            {UP::lfo1_routing, {"lfo1_routing", 0.3f, 6, false, 0, 5, [this](float v) {
+                                    lfo1_routing = static_cast<LFO1::Routing>(static_cast<int>(v));
+                                    std::cout << "setting lfo1-routing to " << v << std::endl;
+                                }}},
+            {UP::lfo1_ramp, {"lfo1_ramp", 0.0f, 0, true, 2, 10, [this](float v) {
+                                 lfo1_ramp = v * 0.0004; // lo val = ramp
+                                 // lfo1_routing = static_cast<LFO1::Routing>(static_cast<int>(v));
+                                 std::cout << "setting lfo1-ramp to " << lfo1_ramp << std::endl;
+                             }}},
+            {UP::lfo1_mw_control, {"lfo1_mw_control", 0.0f, MW::LFOcontrol::_count, false, 0, MW::LFOcontrol::_count - 1, [this](float v) {
+                                       // of what really..
+                                       lfo1_mw_control = static_cast<MW::LFOcontrol>(static_cast<int>(v));
+                                   }}},
+            /* next bank */
+            {UP::osc_mix_kt, {"osc_mix_kt", 0.5f, 0, false, -1, 1, [this](float v) {
+                                  osc_mix_kt = v;
+                              }}},
+            {UP::osc1_fmsens_kt, {"osc1_fmsens_kt", 0.5f, 0, false, -1, 1, [this](float v) {
+                                      osc1_fmsens_kt = v;
+                                  }}},
+            {UP::vca_pan_kt, {"vca_pan_kt", 0.2f, 0, false, 0, 1, [this](float v) {
+                                  vca_pan_kt = v;
+                              }}},
+            {UP::osc_mix_vt, {"osc_mix_vt", 0.5f, 0, false, -1, 1, [this](float v) {
+                                  osc_mix_vt = v;
+                              }}},
+            {UP::osc1_fmsens_vt, {"osc1_fmsens_vt", 0.5f, 0, false, -1, 1, [this](float v) {
+                                      osc1_fmsens_vt = v;
+                                  }}},
+            {UP::osc2_freq_kt, {"osc2_freq_kt", 0.5f, 11, false, 0, 12, [this](float v) {
+                                    osc2_freq_kt = v / 6.0f;
+                                }}},
 
             {UP::vcf_attack, {"vcf_attack", 0.0f, 0, true, 2, 11, [this](float v) { // 8192 max
                                   // um - this is no good. how to use rate_kt?
@@ -290,7 +290,7 @@ void Model::setupParams(int upCount) {
             {UP::lfo2_routing, {"lfo2_routing", 0.0, LFO1::Routing::_count, false, 0, LFO1::Routing::_count - 1, [this](float v) {
                                     lfo2_routing = static_cast<LFO2::Routing>(static_cast<int>(v));
                                 }}},
-            {UP::lfo2_depth, {"lfo2_depth", 0.0f, 0, false, 0, 7, [this](float v) {
+            {UP::lfo2_depth, {"lfo2_depth", 0.0f, 0, false, 0, 1, [this](float v) {
                                   // of what really..
                                   lfo2_depth = v;
                               }}},

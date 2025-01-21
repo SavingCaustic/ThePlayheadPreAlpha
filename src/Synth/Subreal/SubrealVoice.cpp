@@ -35,7 +35,10 @@ void Voice::noteOn(uint8_t midiNote, float velocity) {
     std::cout << "osc_mix_kv:" << osc_mix_kv << std::endl;
 
     osc1_fmsens_kv = ((midiNote * 0.02f - 1) * modelRef.osc1_fmsens_kt + 1.0f) *
-                     ((velocity * 2.0f - 1) * modelRef.osc1_fmsens_kt + 1.0f);
+                     ((velocity * 2.0f - 1) * modelRef.osc1_fmsens_vt + 1.0f);
+
+    vcf_cutoff_kv = ((midiNote * 0.02f - 1) * modelRef.vcf_cutoff_kt + 1.0f) *
+                    ((velocity * 2.0f - 1) * modelRef.vcf_cutoff_vt + 1.0f);
 
     leftAtt = fmin(1, fmax(0, (notePlaying - 60) * 0.04f * modelRef.vca_pan_kt));
     rightAtt = fmin(1, fmax(0, (60 - notePlaying) * 0.04f * modelRef.vca_pan_kt));
@@ -75,7 +78,7 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
     if (vcaARslope.state != audio::envelope::ADSFRState::OFF) {
         // calc lfo1 ramp
         lfo1_ramp_avg = modelRef.lfo1_depth * modelRef.lfo1_ramp + lfo1_ramp_avg * (1 - modelRef.lfo1_ramp);
-        float lfo1cents = modelRef.lfo1.getLFOval() * lfo1_ramp_avg * 200.0f;
+        float lfo1cents = modelRef.lfo1.getLFOval() * lfo1_ramp_avg * 1200.0f;
         if (modelRef.lfo1_mw_control == MW::LFOcontrol::depth) {
             lfo1cents *= modelRef.modwheel;
         }
@@ -87,11 +90,17 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
 
         // PEG
         float pegCents = 0;
-        if (pegARslope.state == audio::envelope::ASRState::ATTACK) {
+        switch (pegARslope.state) {
+        case audio::envelope::ASRState::ATTACK:
             pegCents = (1 - pegARslope.currVal) * modelRef.peg_asemis * 100;
-        }
-        if (pegARslope.state == audio::envelope::ASRState::RELEASE) {
+            break;
+        case audio::envelope::ASRState::RELEASE:
             pegCents = (1 - pegARslope.currVal) * modelRef.peg_rsemis * 100;
+            break;
+        case audio::envelope::ASRState::OFF:
+            // clinging vca-release..
+            pegCents = modelRef.peg_rsemis * 100;
+            break;
         }
 
         // calc osc2
@@ -111,7 +120,7 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
         // calc fmSens driving osc1.
         float fmAmp = modelRef.osc1_fmsens * osc1_fmsens_kv;
         if (modelRef.lfo2_routing == LFO2::Routing::fmSens) {
-            fmAmp *= (1 + modelRef.lfo2.getLFOval() * lfo2amp);
+            fmAmp *= (1 + modelRef.lfo2.getLFOval()) * lfo2amp * 5.0f;
         }
 
         // calc note and cent for osc1
@@ -132,13 +141,20 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
 
         modelRef.pegAR.updateDelta(pegARslope);
 
+        // adjusted to avoid distrortion. only attenuate..
+        // i'm not really happy with this math at all. no easing here.
+        float modTarget = vcaTarget;
         if (modelRef.lfo1_routing == LFO1::Routing::vca) {
-            vcaTarget *= (modelRef.lfo1.getLFOval() * modelRef.lfo1_depth) + 1.0f;
+            // vcaTarget *= 1.0f + (modelRef.lfo1.getLFOval() * modelRef.lfo1_depth) - modelRef.lfo1_depth;
+            modTarget = modTarget - modTarget * modelRef.lfo1_depth + (modelRef.lfo1.getLFOval() + 1.0f) * modTarget * modelRef.lfo1_depth * 0.5f;
         }
         if (modelRef.lfo2_routing == LFO2::Routing::vca) {
-            vcaTarget *= (modelRef.lfo2.getLFOval() * lfo2amp) + 1.0f;
+            // vcaTarget *= 1.0f + (modelRef.lfo2.getLFOval() * lfo2amp) - lfo2amp;
+            // vcaTarget -= vcaTarget * lfo2amp + (modelRef.lfo2.getLFOval() + 1.0f) * vcaTarget * lfo2amp * 0.5f;
+            modTarget = modTarget - modTarget * lfo2amp + (modelRef.lfo2.getLFOval() + 1.0f) * 0.5f * modTarget * lfo2amp;
         }
-        vcaEaser.setTarget(vcaTarget);
+        vcaEaser.setTarget(modTarget);
+        //
         vcfEaser.setTarget(vcfTarget);
 
         for (std::size_t i = 0; i < bufferSize; i += chunkSize * 2) {
@@ -161,7 +177,7 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
                 chunkSample[j] = y1 * (1 - oscMixEaseOut) + chunkSample[j] * oscMixEaseOut;
             }
             // VCF (100Hz is appropirate for lpf - maybe not for others..)
-            vcfEaserVal = vcfEaser.getValue();
+            vcfEaserVal = vcfEaser.getValue() * vcf_cutoff_kv;
             if (modelRef.vcfInverse) {
                 filter.setCutoff(100 + modelRef.vcf_cutoff * (1.0f - vcfEaserVal));
             } else {
@@ -184,8 +200,7 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
                 modelRef.addToSample(i + j * 2 + 1, chunkSample[j] * (1 - rightAtt));
             }
         }
-
-        // copy local voice-buffer to synth-buffer
+        // commit easers (this way to avoid float rounding errors)
         modelRef.vcaAR.commit(vcaARslope);
         modelRef.vcfAR.commit(vcfARslope);
         modelRef.pegAR.commit(pegARslope);

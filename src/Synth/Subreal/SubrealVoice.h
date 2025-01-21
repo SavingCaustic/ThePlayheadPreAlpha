@@ -54,6 +54,7 @@ class Voice { //: public VoiceInterface {
 
     float osc_mix_kv = 0;
     float osc1_fmsens_kv = 0;
+    float vcf_cutoff_kv = 0;
     float leftAtt;
     float rightAtt;
     float noteVelocity;
@@ -68,5 +69,6 @@ class Voice { //: public VoiceInterface {
     float oscMixEaseOut = 0;
     float fmAmpEaseOut = 0;
     float mixAmplitude;
+    int debugCnt = 0;
 };
 } // namespace Synth::Subreal
