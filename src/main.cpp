@@ -7,10 +7,9 @@
 #include "core/api/rpcParser.h"
 #include "core/audio/AudioMath.h"
 #include "core/destructor/Worker.h"
-#include "core/errors/AudioErrorBuffer.h"
-#include "core/errors/ErrorBuffer.h"
-#include "core/errors/ErrorHandler.h"
-#include "core/errors/ErrorLogger.h"
+#include "core/logger/AudioLoggerBuffer.h"
+#include "core/logger/LoggerBuffer.h"
+#include "core/logger/LoggerHandler.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutBuffer.h"
 #include "core/messages/MessageOutReader.h"
@@ -73,9 +72,9 @@ AudioManager sAudioManager(sAudioDriver, sPlayerEngine);
 MidiManager sMidiManager;
 
 // Add global ErrorHandler
-AudioErrorBuffer sAudioErrorBuffer;                            // Error buffer used by the audio engine
-ErrorBuffer sErrorBuffer;                                      // Main error buffer for logging
-ErrorHandler sErrorHandler(&sAudioErrorBuffer, &sErrorBuffer); // Error handler with threads
+AudioLoggerBuffer sAudioLoggerBuffer;                              // Error buffer used by the audio engine
+LoggerBuffer sLoggerBuffer;                                        // Main error buffer for logging
+LoggerHandler sLoggerHandler(&sAudioLoggerBuffer, &sLoggerBuffer); // Error handler with threads
 
 // DestructorBuffer
 Destructor::Queue sDestructorQueue;
@@ -112,12 +111,12 @@ int main() {
     //
     sPlayerEngine.bindMessageInBuffer(sMessageInBuffer);
     sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
-    sPlayerEngine.bindErrorBuffer(sAudioErrorBuffer);
+    sPlayerEngine.bindLoggerBuffer(sAudioLoggerBuffer);
     sPlayerEngine.bindMidiManager(sMidiManager);
     sPlayerEngine.bindConstructorQueue(sConstructorQueue);
     sPlayerEngine.bindDestructorBuffer(sDestructorQueue);
 
-    sErrorHandler.start();
+    sLoggerHandler.start();
     sDestructorWorker.start();
     sPlayerEngine.initializeRacks();
 
@@ -126,7 +125,7 @@ int main() {
     sStudioRunner.start();
 
     //
-    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sErrorBuffer, rpcParser, sConstructorQueue);
+    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sLoggerBuffer, rpcParser, sConstructorQueue);
     int httpPort = std::stoi(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {
@@ -150,7 +149,7 @@ int main() {
     if (server_thread.joinable()) {
         server_thread.join();
     }
-    sErrorHandler.stopThreads();
+    sLoggerHandler.stopThreads();
 
     sStudioRunner.stop();
     std::cout << "Server stopped gracefully." << std::endl;

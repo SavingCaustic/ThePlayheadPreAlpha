@@ -1,4 +1,5 @@
 #include "mainDebugBeatnik.cpp"
+#include "mainDebugPatchLoad.cpp"
 #include "mainDebugSubreal.cpp"
 #include "mainDebugSubrealKV.cpp"
 #include "mainDebugSubrealPEG.cpp"
@@ -22,8 +23,8 @@ int main() {
     int number;
 
     // comment either row there to get the selction stop or not
-    // std::cin >> number;
-    number = 2;
+    std::cin >> number;
+    // number = 2;
 
     if (!std::cin) {
         std::cerr << "Invalid input!" << std::endl;
@@ -43,6 +44,9 @@ int main() {
             break;
         case 5:
             debugSubrealPEG();
+            break;
+        case 6:
+            debugPatchLoad();
             break;
         default:
             std::cout << "illegal option" << std::endl;

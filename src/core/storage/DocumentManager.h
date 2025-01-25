@@ -31,14 +31,23 @@ class DocumentManager {
         return json;
     }
 
-    static nlohmann::json loadSynthPatchFromFile(const std::string &filename) {
-        if (FileDriver::assetFileExists(filename)) {
-            return FileDriver::assetFileRead(filename);
-        }
+    static nlohmann::json loadSynthPatchFromFile(const std::string &patchName, const std::string &synthType) {
+        std::string filename = "Synth/" + synthType + "/patches/" + patchName + ".json";
         nlohmann::json json;
+        if (!FileDriver::assetFileExists(filename)) {
+            // bad patch name..
+            return json;
+        }
+        std::string fileContent = FileDriver::assetFileRead(filename);
+        try {
+            json = nlohmann::json::parse(fileContent);
+        } catch (const nlohmann::json::parse_error &e) {
+            throw std::runtime_error("Failed to parse JSON from file: " + filename + " (" + e.what() + ")");
+        }
         return json;
     }
 
+    // WHAT ?!
     static void saveToFile(const nlohmann::json &json, const std::string &filename) {
         std::ofstream file(filename);
         if (!file.is_open()) {

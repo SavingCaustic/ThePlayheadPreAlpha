@@ -76,11 +76,6 @@ class SynthFactory {
         }
 
         return true;
-        /*if (loadOK) {
-            synth->setErrorWriter(errorWriter_);
-            this->enabled = true;
-        }
-        return (loadOK);*/
     }
 
     static bool patchLoad(SynthBase *&synth, std::string patchName) {

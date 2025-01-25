@@ -26,6 +26,11 @@ Model::Model() {
     reset();
 }
 
+void Model::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
+    this->buffer = audioBuffer;
+    this->bufferSize = bufferSize;
+}
+
 void Model::setupParams(int upCount) {
     if (SynthBase::paramDefs.empty()) {
         SynthBase::paramDefs = {

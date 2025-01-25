@@ -1,5 +1,6 @@
 {
     "audio_device":"jack",
+    "audio_device_ref":"Scarlett Solo USB: Audio (hw:1,0)",
     "44k1": "0",
     "buffer_size":"256",
     "midi_device":"1",

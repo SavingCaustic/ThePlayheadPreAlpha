@@ -70,6 +70,7 @@ struct Rack {
             rack.eventor2 = Unit::from_json(json["eventor2"]);
         }
         if (json.contains("synth")) {
+            std::cout << "Synth (project) JSON: " << json["synth"].dump(4) << std::endl; // Pretty print with 4-space indentation
             rack.synth = Unit::from_json(json["synth"]);
         }
         if (json.contains("effect1")) {

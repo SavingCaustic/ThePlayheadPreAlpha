@@ -170,6 +170,7 @@ void Model::setupParams(int upCount) {
                                  }}},
 
             {UP::peg_atime, {"peg_atime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max
+                                 sendLog(105, "setting attack to " + std::to_string(v));
                                  pegAR.setTime(audio::envelope::ASRState::ATTACK, v);
                              }}},
             {UP::peg_rtime, {"peg_rtime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max

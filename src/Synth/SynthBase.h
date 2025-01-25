@@ -1,6 +1,7 @@
 #pragma once
 #include "Synth/SynthInterface.h"
 #include "core/Unit/MidiReciever.h"
+#include "core/audio/AudioMath.h"
 #include "core/ext/nlohmann/json.hpp"
 #include "core/parameters/params.h"
 #include <iostream>
@@ -9,6 +10,7 @@
 #include <vector>
 
 // maybe this class should be renamed to SynthInstance or something..
+class Rack;
 
 class SynthBase : public SynthInterface {
   public:
@@ -23,7 +25,9 @@ class SynthBase : public SynthInterface {
     std::string resolveUPname(const int paramID);
 
     // this could be private.. ehh? called from rack
-    void bindBuffers(float *audioBuffer, std::size_t bufferSize);
+    void bindBuffers(float *audioBuffer, std::size_t bufferSize, Rack *rack);
+
+    void sendLog(int code, const std::string &message);
 
     void pushStrParam(const std::string &name, float val);
     void initParams();
@@ -31,6 +35,7 @@ class SynthBase : public SynthInterface {
     void indexParams(const int upCount);
 
   public:
+    Rack *host = nullptr;
     // static std::unordered_map<int, ParamDefinition> paramDefs;
     // static std::unordered_map<std::string, int> paramIndex;
     std::unordered_map<int, ParamDefinition> paramDefs;

@@ -1,0 +1,13 @@
+{
+    "type": "Subreal",
+    "settings": {
+        "lut1_overtones": "0.8,0.0",
+        "lut2_overtones": "0.7,0.0,0.8,0,0.0"
+    },
+    "params": {
+        "vcf_cutoff": 0.9,
+        "vca_attack": 0.0,
+        "osc2_octave": 0.2,
+        "osc_mix_kt": 0.9
+    }
+}

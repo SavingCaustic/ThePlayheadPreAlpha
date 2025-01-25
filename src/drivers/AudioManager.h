@@ -86,8 +86,10 @@ class AudioManager {
         //  Find the ID of the preferred device by name
         int preferredDeviceID = -1;
         for (const auto &device : availableDevices) {
+            std::cout << "Testing device-name match" << device.name << std::endl;
             if (device.name == preferredDeviceName) {
                 preferredDeviceID = device.id;
+                std::cout << "identified default audio device id: " << preferredDeviceID << std::endl;
                 break;
             }
         }

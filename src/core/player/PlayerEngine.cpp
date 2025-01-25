@@ -1,10 +1,9 @@
 #include "./PlayerEngine.h"
-#include "ErrorWriter.h"
 #include "chrono"
 #include "core/utils/FNV.h"
 
 PlayerEngine::PlayerEngine()
-    : noiseVolume(0.2f), isWritingMessage(false), hRotator(), errorWriter_(*this), objectManager(racks), ccManager(*this) {
+    : noiseVolume(0.2f), isWritingMessage(false), hRotator(), objectManager(racks), ccManager(*this) {
     this->rackReceivingMidi = 0; // meh
     this->loadAvg = 0.0f;
 }
@@ -25,7 +24,6 @@ void PlayerEngine::doReset() {
 void PlayerEngine::initializeRacks() {
     for (int i = 0; i < TPH_RACK_COUNT; ++i) {
         racks[i].setPlayerEngine(*this);
-        racks[i].setErrorWriter(errorWriter_); // Pass the ErrorWriter reference
     }
 }
 
@@ -37,8 +35,8 @@ void PlayerEngine::bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer) {
     messageOutBuffer = &hMessageOutBuffer;
 }
 
-void PlayerEngine::bindErrorBuffer(AudioErrorBuffer &hAudioErrorBuffer) {
-    audioErrorBuffer = &hAudioErrorBuffer;
+void PlayerEngine::bindLoggerBuffer(AudioLoggerBuffer &hAudioLoggerBuffer) {
+    audioLoggerBuffer = &hAudioLoggerBuffer;
 }
 
 void PlayerEngine::bindDestructorBuffer(Destructor::Queue &hDestructorBuffer) {
@@ -86,7 +84,7 @@ bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue,
 
 void PlayerEngine::sendError(int code, const std::string &message) {
     // dunno if this should be kept. But still, units have to be context-aware..
-    audioErrorBuffer->addAudioError(code, message);
+    audioLoggerBuffer->addAudioLog(code, message);
 }
 
 float PlayerEngine::getLoadAvg() {

@@ -4,7 +4,6 @@
 #include "core/ext/nlohmann/json.hpp"
 #include "core/factory/constructor/Queue.h"
 #include "core/parameters/params.h"
-#include "core/player/ErrorWriter.h" // Include ErrorWriter (or forward declare it) to use its methods
 #include <cstdint>
 #include <iostream>
 #include <string>
@@ -27,11 +26,6 @@ class SynthInterface : public MidiRecieverInterface {
     void handleMidiCC(uint8_t ccNumber, float value);
     void setupCCmapping(const std::string &synthName);
 
-    // i'd rather had this in the abstract but no luck..
-    void setErrorWriter(ErrorWriter *errorWriter) {
-        errorWriter_ = errorWriter;
-    }
-
     // this too..
     void logErr(int code, const std::string &message);
 
@@ -39,7 +33,6 @@ class SynthInterface : public MidiRecieverInterface {
     // belonging to class, not instance
     // belonging to instance, because they may be overridden by patch settings.
     std::unordered_map<int, std::string> ccMappings; // MIDI CC -> parameter name mappings
-    ErrorWriter *errorWriter_ = nullptr;
-    float *buffer;          // Pointer to audio buffer
-    std::size_t bufferSize; // Size of the audio buffer
+    float *buffer;                                   // Pointer to audio buffer
+    std::size_t bufferSize;                          // Size of the audio buffer
 };

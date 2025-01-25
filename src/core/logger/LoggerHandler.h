@@ -1,36 +1,36 @@
 #pragma once
 
-#include "./AudioErrorBuffer.h"
-#include "./ErrorBuffer.h"
-#include "./ErrorRec.h"
-#include "AudioErrorProxy.h"
-#include "ErrorReader.h"
+#include "./AudioLoggerBuffer.h"
+#include "./LoggerBuffer.h"
+#include "./LoggerRec.h"
+#include "AudioLoggerProxy.h"
+#include "LoggerReader.h"
 #include <array>
 #include <atomic>
 #include <iostream>
 #include <mutex>
 #include <thread>
 
-class ErrorHandler {
+class LoggerHandler {
   public:
-    ErrorHandler(AudioErrorBuffer *audioErrorBuffer, ErrorBuffer *errorBuffer)
-        : audioErrorBuffer(audioErrorBuffer), errorBuffer(errorBuffer), stop(false) {
-        errorProxy = std::make_unique<AudioErrorProxy>(audioErrorBuffer, errorBuffer);
-        errorReader = std::make_unique<ErrorReader>(*errorBuffer);
+    LoggerHandler(AudioLoggerBuffer *audioErrorBuffer, LoggerBuffer *errorBuffer)
+        : audioLoggerBuffer(audioLoggerBuffer), loggerBuffer(loggerBuffer), stop(false) {
+        loggerProxy = std::make_unique<AudioLoggerProxy>(audioErrorBuffer, errorBuffer);
+        loggerReader = std::make_unique<LoggerReader>(*errorBuffer);
     }
 
     // Start the threads
     void start() {
         // Start the proxy thread (runs proxyThreadFunc with condition variable)
-        proxyThread = std::thread(&AudioErrorProxy::proxyThreadFunc, errorProxy.get());
+        proxyThread = std::thread(&AudioLoggerProxy::proxyThreadFunc, loggerProxy.get());
 
         // Start the reader thread to process the buffered errors
-        readerThread = std::thread(&ErrorHandler::readerLoop, this);
+        readerThread = std::thread(&LoggerHandler::readerLoop, this);
     }
 
     // Stop the threads safely
     void stopThreads() {
-        errorProxy->stop(); // Stop the proxy thread gracefully
+        loggerProxy->stop(); // Stop the proxy thread gracefully
         stop = true;
 
         // Join threads
@@ -50,17 +50,17 @@ class ErrorHandler {
     void readerLoop() {
         while (!stop) {
             // Process and log errors from the ErrorBuffer
-            errorReader->readAll();
+            loggerReader->readAll();
             std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Reader can use a small sleep to avoid excessive CPU
         }
     }
 
-    AudioErrorBuffer *audioErrorBuffer;
-    ErrorBuffer *errorBuffer;
+    AudioLoggerBuffer *audioLoggerBuffer;
+    LoggerBuffer *loggerBuffer;
     std::atomic<bool> stop;
     std::thread proxyThread;
     std::thread readerThread;
 
-    std::unique_ptr<AudioErrorProxy> errorProxy;
-    std::unique_ptr<ErrorReader> errorReader;
+    std::unique_ptr<AudioLoggerProxy> loggerProxy;
+    std::unique_ptr<LoggerReader> loggerReader;
 };

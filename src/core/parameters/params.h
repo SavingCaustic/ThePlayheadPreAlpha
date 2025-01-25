@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <string>
-#include <unordered_map>
 
 // Struct for parameter definitions
 struct ParamDefinition {
@@ -14,6 +13,3 @@ struct ParamDefinition {
     int rangeFactor;                          // Factor for scaling (based on log or linear curve)
     std::function<void(float)> transformFunc; // Lambda for handling parameter changes
 };
-
-// Probably move to SynthInterface..
-// extern std::unordered_map<std::string, ParamDefinition> parameterDefinitions;

@@ -1,5 +1,5 @@
 #include "SynthBase.h"
-#include "core/audio/AudioMath.h"
+#include "core/player/Rack/Rack.h"
 
 // Define the static members - shared across instances
 // This approach didn't work because lambdas need to access variables in the model.
@@ -14,10 +14,26 @@ void SynthBase::initParams() {
     }
 }
 
-void SynthBase::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
+void SynthBase::bindBuffers(float *audioBuffer, std::size_t bufferSize, Rack *host) {
+    // Rack should later be host
+    this->host = host;
     this->buffer = audioBuffer;
     this->bufferSize = bufferSize;
 }
+
+void SynthBase::sendLog(int code, const std::string &message) {
+    if (host) {
+        host->sendLog(code, message);
+    }
+}
+
+/*
+void SynthBase::bindHost(UnitHost myHost) {
+    this->host = *myHost;
+    this->buffer = myHost.audioBuffer;
+    this->bufferSize = myHost.audioBuffer.size();
+}
+*/
 
 void SynthBase::pushAllParams() {
     float valToLambda;

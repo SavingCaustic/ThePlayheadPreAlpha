@@ -1,5 +1,4 @@
 #include "./EventorInterface.h"
-#include "core/player/ErrorWriter.h"
 #include <core/ext/nlohmann/json.hpp>
 #include <drivers/FileDriver.h>
 #include <iostream>
@@ -7,11 +6,7 @@
 // Initialize the static unordered_map
 
 void EventorInterface::logErr(int code, const std::string &message) {
-    if (errorWriter_) {
-        errorWriter_->logError(code, message);
-    } else {
-        std::cerr << "std:Error [" << code << "]: " << message << std::endl;
-    }
+    std::cerr << "std:Error [" << code << "]: " << message << std::endl;
 }
 
 // CC-mapping stuff

@@ -18,7 +18,7 @@
                     "lut2_overtones": "0.7,0.0,0.2,0,0.7"
                 },
                 "params": {
-                    "vcf_cutoff": 0.4,
+                    "vcf_cutoff": 0.8,
                     "vca_attack": 0.4
                 }
             },

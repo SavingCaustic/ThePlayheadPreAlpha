@@ -16,26 +16,15 @@ void DataStore::loadSynthPatch(const std::string &filename, size_t rackID) {
         std::cerr << "Invalid rackID: " << rackID << "\n";
         return;
     }
+    const std::string &synthType = project.racks[rackID].synth.type;
 
-    auto &rack = project.racks[rackID];
-    auto json = DocumentManager::loadSynthPatchFromFile(filename);
-    // maybe i could skip or simplify below, using stuff in structs.h
+    auto json = DocumentManager::loadSynthPatchFromFile(filename, synthType);
 
     if (!json.empty()) {
-        Unit patchUnit = Unit::from_json(json);
-
-        if (patchUnit.type == rack.synth.type) {
-            // Apply the patch settings and parameters to the existing synth
-            rack.synth.settings = patchUnit.settings;
-            rack.synth.params = patchUnit.params;
-
-            // UnitFactory::initialize(rack.synth); // Reinitialize the synth with new settings
-            std::cout << "Synth patch loaded and applied to Rack " << rackID << ".\n";
-        } else {
-            std::cerr << "Patch type (" << patchUnit.type
-                      << ") does not match the synth type (" << rack.synth.type
-                      << ") in Rack " << rackID << ".\n";
-        }
+        // std::cout << "Synth (patch) JSON: " << json["synth"].dump(4) << std::endl; // Pretty print with 4-space indentation
+        std::cout << "Before loading: " << project.racks[rackID].synth.to_json().dump(4) << std::endl;
+        project.racks[rackID].synth = Unit::from_json(json);
+        std::cout << "After loading: " << project.racks[rackID].synth.to_json().dump(4) << std::endl;
     } else {
         std::cerr << "Failed to load synth patch file: " << filename << "\n";
     }

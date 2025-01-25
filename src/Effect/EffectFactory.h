@@ -54,11 +54,6 @@ class EffectFactory {
             loadOK = false;
         }
         return true;
-        /*if (loadOK) {
-            synth->setErrorWriter(errorWriter_);
-            this->enabled = true;
-        }
-        return (loadOK);*/
     }
 
     // skipping patch load and save for now..

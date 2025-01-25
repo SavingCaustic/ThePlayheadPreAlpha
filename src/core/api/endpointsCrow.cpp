@@ -1,7 +1,7 @@
 #include "endpointsCrow.h"
 #include "constants.h"
 #include "core/api/rpcParser.h"
-#include "core/errors/ErrorBuffer.h"
+#include "core/logger/LoggerBuffer.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutReader.h"
 #include "core/parameters/SettingsManager.h"
@@ -25,7 +25,7 @@ void crowSetupEndpoints(
     MessageInBuffer &messageInBuffer,
     MessageOutBuffer &messageOutBuffer,
     MessageOutReader &messageOutReader,
-    ErrorBuffer &errorBuffer,
+    LoggerBuffer &loggerBuffer,
     RPCParser &rpcParser,
     Constructor::Queue &constructorQueue) {
     // root endpoint. just info.

@@ -16,13 +16,13 @@ void Beatnik::Voice::reset() {
 
 void Beatnik::Voice::noteOn(uint8_t midiNote, float velocity) {
     notePlaying = midiNote;
-    sampleID = (midiNote - 60 + 12) % 12;
+    sampleID = (midiNote) % 12;
     currSamplePos = 0;
     noteVelocity = velocity * velocity; // use x2 for now instead of log20.
     float pan = 0.0f + (60 - midiNote) * 0.2f;
     float angle = (pan + 1.0f) * 0.125;
-    leftGain = AudioMath::ccos(angle) * noteVelocity * 0.25;
-    rightGain = AudioMath::csin(angle) * noteVelocity * 0.25;
+    leftGain = AudioMath::ccos(angle) * noteVelocity * 0.5f;
+    rightGain = AudioMath::csin(angle) * noteVelocity * 0.5f;
 
     // it's all in the voice. no AR in model.
     vcaAR.triggerSlope(vcaARslope, audio::envelope::ADSFRCmd::NOTE_ON);

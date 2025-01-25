@@ -2,6 +2,8 @@
 #include "drivers/FileDriver.h"
 #include <iostream>
 
+/* this class is used to read device.json and such. */
+
 void SettingsManager::jsonRead(std::unordered_map<std::string, std::string> &settingsMap, const std::string &sFilename) {
     // Read the file in /assets (read-only)
     std::string assetsContent = FileDriver::assetFileRead(sFilename); // Assuming this returns the file as a string
