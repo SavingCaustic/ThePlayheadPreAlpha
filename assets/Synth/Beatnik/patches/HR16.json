@@ -1,0 +1,19 @@
+{
+    "settings": {
+        "a_sample": "HR16A/Alesis_HR16A_10.wav",
+        "b_sample": "HR16A/Alesis_HR16A_11.wav",
+        "c_sample": "HR16A/Alesis_HR16A_12.wav",
+        "d_sample": "HR16A/Alesis_HR16A_13.wav",
+        "e_sample": "HR16A/Alesis_HR16A_14.wav",
+        "f_sample": "HR16A/Alesis_HR16A_15.wav",
+        "g_sample": "HR16A/Alesis_HR16A_16.wav",
+        "h_sample": "HR16A/Alesis_HR16A_17.wav",
+        "i_sample": "HR16A/Alesis_HR16A_18.wav",
+        "j_sample": "HR16A/Alesis_HR16A_19.wav"
+    },
+    "params": {
+        "vca_attack": 0.5,
+        "vca_release": 0.5
+    },
+    "type": "Beatnik"
+}

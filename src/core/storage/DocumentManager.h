@@ -34,6 +34,7 @@ class DocumentManager {
     static nlohmann::json loadSynthPatchFromFile(const std::string &patchName, const std::string &synthType) {
         std::string filename = "Synth/" + synthType + "/patches/" + patchName + ".json";
         nlohmann::json json;
+        std::cout << "trying to open " << filename << std::endl;
         if (!FileDriver::assetFileExists(filename)) {
             // bad patch name..
             return json;
