@@ -32,9 +32,9 @@ struct MessageIn {
     }
 };
 
-class MessageInBuffer {
+class MessageInQueue {
   public:
-    explicit MessageInBuffer(size_t bufferSize)
+    explicit MessageInQueue(size_t bufferSize)
         : bufferSize(bufferSize), head(0), tail(0) {
         buffer.fill(MessageIn()); // Initialize buffer with default Messages
     }

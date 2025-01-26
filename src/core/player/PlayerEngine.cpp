@@ -27,12 +27,12 @@ void PlayerEngine::initializeRacks() {
     }
 }
 
-void PlayerEngine::bindMessageInBuffer(MessageInBuffer &hMessageInBuffer) {
-    messageInBuffer = &hMessageInBuffer;
+void PlayerEngine::bindMessageInQueue(MessageInQueue &hMessageInQueue) {
+    messageInQueue = &hMessageInQueue;
 }
 
-void PlayerEngine::bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer) {
-    messageOutBuffer = &hMessageOutBuffer;
+void PlayerEngine::bindMessageOutQueue(MessageOutQueue &hMessageOutQueue) {
+    messageOutQueue = &hMessageOutQueue;
 }
 
 void PlayerEngine::bindLoggerQueue(AudioLoggerQueue &hAudioLoggerQueue) {
@@ -75,7 +75,7 @@ bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue,
     message.paramLabel[msgOutParamLabelSize - 1] = '\0';
 
     // Push the message to the queue
-    messageOutBuffer->push(message);
+    messageOutQueue->push(message);
 
     // Release the write lock
     isWritingMessage.store(false, std::memory_order_release);
@@ -112,7 +112,7 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
 
     if (timeLeftUs > 500) {
         // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
-        auto optionalMessage = messageInBuffer->pop();
+        auto optionalMessage = messageInQueue->pop();
         if (optionalMessage) { // Check if a message was retrieved
             newMessage = *optionalMessage;
             std::cout << "New message received," << newMessage.paramName << "value:" << newMessage.paramValue << std::endl;

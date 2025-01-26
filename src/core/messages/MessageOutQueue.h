@@ -35,13 +35,13 @@ struct MessageOut {
     }
 };
 
-class MessageOutBuffer {
+class MessageOutQueue {
   public:
     static constexpr size_t kBufferSize = 32; // Set your desired buffer size
     std::condition_variable cv;               // Reference to shared condition variable
     std::mutex mtx;
 
-    MessageOutBuffer()
+    MessageOutQueue()
         : head(0), tail(0), messageAvailable(false) {}
 
     // Push a message (Producer)

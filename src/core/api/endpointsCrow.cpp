@@ -2,7 +2,7 @@
 #include "constants.h"
 #include "core/api/rpcParser.h"
 #include "core/logger/LoggerQueue.h"
-#include "core/messages/MessageInBuffer.h"
+#include "core/messages/MessageInQueue.h"
 #include "core/messages/MessageOutReader.h"
 #include "core/parameters/SettingsManager.h"
 #include "core/player/PlayerEngine.h" // Include your relevant headers
@@ -22,8 +22,8 @@ void crowSetupEndpoints(
     PlayerEngine &playerEngine,
     AudioManager &audioManager,
     MidiManager &midiManager,
-    MessageInBuffer &messageInBuffer,
-    MessageOutBuffer &messageOutBuffer,
+    MessageInQueue &messageInQueue,
+    MessageOutQueue &messageOutQueue,
     MessageOutReader &messageOutReader,
     LoggerQueue &loggerQueue,
     RPCParser &rpcParser,
@@ -115,7 +115,7 @@ void crowSetupEndpoints(
         });
     // below to be removed
 
-    api.route_dynamic("/setRackUnitParam")([&messageInBuffer](const crow::request &req) {
+    api.route_dynamic("/setRackUnitParam")([&messageInQueue](const crow::request &req) {
         auto rack_str = req.url_params.get("rack");
         auto unit = req.url_params.get("unit");
         auto name = req.url_params.get("name");
@@ -147,7 +147,7 @@ void crowSetupEndpoints(
 
         std::string name_str(name ? name : "");
         MessageIn msg{rack, unit, name_str.c_str(), value};
-        if (messageInBuffer.push(msg)) {
+        if (messageInQueue.push(msg)) {
             // Return success message
             return crow::response(200, "Pushed message to the queue");
         } else {

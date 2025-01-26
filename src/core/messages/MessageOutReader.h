@@ -1,5 +1,5 @@
 #pragma once
-#include "MessageOutBuffer.h"
+#include "core/messages/MessageOutQueue.h"
 #include <chrono>
 #include <crow.h>
 #include <iostream>
@@ -7,8 +7,8 @@
 
 class MessageOutReader {
   public:
-    explicit MessageOutReader(MessageOutBuffer &sender, crow::websocket::connection *wsConn)
-        : messageOutBuffer(sender), wsConnection(wsConn), stopFlag(false), isRunning(false) {}
+    explicit MessageOutReader(MessageOutQueue &sender, crow::websocket::connection *wsConn)
+        : messageOutQueue(sender), wsConnection(wsConn), stopFlag(false), isRunning(false) {}
 
     void setConnection(crow::websocket::connection *wsConn) {
         wsConnection = wsConn;
@@ -27,7 +27,7 @@ class MessageOutReader {
     void stop() {
         stopFlag.store(true, std::memory_order_release);
         // Notify the condition variable to wake the consumer thread
-        messageOutBuffer.cv.notify_all();
+        messageOutQueue.cv.notify_all();
         if (consumerThread.joinable()) {
             consumerThread.join();
         }
@@ -43,19 +43,19 @@ class MessageOutReader {
         std::cout << "Thread consuming messages started." << std::endl;
 
         while (!stopFlag.load(std::memory_order_acquire)) {
-            std::unique_lock<std::mutex> lock(messageOutBuffer.mtx); // Lock buffer's mutex
+            std::unique_lock<std::mutex> lock(messageOutQueue.mtx); // Lock buffer's mutex
 
             // Wait until either a message is available or stopFlag is set
-            messageOutBuffer.cv.wait(lock, [this] {
-                return messageOutBuffer.checkMoreMessages() || stopFlag.load(std::memory_order_acquire);
+            messageOutQueue.cv.wait(lock, [this] {
+                return messageOutQueue.checkMoreMessages() || stopFlag.load(std::memory_order_acquire);
             });
 
             if (stopFlag.load(std::memory_order_acquire)) {
                 break;
             }
 
-            while (messageOutBuffer.checkMoreMessages()) {
-                auto message = messageOutBuffer.pop();
+            while (messageOutQueue.checkMoreMessages()) {
+                auto message = messageOutQueue.pop();
                 if (message && wsConnection) {
                     // Send message if WebSocket is still open
                     std::string msg = "rackId: " + std::to_string(message->rackId) +
@@ -69,7 +69,7 @@ class MessageOutReader {
         std::cout << "Message consumer thread exiting." << std::endl;
     }
 
-    MessageOutBuffer &messageOutBuffer;
+    MessageOutQueue &messageOutQueue;
     crow::websocket::connection *wsConnection;
     std::thread consumerThread;
     std::atomic<bool> stopFlag;

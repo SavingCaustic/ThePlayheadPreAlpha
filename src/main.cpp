@@ -11,14 +11,13 @@
 #include "core/logger/AudioLoggerQueue.h"
 #include "core/logger/LoggerHandler.h"
 #include "core/logger/LoggerQueue.h"
-#include "core/messages/MessageInBuffer.h"
-#include "core/messages/MessageOutBuffer.h"
+#include "core/messages/MessageInQueue.h"
+#include "core/messages/MessageOutQueue.h"
 #include "core/messages/MessageOutReader.h"
 #include "core/parameters/SettingsManager.h"
 #include "core/player/PlayerEngine.h"
 #include "core/player/Rack/Rack.h"
 #include "core/runner/StudioRunner.h"
-// #include "core/storage/Project.h"
 #include "crow.h"
 #include "drivers/AudioDriver.h"
 #include "drivers/AudioManager.h"
@@ -57,9 +56,9 @@ void signal_handler(int signal) {
 
 // Global objects. Could possibly be hierarchial but could lead to poor testing environments.
 PlayerEngine sPlayerEngine;
-MessageInBuffer sMessageInBuffer(8);
-MessageOutBuffer sMessageOutBuffer;
-MessageOutReader sMessageOutReader(sMessageOutBuffer, nullptr); // Initialize without connection
+MessageInQueue sMessageInQueue(8);
+MessageOutQueue sMessageOutQueue;
+MessageOutReader sMessageOutReader(sMessageOutQueue, nullptr); // Initialize without connection
 
 Constructor::Queue sConstructorQueue;
 // with factories being stateless, it's API and PlayerEngine that needs to know sConstructorQueue
@@ -115,8 +114,8 @@ int main() {
     unsigned long framesPerBuffer = static_cast<unsigned long>(std::stoi(deviceSettings["buffer_size"]));
 
     //
-    sPlayerEngine.bindMessageInBuffer(sMessageInBuffer);
-    sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
+    sPlayerEngine.bindMessageInQueue(sMessageInQueue);
+    sPlayerEngine.bindMessageOutQueue(sMessageOutQueue);
     sPlayerEngine.bindLoggerQueue(sAudioLoggerQueue);
     sPlayerEngine.bindMidiManager(sMidiManager);
     sPlayerEngine.bindConstructorQueue(sConstructorQueue);
@@ -131,7 +130,7 @@ int main() {
     sStudioRunner.start();
 
     //
-    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sLoggerQueue, rpcParser, sConstructorQueue);
+    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInQueue, sMessageOutQueue, sMessageOutReader, sLoggerQueue, rpcParser, sConstructorQueue);
     int httpPort = std::stoi(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {

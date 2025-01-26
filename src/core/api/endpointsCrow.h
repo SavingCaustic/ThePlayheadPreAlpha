@@ -6,8 +6,8 @@
 class PlayerEngine;
 class AudioManager;
 class MidiManager;
-class MessageInBuffer;
-class MessageOutBuffer;
+class MessageInQueue;
+class MessageOutQueue;
 class MessageOutReader;
 class LoggerQueue;
 class RPCParser;
@@ -20,8 +20,8 @@ void crowSetupEndpoints(
     PlayerEngine &playerEngine,
     AudioManager &audioManager,
     MidiManager &midiManager,
-    MessageInBuffer &messageInBuffer,
-    MessageOutBuffer &MessageOutBuffer,
+    MessageInQueue &messageInQueue,
+    MessageOutQueue &MessageOutQueue,
     MessageOutReader &MessageOutReader,
     LoggerQueue &LoggerQueue,
     RPCParser &rpcParser,
