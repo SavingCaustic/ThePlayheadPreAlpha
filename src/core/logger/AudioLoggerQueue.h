@@ -10,7 +10,7 @@
 
 // Global buffer. Writes made by PlayerEngine & c:o. Read by proxy.
 
-class AudioLoggerBuffer {
+class AudioLoggerQueue {
   public:
     // buffer-size must be 2^x
     static constexpr size_t BufferSize = 64;

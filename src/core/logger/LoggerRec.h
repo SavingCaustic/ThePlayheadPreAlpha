@@ -1,6 +1,6 @@
 #pragma once
 
-// no namespace for error..
+// no namespace for logger..
 
 constexpr int LOG_DEBUG = 1;
 constexpr int LOG_INFO = 2;

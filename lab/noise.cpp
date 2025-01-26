@@ -1,6 +1,18 @@
+#include <alsa/asoundlib.h>
 #include <portaudio.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+// Custom error handler to suppress ALSA messages
+void alsaErrorHandler(const char *file, int line, const char *function, int err, const char *fmt, ...) {
+    // Do nothing to suppress the messages
+    // Uncomment the following line to log suppressed messages (for debugging):
+    // fprintf(stderr, "ALSA suppressed: %s:%d %s\n", file, line, function);
+}
+
+void suppressAlsaLogs() {
+    snd_lib_error_set_handler(alsaErrorHandler);
+}
 
 // simple noise generator to test audio-device and also its low-level latency (when hitting key)
 
@@ -25,21 +37,10 @@ float noise() {
     noiseSeed = (noiseA * noiseSeed + noiseB) & (noiseC - 1);
     constexpr float invNoiseC = (1.0f / (1 << 24));
     float sample = noiseSeed * invNoiseC * 2.0f - 1.0f;
-    //testing use of EMA as EQ..
+    // testing use of EMA as EQ..
     noiseEMA = noiseEMA * 0.95f + sample * 0.05f;
-    if (gainup) {
-      gain += 0.00001f;
-      if (gain > 0.999) {
-        gainup = false;
-      }
-    } else {
-      gain -= 0.0001f;
-      if (gain < -0.999) {
-        gainup = true;
-      }
-    }
-    
-    return sample + noiseEMA * gain;
+
+    return noiseEMA * 0.5f;
 }
 
 // Callback function to generate white noise
@@ -62,7 +63,15 @@ static int noiseCallback(const void *inputBuffer,
 }
 
 int main() {
+    // Set environment variables
+    setenv("PA_ALSA_PLUGHW", "1", 1);
+    setenv("ALSA_DEBUG", "0", 1);
+    setenv("JACK_NO_START_SERVER", "1", 1);
+    //
+    printf("Before..\n");
+    suppressAlsaLogs();
     PaError err = Pa_Initialize();
+    printf("After..\n");
     if (err != paNoError) {
         printf("PortAudio error: %s\n", Pa_GetErrorText(err));
         return -1;

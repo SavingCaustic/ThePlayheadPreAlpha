@@ -35,8 +35,8 @@ void PlayerEngine::bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer) {
     messageOutBuffer = &hMessageOutBuffer;
 }
 
-void PlayerEngine::bindLoggerBuffer(AudioLoggerBuffer &hAudioLoggerBuffer) {
-    audioLoggerBuffer = &hAudioLoggerBuffer;
+void PlayerEngine::bindLoggerQueue(AudioLoggerQueue &hAudioLoggerQueue) {
+    audioLoggerQueue = &hAudioLoggerQueue;
 }
 
 void PlayerEngine::bindDestructorBuffer(Destructor::Queue &hDestructorBuffer) {
@@ -84,11 +84,11 @@ bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue,
 
 void PlayerEngine::sendError(int code, const std::string &message) {
     // dunno if this should be kept. But still, units have to be context-aware..
-    audioLoggerBuffer->addAudioLog(code, message);
+    audioLoggerQueue->addAudioLog(code, message);
 }
 
 float PlayerEngine::getLoadAvg() {
-    // this should really be atomic..
+    // this should really be atomic.. and maybe skip altogether..
     return this->loadAvg;
 }
 
@@ -108,7 +108,7 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
         turnRackAndRender();
         sumToMaster(buffer, numFrames, outer);
     }
-    int64_t timeLeftUs = sendLoadStats(nextFrameTime, frameDurationMicroSec);
+    int64_t timeLeftUs = calcTimeLeftUs(nextFrameTime, frameDurationMicroSec);
 
     if (timeLeftUs > 500) {
         // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
@@ -126,13 +126,24 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
         }
     }
 
-    // meh - refactor this call..
+    timeLeftUs = calcTimeLeftUs(nextFrameTime, frameDurationMicroSec);
     if (timeLeftUs > 500) {
         objectManager.process();
     }
+
+    debugCnt++;
+    if ((debugCnt & (4096 - 1)) == 0) {
+        sendLoadStats(nextFrameTime, frameDurationMicroSec);
+    }
 }
 
-int64_t PlayerEngine::sendLoadStats(std::chrono::time_point<std::chrono::high_resolution_clock> nextFrameTime, int64_t frameDurationMicroSec) {
+int64_t PlayerEngine::calcTimeLeftUs(std::chrono::time_point<std::chrono::high_resolution_clock> nextFrameTime, int64_t frameDurationMicroSec) {
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+               nextFrameTime - std::chrono::high_resolution_clock::now())
+        .count();
+}
+
+void PlayerEngine::sendLoadStats(std::chrono::time_point<std::chrono::high_resolution_clock> nextFrameTime, int64_t frameDurationMicroSec) {
     //
     std::chrono::time_point endTime = std::chrono::high_resolution_clock::now();
     int64_t timeLeftUs = std::chrono::duration_cast<std::chrono::microseconds>(nextFrameTime - endTime).count();
@@ -152,16 +163,12 @@ int64_t PlayerEngine::sendLoadStats(std::chrono::time_point<std::chrono::high_re
     // Update loadAvg with smoothing
     this->loadAvg = (alpha * rawLoad) + ((1 - alpha) * this->loadAvg);
 
-    debugCnt++;
-    if ((debugCnt & (4096 - 1)) == 0) {
-        sendError(100, "Stat: " + std::to_string(this->loadAvg));
-        sendError(105, "TimeLeftUs: " + std::to_string(timeLeftUs));
-    }
-    return timeLeftUs;
+    sendError(LOG_INFO, "Stat: " + std::to_string(this->loadAvg));
+    sendError(LOG_INFO, "TimeLeftUs: " + std::to_string(timeLeftUs));
 }
 
 std::string PlayerEngine::getSynthParams(int rackId) {
-    // this shoud really require rack to be non-playing..
+    // this shoud really require rack to be non-playing.. ..or receieved from queue - not directly from endpoint.
     return this->racks[rackId].synth->getParamDefsAsJSON();
 }
 

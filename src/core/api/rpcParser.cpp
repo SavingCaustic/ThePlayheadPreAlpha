@@ -1,7 +1,5 @@
 #include "rpcParser.h"
 
-RPCParser::RPCParser(Constructor::Queue &queue, Storage::DataStore &store) : constructorQueue(queue), dataStore(store) {}
-
 void RPCParser::parse(const std::string &strClass, const std::string &strMethod, const std::string &strKey,
                       const std::string &strVal, const std::string &rackID, const std::string &unit) {
     // ok. for simplicity.
@@ -17,15 +15,15 @@ void RPCParser::parse(const std::string &strClass, const std::string &strMethod,
         break;
     case Utils::Hash::fnv1a_hash("project"):
         // might need the constructor queue for master effects (outside racks)
-        Factory::Project::parse(strMethod, strKey, strVal, constructorQueue, dataStore); // synth, set, monolith
+        Factory::Project::parse(strMethod, strKey, strVal); // synth, set, monolith
         break;
     case Utils::Hash::fnv1a_hash("rack"):
         std::cout << "rack here we go.." << std::endl;
-        Factory::Rack::parse(strMethod, strKey, strVal, stoi(rackID), constructorQueue); // synth, set, monolith
+        Factory::Rack::parse(strMethod, strKey, strVal, stoi(rackID)); // synth, set, monolith
         break;
     case Utils::Hash::fnv1a_hash("unit"):
         std::cout << "unit here we go.." << std::endl;
-        Factory::Unit::parse(strMethod, strKey, strVal, stoi(rackID), unit, constructorQueue, dataStore); // synth, "lut1_overtones", "blaha"
+        Factory::Unit::parse(strMethod, strKey, strVal, stoi(rackID), unit); // synth, "lut1_overtones", "blaha"
         break;
     case Utils::Hash::fnv1a_hash("pattern"):
         break;

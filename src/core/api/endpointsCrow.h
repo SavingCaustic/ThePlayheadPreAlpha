@@ -9,7 +9,7 @@ class MidiManager;
 class MessageInBuffer;
 class MessageOutBuffer;
 class MessageOutReader;
-class LoggerBuffer;
+class LoggerQueue;
 class RPCParser;
 
 // Function to set up Crow routes
@@ -23,6 +23,6 @@ void crowSetupEndpoints(
     MessageInBuffer &messageInBuffer,
     MessageOutBuffer &MessageOutBuffer,
     MessageOutReader &MessageOutReader,
-    LoggerBuffer &LoggerBuffer,
+    LoggerQueue &LoggerQueue,
     RPCParser &rpcParser,
     Constructor::Queue &constructorQueue);

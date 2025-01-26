@@ -1,7 +1,7 @@
 #pragma once
 
-#include "./AudioLoggerBuffer.h"
-#include "./LoggerBuffer.h"
+#include "./AudioLoggerQueue.h"
+#include "./LoggerQueue.h"
 #include "./LoggerRec.h"
 #include "AudioLoggerProxy.h"
 #include "LoggerReader.h"
@@ -13,10 +13,10 @@
 
 class LoggerHandler {
   public:
-    LoggerHandler(AudioLoggerBuffer *audioErrorBuffer, LoggerBuffer *errorBuffer)
-        : audioLoggerBuffer(audioLoggerBuffer), loggerBuffer(loggerBuffer), stop(false) {
-        loggerProxy = std::make_unique<AudioLoggerProxy>(audioErrorBuffer, errorBuffer);
-        loggerReader = std::make_unique<LoggerReader>(*errorBuffer);
+    LoggerHandler(AudioLoggerQueue *audioErrorQueue, LoggerQueue *errorQueue)
+        : audioLoggerQueue(audioLoggerQueue), loggerQueue(loggerQueue), stop(false) {
+        loggerProxy = std::make_unique<AudioLoggerProxy>(audioErrorQueue, errorQueue);
+        loggerReader = std::make_unique<LoggerReader>(*errorQueue);
     }
 
     // Start the threads
@@ -55,8 +55,8 @@ class LoggerHandler {
         }
     }
 
-    AudioLoggerBuffer *audioLoggerBuffer;
-    LoggerBuffer *loggerBuffer;
+    AudioLoggerQueue *audioLoggerQueue;
+    LoggerQueue *loggerQueue;
     std::atomic<bool> stop;
     std::thread proxyThread;
     std::thread readerThread;

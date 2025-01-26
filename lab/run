@@ -7,7 +7,7 @@ if [ -z "$1" ]; then
 fi
 
 # Compile the provided program
-g++ "$1" -o "temp" -lportaudio -lrtmidi
+g++ "$1" -o "temp" -lportaudio -lrtmidi -lasound
 
 # Run the compiled program
 ./temp

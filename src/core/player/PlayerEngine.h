@@ -5,7 +5,7 @@
 #include "Synth/SynthBase.h"
 #include "chrono"
 #include "core/destructor/Queue.h"
-#include "core/logger/AudioLoggerBuffer.h"
+#include "core/logger/AudioLoggerQueue.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutBuffer.h"
 #include "core/player/Rack/Rack.h"
@@ -30,7 +30,7 @@ class PlayerEngine {
 
     void bindMessageInBuffer(MessageInBuffer &hMessageInBuffer);
     void bindMessageOutBuffer(MessageOutBuffer &hMessageOutBuffer);
-    void bindLoggerBuffer(AudioLoggerBuffer &hAudioLoggerBuffer);
+    void bindLoggerQueue(AudioLoggerQueue &hAudioLoggerQueue);
     void bindDestructorBuffer(Destructor::Queue &hDestructorBuffer);
 
     void bindMidiManager(MidiManager &hMidiManager);
@@ -55,7 +55,10 @@ class PlayerEngine {
     // R    bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
     // R    Rack *getRack(std::size_t position) const;
     void renderNextBlock(float *buffer, unsigned long numFrames);
-    int64_t sendLoadStats(std::chrono::time_point<std::chrono::high_resolution_clock> nextFrameCount, int64_t frameDurationMicroSec);
+
+    int64_t calcTimeLeftUs(std::chrono::time_point<std::chrono::high_resolution_clock> nextFrameTime, int64_t frameDurationMicroSec);
+
+    void sendLoadStats(std::chrono::time_point<std::chrono::high_resolution_clock> nextFrameCount, int64_t frameDurationMicroSec);
 
     void sendError(int code, const std::string &message);
 
@@ -87,7 +90,7 @@ class PlayerEngine {
     // Destructor::Queue *destructorBuffer = nullptr;
     MessageIn newMessage;               // Declare a reusable Message object
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
-    AudioLoggerBuffer *audioLoggerBuffer = nullptr;
+    AudioLoggerQueue *audioLoggerQueue = nullptr;
     MidiManager *midiManager = nullptr;
 
     float loadAvg = 0;

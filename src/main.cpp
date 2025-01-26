@@ -7,9 +7,10 @@
 #include "core/api/rpcParser.h"
 #include "core/audio/AudioMath.h"
 #include "core/destructor/Worker.h"
-#include "core/logger/AudioLoggerBuffer.h"
-#include "core/logger/LoggerBuffer.h"
+#include "core/hallways/FactoryHallway.h"
+#include "core/logger/AudioLoggerQueue.h"
 #include "core/logger/LoggerHandler.h"
+#include "core/logger/LoggerQueue.h"
 #include "core/messages/MessageInBuffer.h"
 #include "core/messages/MessageOutBuffer.h"
 #include "core/messages/MessageOutReader.h"
@@ -64,17 +65,18 @@ Constructor::Queue sConstructorQueue;
 // with factories being stateless, it's API and PlayerEngine that needs to know sConstructorQueue
 Storage::DataStore sDataStore;
 
-RPCParser rpcParser(sConstructorQueue, sDataStore);
+RPCParser rpcParser;
 // data and serialization methods kept here:
+FactoryHallway factoryHallway;
 
 AudioDriver sAudioDriver;
 AudioManager sAudioManager(sAudioDriver, sPlayerEngine);
 MidiManager sMidiManager;
 
 // Add global ErrorHandler
-AudioLoggerBuffer sAudioLoggerBuffer;                              // Error buffer used by the audio engine
-LoggerBuffer sLoggerBuffer;                                        // Main error buffer for logging
-LoggerHandler sLoggerHandler(&sAudioLoggerBuffer, &sLoggerBuffer); // Error handler with threads
+AudioLoggerQueue sAudioLoggerQueue;                              // Error buffer used by the audio engine
+LoggerQueue sLoggerQueue;                                        // Main error buffer for logging
+LoggerHandler sLoggerHandler(&sAudioLoggerQueue, &sLoggerQueue); // Error handler with threads
 
 // DestructorBuffer
 Destructor::Queue sDestructorQueue;
@@ -85,6 +87,10 @@ StudioRunner sStudioRunner(sMidiManager, sAudioManager);
 
 // Entry point of the program
 int main() {
+    // setup factory hallway
+    factoryHallway.constructorQueueMount(sConstructorQueue);
+    factoryHallway.loggerMount(sLoggerQueue);
+    factoryHallway.datastoreMount(sDataStore);
     // Create the object
     crow::SimpleApp api;
     // Remove default signal handler
@@ -111,7 +117,7 @@ int main() {
     //
     sPlayerEngine.bindMessageInBuffer(sMessageInBuffer);
     sPlayerEngine.bindMessageOutBuffer(sMessageOutBuffer);
-    sPlayerEngine.bindLoggerBuffer(sAudioLoggerBuffer);
+    sPlayerEngine.bindLoggerQueue(sAudioLoggerQueue);
     sPlayerEngine.bindMidiManager(sMidiManager);
     sPlayerEngine.bindConstructorQueue(sConstructorQueue);
     sPlayerEngine.bindDestructorBuffer(sDestructorQueue);
@@ -125,7 +131,7 @@ int main() {
     sStudioRunner.start();
 
     //
-    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sLoggerBuffer, rpcParser, sConstructorQueue);
+    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInBuffer, sMessageOutBuffer, sMessageOutReader, sLoggerQueue, rpcParser, sConstructorQueue);
     int httpPort = std::stoi(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {

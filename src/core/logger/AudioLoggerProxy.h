@@ -1,8 +1,8 @@
 #pragma once
 
 #include "./LoggerRec.h"
-#include "AudioLoggerBuffer.h"
-#include "LoggerBuffer.h"
+#include "AudioLoggerQueue.h"
+#include "LoggerQueue.h"
 #include <atomic>
 #include <iostream>
 #include <thread>
@@ -11,14 +11,14 @@
 // It's run in its own thread and uses a condition variable to wake up when there's new data.
 class AudioLoggerProxy {
   public:
-    AudioLoggerProxy(AudioLoggerBuffer *alogBuffer, LoggerBuffer *logBuffer)
-        : alogBuffer(alogBuffer), logBuffer(logBuffer), stopFlag(false) {}
+    AudioLoggerProxy(AudioLoggerQueue *alogQueue, LoggerQueue *logQueue)
+        : alogQueue(alogQueue), logQueue(logQueue), stopFlag(false) {}
 
     void proxyThreadFunc() {
         std::unique_lock<std::mutex> lock(cvMutex);
         while (!stopFlag) {
             // Wait for notification from AudioErrorBuffer
-            alogBuffer->cv.wait(lock, [this]() { return stopFlag || alogBuffer->hasData(); });
+            alogQueue->cv.wait(lock, [this]() { return stopFlag || alogQueue->hasData(); });
 
             if (stopFlag) {
                 break;
@@ -32,23 +32,23 @@ class AudioLoggerProxy {
     // Stop the proxy thread (for a graceful shutdown)
     void stop() {
         stopFlag = true;
-        alogBuffer->cv.notify_all(); // Ensure the thread wakes up and can exit
+        alogQueue->cv.notify_all(); // Ensure the thread wakes up and can exit
     }
 
     void forward() {
         LoggerRec fwdErr;
         // Forward all available errors
-        while (alogBuffer->hasData()) { // Use hasData() instead of comparing wrIndex and rdIndex
-            if (alogBuffer->read(fwdErr)) {
-                logBuffer->write(fwdErr); // Forward to main error buffer
+        while (alogQueue->hasData()) { // Use hasData() instead of comparing wrIndex and rdIndex
+            if (alogQueue->read(fwdErr)) {
+                logQueue->write(fwdErr); // Forward to main error buffer
                 // std::cout << "forwarding err from audioBuff to mainBuff" << std::endl;
             }
         }
     }
 
   private:
-    AudioLoggerBuffer *alogBuffer; // Pointer to the shared audio error buffer
-    LoggerBuffer *logBuffer;       // Pointer to the shared error buffer
-    std::mutex cvMutex;            // Mutex required for CV waiting (minimal use)
-    bool stopFlag;                 // Flag to stop the proxy thread
+    AudioLoggerQueue *alogQueue; // Pointer to the shared audio error buffer
+    LoggerQueue *logQueue;       // Pointer to the shared error buffer
+    std::mutex cvMutex;          // Mutex required for CV waiting (minimal use)
+    bool stopFlag;               // Flag to stop the proxy thread
 };

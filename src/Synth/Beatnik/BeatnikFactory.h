@@ -2,6 +2,7 @@
 #include "./BeatnikModel.h"
 #include "core/audio/sample/SimpleSample.h"
 #include "core/factory/constructor/Queue.h"
+#include "core/hallways/FactoryHallway.h"
 #include "core/utils/WavReader.h"
 #include <array>
 #include <cmath>
@@ -16,7 +17,7 @@
 namespace Synth::Beatnik {
 class Factory {
   public:
-    static void prepareSetting(std::string key, std::string value, int rackID, Constructor::Queue &constructorQueue) {
+    static void prepareSetting(std::string key, std::string value, int rackID) {
         // Split the key using "_" as the delimiter
         size_t delimiterPos = key.find('_');
         if (delimiterPos != std::string::npos) {
@@ -27,7 +28,7 @@ class Factory {
             if (secondPart == "sample") {
                 // Process the sample using the first part
                 std::cout << "Loading sample: " << firstPart << std::endl;
-                createSample(key, value, rackID, constructorQueue);
+                createSample(key, value, rackID);
                 return;
             }
         }
@@ -36,7 +37,7 @@ class Factory {
         std::cout << "Unrecognized key: " << key << std::endl;
     }
 
-    static void createSample(std::string &key, std::string value, int rackID, Constructor::Queue &constructorQueue) {
+    static void createSample(std::string &key, std::string value, int rackID) {
         // check if file exists, if it's stereo and load it into a object, and pass it to the constructor
         std::cout << "loading beatnik sample now.." << std::endl;
         uint32_t sampleSize = 0;
@@ -52,7 +53,7 @@ class Factory {
         std::string prefixedKey = "synth." + key;
 
         // Push the LUT into the Constructor Queue
-        if (!constructorQueue.push(sampleTmp, sampleSize, false, prefixedKey.c_str(), rackID)) {
+        if (!factoryHallway.constructorPush(sampleTmp, sampleSize, false, prefixedKey.c_str(), rackID)) {
             std::cerr << "Failed to push sample into Constructor Queue. Queue is full!" << std::endl;
             delete sampleTmp; // Clean up if the push fails
         }
