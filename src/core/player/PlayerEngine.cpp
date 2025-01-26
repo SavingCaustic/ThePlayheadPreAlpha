@@ -39,9 +39,9 @@ void PlayerEngine::bindLoggerQueue(AudioLoggerQueue &hAudioLoggerQueue) {
     audioLoggerQueue = &hAudioLoggerQueue;
 }
 
-void PlayerEngine::bindDestructorBuffer(Destructor::Queue &hDestructorBuffer) {
+void PlayerEngine::bindDestructorQueue(Destructor::Queue &hDestructorQueue) {
     // really just a proxy
-    objectManager.destructorBuffer = &hDestructorBuffer;
+    objectManager.destructorQueue = &hDestructorQueue;
 }
 
 void PlayerEngine::bindConstructorQueue(Constructor::Queue &hConstructorQueue) {

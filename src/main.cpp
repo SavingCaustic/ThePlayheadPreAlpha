@@ -119,7 +119,7 @@ int main() {
     sPlayerEngine.bindLoggerQueue(sAudioLoggerQueue);
     sPlayerEngine.bindMidiManager(sMidiManager);
     sPlayerEngine.bindConstructorQueue(sConstructorQueue);
-    sPlayerEngine.bindDestructorBuffer(sDestructorQueue);
+    sPlayerEngine.bindDestructorQueue(sDestructorQueue);
 
     sLoggerHandler.start();
     sDestructorWorker.start();

@@ -31,7 +31,7 @@ class PlayerEngine {
     void bindMessageInQueue(MessageInQueue &hMessageInQueue);
     void bindMessageOutQueue(MessageOutQueue &hMessageOutQueue);
     void bindLoggerQueue(AudioLoggerQueue &hAudioLoggerQueue);
-    void bindDestructorBuffer(Destructor::Queue &hDestructorBuffer);
+    void bindDestructorQueue(Destructor::Queue &hDestructorQueue);
 
     void bindMidiManager(MidiManager &hMidiManager);
 
@@ -87,7 +87,8 @@ class PlayerEngine {
     double midiInTS; // probably not used, we use it when we get it.
     MessageInQueue *messageInQueue = nullptr;
     MessageOutQueue *messageOutQueue = nullptr;
-    // Destructor::Queue *destructorBuffer = nullptr;
+    // Destructor::Queue *destructorQueue = nullptr;
+
     MessageIn newMessage;               // Declare a reusable Message object
     std::atomic<bool> isWritingMessage; // Atomic flag to track write access
     AudioLoggerQueue *audioLoggerQueue = nullptr;

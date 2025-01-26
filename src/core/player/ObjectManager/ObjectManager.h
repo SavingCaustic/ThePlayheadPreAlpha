@@ -23,5 +23,5 @@ class ObjectManager {
 
     Rack (&racks)[TPH_RACK_COUNT]; // Reference to the racks array
     Constructor::Queue *constructorQueue = nullptr;
-    Destructor::Queue *destructorBuffer = nullptr;
+    Destructor::Queue *destructorQueue = nullptr;
 };

@@ -6,7 +6,7 @@
 
 namespace Destructor {
 
-constexpr int bufferSize = 16; // Must be a power of 2
+constexpr int queueSize = 16; // Must be a power of 2
 
 struct Record {
     void *ptr = nullptr;     // Pointer to the object to be destroyed
@@ -19,7 +19,7 @@ class Queue {
 
     // Push a message (Producer)
     bool push(const Record &destRec) {
-        size_t nextWrIdx = (wrIdx.load(std::memory_order_relaxed) + 1) & (bufferSize - 1);
+        size_t nextWrIdx = (wrIdx.load(std::memory_order_relaxed) + 1) & (queueSize - 1);
         if (nextWrIdx == rdIdx.load(std::memory_order_acquire)) {
             // Buffer is full
             return false;
@@ -40,7 +40,7 @@ class Queue {
         }
 
         Record record = destructorQueue[currentRdIdx];
-        rdIdx.store((currentRdIdx + 1) & (bufferSize - 1), std::memory_order_release);
+        rdIdx.store((currentRdIdx + 1) & (queueSize - 1), std::memory_order_release);
         return record;
     }
 
@@ -52,7 +52,7 @@ class Queue {
     std::condition_variable cv_;
 
   private:
-    std::array<Record, bufferSize> destructorQueue;
+    std::array<Record, queueSize> destructorQueue;
     std::atomic<size_t> wrIdx; // Producer writes to head
     std::atomic<size_t> rdIdx; // Consumer reads from tail
 };

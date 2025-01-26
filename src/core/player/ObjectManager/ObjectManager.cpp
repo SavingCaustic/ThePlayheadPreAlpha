@@ -66,7 +66,7 @@ void ObjectManager::process() {
                 racks[rackID].synth->updateSetting(methodName, record.ptr, record.size, record.isStereo, recordDelete);
                 // if recordDelete has a set pointer, add it to the queue
                 if (recordDelete.ptr != nullptr) {
-                    destructorBuffer->push(recordDelete);
+                    destructorQueue->push(recordDelete);
                 }
                 break;
             }
@@ -81,7 +81,7 @@ bool ObjectManager::destroySynth(int rackID) {
         record.ptr = racks[rackID].synth;
         record.deleter = [](void *ptr) { delete static_cast<SynthBase *>(ptr); }; // Create deleter for SynthBase
         // Push the record to the destructor queue
-        if (!destructorBuffer->push(record)) {
+        if (!destructorQueue->push(record)) {
             std::cout << "Destructor queue is full, could not enqueue the synth to be deleted." << std::endl;
         }
         // std::cout << "destroying synth (inside audio-thread)" << std::endl;
@@ -106,7 +106,7 @@ bool ObjectManager::destroyEffect(int rackID, int effectSlot) {
         record.ptr = *effectTarget;
         record.deleter = [](void *ptr) { delete static_cast<EffectBase *>(ptr); }; // Create deleter for SynthBase
         // Push the record to the destructor queue
-        if (!destructorBuffer->push(record)) {
+        if (!destructorQueue->push(record)) {
             std::cout << "Destructor queue is full, could not enqueue the effect to be deleted." << std::endl;
         }
         // std::cout << "destroying synth (inside audio-thread)" << std::endl;
@@ -130,7 +130,7 @@ bool ObjectManager::destroyEventor(int rackID, int eventorSlot) {
         record.ptr = *eventorTarget;
         record.deleter = [](void *ptr) { delete static_cast<EventorBase *>(ptr); }; // Create deleter for SynthBase
         // Push the record to the destructor queue
-        if (!destructorBuffer->push(record)) {
+        if (!destructorQueue->push(record)) {
             std::cout << "Destructor queue is full, could not enqueue the eventor to be deleted." << std::endl;
         }
         *eventorTarget = nullptr;
