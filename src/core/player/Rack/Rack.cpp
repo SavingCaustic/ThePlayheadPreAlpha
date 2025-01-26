@@ -21,12 +21,6 @@ void Rack::sendLog(int code, const std::string &message) {
     }
 }
 
-/*
-std::array<float, TPH_RACK_BUFFER_SIZE> &Rack::getAudioBuffer() {
-    return audioBuffer;
-}
-*/
-
 void Rack::clockReset() {}
 
 void Rack::probeNewClock(float pulse) {}
