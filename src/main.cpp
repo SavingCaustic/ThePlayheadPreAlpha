@@ -130,7 +130,7 @@ int main() {
     sStudioRunner.start();
 
     //
-    crowSetupEndpoints(api, sPlayerEngine, sAudioManager, sMidiManager, sMessageInQueue, sMessageOutQueue, sMessageOutReader, sLoggerQueue, rpcParser, sConstructorQueue);
+    crowSetupEndpoints(api, sMessageInQueue, sMessageOutQueue, sMessageOutReader, rpcParser);
     int httpPort = std::stoi(deviceSettings["http_port"]);
     std::thread server_thread([&api, httpPort]() { api.port(httpPort).run(); });
     while (!shutdown_flag.load()) {

@@ -17,12 +17,7 @@ class RPCParser;
 
 void crowSetupEndpoints(
     crow::SimpleApp &api,
-    PlayerEngine &playerEngine,
-    AudioManager &audioManager,
-    MidiManager &midiManager,
     MessageInQueue &messageInQueue,
     MessageOutQueue &MessageOutQueue,
     MessageOutReader &MessageOutReader,
-    LoggerQueue &LoggerQueue,
-    RPCParser &rpcParser,
-    Constructor::Queue &constructorQueue);
+    RPCParser &rpcParser);

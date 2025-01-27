@@ -1,15 +1,11 @@
 #include "endpointsCrow.h"
 #include "constants.h"
 #include "core/api/rpcParser.h"
-#include "core/logger/LoggerQueue.h"
 #include "core/messages/MessageInQueue.h"
 #include "core/messages/MessageOutReader.h"
 #include "core/parameters/SettingsManager.h"
-#include "core/player/PlayerEngine.h" // Include your relevant headers
 #include "crow/json.h"
-#include "drivers/AudioManager.h"
 #include "drivers/FileDriver.h"
-#include "drivers/MidiManager.h"
 
 // Mutex to protect access to WebSocket connections
 std::mutex conn_mutex;
@@ -19,15 +15,10 @@ std::vector<crow::websocket::connection *> connections;
 
 void crowSetupEndpoints(
     crow::SimpleApp &api,
-    PlayerEngine &playerEngine,
-    AudioManager &audioManager,
-    MidiManager &midiManager,
     MessageInQueue &messageInQueue,
     MessageOutQueue &messageOutQueue,
     MessageOutReader &messageOutReader,
-    LoggerQueue &loggerQueue,
-    RPCParser &rpcParser,
-    Constructor::Queue &constructorQueue) {
+    RPCParser &rpcParser) {
     // root endpoint. just info.
     CROW_ROUTE(api, "/")
     ([]() { return crow::response(200, "PLAYHEAD AUDIO SERVER"); });
