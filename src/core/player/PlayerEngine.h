@@ -5,6 +5,7 @@
 #include "Synth/SynthBase.h"
 #include "chrono"
 #include "core/destructor/Queue.h"
+#include "core/hallways/AudioHallway.h"
 #include "core/logger/AudioLoggerQueue.h"
 #include "core/messages/MessageInQueue.h"
 #include "core/messages/MessageOutQueue.h"
@@ -32,6 +33,7 @@ class PlayerEngine {
     void bindMessageOutQueue(MessageOutQueue &hMessageOutQueue);
     void bindLoggerQueue(AudioLoggerQueue &hAudioLoggerQueue);
     void bindDestructorQueue(Destructor::Queue &hDestructorQueue);
+    void initAudioHallway();
 
     void bindMidiManager(MidiManager &hMidiManager);
 
@@ -69,7 +71,7 @@ class PlayerEngine {
   private:
     Rack racks[TPH_RACK_COUNT]; // Array of Rack objects
     //  Other members...
-
+    bool audioHallwaySetup = false;
     void clockResetMethod();
     bool pollMidiIn();
     void turnRackAndRender();

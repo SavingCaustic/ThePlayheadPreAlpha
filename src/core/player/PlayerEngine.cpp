@@ -2,6 +2,8 @@
 #include "chrono"
 #include "core/utils/FNV.h"
 
+thread_local AudioHallway audioHallway;
+
 PlayerEngine::PlayerEngine()
     : noiseVolume(0.2f), isWritingMessage(false), hRotator(), objectManager(racks), ccManager(*this) {
     this->rackReceivingMidi = 0; // meh
@@ -42,6 +44,16 @@ void PlayerEngine::bindLoggerQueue(AudioLoggerQueue &hAudioLoggerQueue) {
 void PlayerEngine::bindDestructorQueue(Destructor::Queue &hDestructorQueue) {
     // really just a proxy
     objectManager.destructorQueue = &hDestructorQueue;
+}
+
+void PlayerEngine::initAudioHallway() {
+    audioHallway.destructorQueueMount(*objectManager.destructorQueue);
+    audioHallway.audioQueueMount(*audioLoggerQueue);
+    std::cout << "it should be setup.." << std::endl;
+    LoggerRec logTemp;
+    FORMAT_LOG_MESSAGE(logTemp, LOG_CRITICAL, "duh - i'm at %s", "playerEngine");
+    audioHallway.logMessage(logTemp);
+    audioHallwaySetup = true;
 }
 
 void PlayerEngine::bindConstructorQueue(Constructor::Queue &hConstructorQueue) {
@@ -95,6 +107,11 @@ float PlayerEngine::getLoadAvg() {
 void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     // Get the current time in microseconds
     // Calculate time for next frame based on sample rate and numFrames
+    if (!audioHallwaySetup) {
+        std::cout << "duh!" << std::endl;
+        initAudioHallway();
+        std::cout << "duh2!" << std::endl;
+    }
     int64_t frameDurationMicroSec = static_cast<long>(numFrames * (1'000'000.0 / TPH_DSP_SR));
     std::chrono::time_point nextFrameTime = std::chrono::high_resolution_clock::now() + std::chrono::microseconds(frameDurationMicroSec);
 
@@ -165,6 +182,9 @@ void PlayerEngine::sendLoadStats(std::chrono::time_point<std::chrono::high_resol
 
     sendError(LOG_INFO, "Stat: " + std::to_string(this->loadAvg));
     sendError(LOG_INFO, "TimeLeftUs: " + std::to_string(timeLeftUs));
+    LoggerRec logTemp;
+    FORMAT_LOG_MESSAGE(logTemp, LOG_CRITICAL, "some milliseconds left.. %s", "..awsome");
+    audioHallway.logMessage(logTemp);
 }
 
 std::string PlayerEngine::getSynthParams(int rackId) {

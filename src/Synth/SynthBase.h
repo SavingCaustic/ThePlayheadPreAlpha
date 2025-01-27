@@ -3,6 +3,8 @@
 #include "core/Unit/MidiReciever.h"
 #include "core/audio/AudioMath.h"
 #include "core/ext/nlohmann/json.hpp"
+#include "core/hallways/AudioHallway.h"
+#include "core/logger/LoggerRec.h"
 #include "core/parameters/params.h"
 #include <iostream>
 #include <string>
@@ -28,6 +30,7 @@ class SynthBase : public SynthInterface {
     void bindBuffers(float *audioBuffer, std::size_t bufferSize, Rack *rack);
 
     void sendLog(int code, const std::string &message);
+    void sendAudioLog();
 
     void pushStrParam(const std::string &name, float val);
     void initParams();
@@ -35,6 +38,7 @@ class SynthBase : public SynthInterface {
     void indexParams(const int upCount);
 
   public:
+    LoggerRec logTemp;
     Rack *host = nullptr;
     // static std::unordered_map<int, ParamDefinition> paramDefs;
     // static std::unordered_map<std::string, int> paramIndex;

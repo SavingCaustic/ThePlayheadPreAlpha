@@ -1,6 +1,13 @@
 #pragma once
 
 // no namespace for logger..
+#define LOG_MSG_LEN 100 // Match LoggerRec's message size
+
+#define FORMAT_LOG_MESSAGE(logger, level, fmt, ...)                  \
+    do {                                                             \
+        (logger).code = (level);                                     \
+        snprintf((logger).message, LOG_MSG_LEN, (fmt), __VA_ARGS__); \
+    } while (0)
 
 constexpr int LOG_DEBUG = 1;
 constexpr int LOG_INFO = 2;
@@ -10,5 +17,5 @@ constexpr int LOG_CRITICAL = 16;
 
 struct LoggerRec {
     int code; // BIT MASKED, not http status code ..
-    char message[100];
+    char message[LOG_MSG_LEN];
 };

@@ -170,8 +170,10 @@ void Model::setupParams(int upCount) {
                                  }}},
 
             {UP::peg_atime, {"peg_atime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max
-                                 sendLog(105, "setting attack to " + std::to_string(v));
                                  pegAR.setTime(audio::envelope::ASRState::ATTACK, v);
+                                 FORMAT_LOG_MESSAGE(logTemp, LOG_CRITICAL, "Something bad happened with %s", "someCharArr");
+                                 sendAudioLog();
+                                 // sendLog(105, "setting attack to " + std::to_string(v));
                              }}},
             {UP::peg_rtime, {"peg_rtime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max
                                  pegAR.setTime(audio::envelope::ASRState::RELEASE, v);
@@ -338,6 +340,9 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
         } else {
             int8_t voiceIdx = findVoiceToAllocate(param1);
             // ok now start that note..
+            FORMAT_LOG_MESSAGE(logTemp, LOG_CRITICAL, "note on in audio thread.. %s", "..awsome");
+            sendAudioLog();
+
             if (voiceIdx >= 0) {
                 voices[voiceIdx].noteOn(param1, (fParam2)); // +0.1??
             }

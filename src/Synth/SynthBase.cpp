@@ -27,6 +27,10 @@ void SynthBase::sendLog(int code, const std::string &message) {
     }
 }
 
+void SynthBase::sendAudioLog() {
+    audioHallway.logMessage(logTemp);
+}
+
 /*
 void SynthBase::bindHost(UnitHost myHost) {
     this->host = *myHost;

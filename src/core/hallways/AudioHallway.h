@@ -4,38 +4,36 @@
 #include <iostream>
 
 class AudioHallway {
-    /* THIS SHOULD NOT BE USED. Audio thread may be forked for pre-rendering */
   public:
-    AudioHallway(Destructor::Queue *destrRef = nullptr, AudioLoggerQueue *auQueue)
-        : destructorQueue(destrRef), audioLoggerQueue(auQueue) {
-        std::cerr << "audioHallway should not be used" << std::endl;
+    AudioHallway() {
     }
 
+    // Mount methods for the queues
     void destructorQueueMount(Destructor::Queue &destQueueRef) {
-        //?? used
         destructorQueue = &destQueueRef;
     }
 
     void audioQueueMount(AudioLoggerQueue &alogQueue) {
-        //?? used - rename all queues to queues - not buffers.
         audioLoggerQueue = &alogQueue;
     }
 
+    // Add to the destructor queue or perform immediate destruction
     bool destructorAdd(Destructor::Record &destRec) {
         if (destructorQueue) {
             return destructorQueue->push(destRec);
         } else {
-            std::cout << "no destructor setup so destructing object here" << std::endl;
+            std::cout << "No destructor setup; destructing object directly." << std::endl;
             destRec.deleter(destRec.ptr); // Call the deleter function
             return true;
         }
     }
 
-    void logMessage(LoggerRec &logRec) {
+    // Log message to audioLoggerQueue or print to console if unavailable
+    void logMessage(const LoggerRec &logRec) {
         if (audioLoggerQueue) {
             audioLoggerQueue->addAudioLog(logRec.code, logRec.message);
         } else {
-            std::cout << "No logger present but here's the message: " << logRec.message << std::endl;
+            std::cout << "No logger: " << logRec.message << std::endl;
         }
     }
 
@@ -44,4 +42,5 @@ class AudioHallway {
     AudioLoggerQueue *audioLoggerQueue = nullptr;
 };
 
-extern AudioHallway audioHallway;
+// Declare thread-local instance of AudioHallway
+extern thread_local AudioHallway audioHallway;
