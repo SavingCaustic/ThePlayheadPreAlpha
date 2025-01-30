@@ -74,7 +74,8 @@ class Rack {
     bool setEventor(EventorBase *newEventor, int eventorSlot = 1);
 
   public:
-    alignas(32) std::array<float, TPH_RACK_BUFFER_SIZE> audioBuffer;
+    alignas(32) std::array<float, TPH_RACK_RENDER_SIZE> audioBufferLeft;
+    alignas(32) std::array<float, TPH_RACK_RENDER_SIZE> audioBufferRight;
     bool audioIsStereo = false;
     RackEmitter emitter;
     bool enabled = false;

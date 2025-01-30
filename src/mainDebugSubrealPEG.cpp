@@ -49,7 +49,7 @@ int debugSubrealPEG() {
     myRack.parseMidi(0x90, 64, 100);
     for (int i = 0; i < 900; i++) {
         myRack.render(blockSize);
-        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+        writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
         if (i == 800) {
             lutTmp2 = nullptr;
         }
@@ -57,7 +57,7 @@ int debugSubrealPEG() {
     myRack.parseMidi(0x80, 64, 0);
     for (int i = 0; i < 900; i++) {
         myRack.render(blockSize);
-        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+        writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }
     writer.close();
 

@@ -53,14 +53,14 @@ int debugSubrealKV() {
     }
     for (int i = 0; i < 30; i++) {
         myRack.render(blockSize);
-        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+        writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }
     for (int i = 0; i < 9; i++) {
         myRack.parseMidi(0x80, notes[i], 0);
     }
     for (int i = 0; i < 30; i++) {
         myRack.render(blockSize);
-        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+        writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }
 
     writer.close();

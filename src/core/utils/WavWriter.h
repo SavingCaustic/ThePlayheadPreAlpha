@@ -12,7 +12,9 @@ class WavWriter {
 
     bool open(const std::string &filename, int sample_rate, int num_channels);
     bool isOpen() const;
-    void write(const float *data, std::size_t size);
+    void write(const float *dataLeft, const float *dataRight, std::size_t size);
+    void writeMono(const float *data, std::size_t size);
+    // voide writeMono..
     void close();
 
   private:
@@ -38,6 +40,6 @@ class WavWriter {
     FILE *file;
     int samples_written;
     int dataSize;
-    short short_data[1024]; // 1024 fixed and max.
+    short short_data[1024]; // 1024 fixed and max and INTERLEAVED
 };
 } // namespace Utils

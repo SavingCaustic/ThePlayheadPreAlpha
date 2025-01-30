@@ -76,14 +76,14 @@ bool Model::renderNextBlock(bool isSterero) {
         delayOutL += RMS * noisePink * noise * 0.2f;
         delayOutR += RMS * noisePink * noise * 0.2f;
         //
-        audioInL = buffer[i];
-        audioInR = buffer[i + 1];
+        audioInL = bufferLeft[i];
+        audioInR = bufferRight[i];
         //
         delayBuffer[wrPointer] = audioInL * (1 - feedback) + delayOutL * feedback;
         delayBuffer[wrPointer + 1] = audioInR * (1 - feedback) + delayOutR * feedback;
         //
-        buffer[i] = delayOutL * mix + audioInL * (1 - mix);
-        buffer[i + 1] = delayOutR * mix + audioInR * (1 - mix);
+        bufferLeft[i] = delayOutL * mix + audioInL * (1 - mix);
+        bufferRight[i] = delayOutR * mix + audioInR * (1 - mix);
         //
         wrPointer = (wrPointer + 2) & (BUFFER_SIZE - 1);
         rdPointer = (rdPointer + 2) & (BUFFER_SIZE - 1);

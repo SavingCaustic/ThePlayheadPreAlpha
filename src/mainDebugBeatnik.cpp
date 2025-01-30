@@ -48,24 +48,24 @@ int debugBeatnik() {
     myRack.parseMidi(0x90, 60, 40);
     for (int i = 0; i < 100; i++) {
         myRack.render(blockSize);
-        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+        writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }
     myRack.parseMidi(0x90, 60, 100);
     for (int i = 0; i < 100; i++) {
         myRack.render(blockSize);
-        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+        writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }
     myRack.parseMidi(0x90, 61, 100);
     for (int i = 0; i < 6000; i++) {
         myRack.render(blockSize);
-        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+        writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }
     for (int i = 0; i < 1; i++) {
         myRack.parseMidi(0x80, 60, 0);
     }
     for (int i = 0; i < 100; i++) {
         myRack.render(blockSize);
-        writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+        writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }
 
     writer.close();

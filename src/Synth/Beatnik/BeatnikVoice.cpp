@@ -62,8 +62,8 @@ bool Beatnik::Voice::renderNextVoiceBlock(std::size_t bufferSize) {
     // Process stereo samples
     for (std::size_t j = 0; j < bufferSize; j = j + 2) {
         // Attenuate and assign stereo channels
-        modelRef.addToSample(j, stereoBuffer[j] * leftGain);          // Left channel
-        modelRef.addToSample(j + 1, stereoBuffer[j + 1] * rightGain); // Right channel
+        modelRef.addToLeftSample(j, stereoBuffer[j] * leftGain);       // Left channel
+        modelRef.addToRightSample(j, stereoBuffer[j + 1] * rightGain); // Right channel
     }
 
     return true;

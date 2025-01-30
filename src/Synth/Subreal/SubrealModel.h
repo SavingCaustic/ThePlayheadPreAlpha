@@ -159,7 +159,7 @@ class Model : public SynthBase {
     // void updateSetting(const std::string &key, const std::string &value, void *object, uint32_t size, bool isStereo);
     void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Destructor::Record &recordDelete) override; //, Constructor::Queue &constructorQueue) override;
 
-    void bindBuffers(float *audioBuffer, std::size_t bufferSize);
+    void bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::size_t bufferSize);
 
     json getParamDefsAsJSON() override {
         return SynthBase::getParamDefsAsJson();
@@ -177,7 +177,8 @@ class Model : public SynthBase {
     // Method to render the next block of audio
     bool renderNextBlock() override;
 
-    void addToSample(std::size_t sampleIdx, float val);
+    void addToLeftSample(std::size_t sampleIdx, float val);
+    void addToRightSample(std::size_t sampleIdx, float val);
 
     const audio::osc::LUT &getLUT1() const;
     const audio::osc::LUT &getLUT2() const;
@@ -232,8 +233,8 @@ class Model : public SynthBase {
     audio::filter::FilterPoles filterPoles = audio::filter::FilterPoles::p2;
 
     // private stuff that user should mess with.
-    float *buffer; // Pointer to audio buffer, minimize write so:
-    float synthBuffer[TPH_RACK_BUFFER_SIZE];
+    float *bufferLeft, *bufferRight; // Pointer to audio buffer, minimize write so:
+    float synthBufferLeft[TPH_RACK_RENDER_SIZE], synthBufferRight[TPH_RACK_RENDER_SIZE];
     audio::osc::LUT *lut1 = nullptr;
     audio::osc::LUT *lut2 = nullptr;
     std::size_t bufferSize; // Size of the audio buffer
@@ -247,6 +248,7 @@ class Model : public SynthBase {
 
     void setLFO2speed();
 
+  private:
   protected:
     std::vector<Voice> voices; // Vector to hold Voice objects
 

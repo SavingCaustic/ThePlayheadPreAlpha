@@ -39,7 +39,7 @@ class Model : public SynthBase {
     Model();
     // Public methods. These should match interface right (contract)
     void reset() override;
-    void bindBuffers(float *audioBuffer, std::size_t bufferSize);
+    void bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::size_t bufferSize);
 
     void updateSetting(const std::string &type, void *object, uint32_t size, bool isStereo, Destructor::Record &recordDelete) override; //, Constructor::Queue &constructorQueue) override;
 
@@ -57,7 +57,8 @@ class Model : public SynthBase {
     // Method to render the next block of audio
     bool renderNextBlock() override;
 
-    void addToSample(std::size_t sampleIdx, float val);
+    void addToLeftSample(std::size_t sampleIdx, float val);
+    void addToRightSample(std::size_t sampleIdx, float val);
 
   public:
     std::vector<Voice> voices; // Vector to hold Voice objects
@@ -69,8 +70,8 @@ class Model : public SynthBase {
 
     void motherboardActions();
 
-    float *buffer; // Pointer to audio buffer, minimize write so:
-    float synthBuffer[TPH_RACK_BUFFER_SIZE];
+    float *bufferLeft, *bufferRight; // Pointer to audio buffer, minimize write so:
+    float synthBufferLeft[TPH_RACK_RENDER_SIZE], synthBufferRight[TPH_RACK_RENDER_SIZE];
 
     // void initializeParameters();
     //  Handle incoming MIDI CC messages

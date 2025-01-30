@@ -48,10 +48,6 @@ class Voice { //: public VoiceInterface {
     audio::envelope::ADSFRSlope vcfARslope; // should prob be called vcfEnvSlope..
     audio::envelope::ASRSlope pegARslope;
 
-    // audio::misc::Easer oscMixEaser;
-    audio::misc::Easer vcaEaser; // maybe replace with audioMath-inline easeLin(delta,target)
-    audio::misc::Easer vcfEaser; // maybe replace with audioMath-inline easeLin(delta,target)
-
     float osc_mix_kv = 0;
     float osc1_fmsens_kv = 0;
     float vcf_cutoff_kv = 0;
@@ -65,9 +61,13 @@ class Voice { //: public VoiceInterface {
     float lfo1_ramp_avg;
 
   private:
-    Model &modelRef; // Use reference to Model
+    Model &modelRef;                          // Use reference to Model
+    static constexpr int chunkSize = 16;      // This buffer is MONO.
+    alignas(32) float chunkSample[chunkSize]; // Aligned to 32 bytes (for AVX)
+
     float oscMixEaseOut = 0;
     float fmAmpEaseOut = 0;
+    float mixAmpAvg = 0.5;
     float mixAmplitude;
     int debugCnt = 0;
 };

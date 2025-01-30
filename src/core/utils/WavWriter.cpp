@@ -42,16 +42,43 @@ bool WavWriter::isOpen() const {
     return file != nullptr;
 }
 
-void WavWriter::write(const float *data, std::size_t size) {
+void WavWriter::write(const float *dataLeft, const float *dataRight, std::size_t size) {
     if (file) {
-        for (std::size_t i = 0; i < size; i++) {
-            // Clamp the data and convert to short
-            short_data[i % 1024] = static_cast<short>(std::clamp(data[i], -1.0f, 1.0f) * 32767);
+        std::size_t i = 0;
+        while (i < size) {
+            std::size_t blockSize = std::min(size - i, std::size_t(1024)); // max 1024 samples per loop
 
-            // If the buffer is full or it's the last sample, write it to the file
-            if ((i % 1024 == 1023) || (i == size - 1)) {
-                std::fwrite(short_data, sizeof(short), (i % 1024) + 1, file);
+            // Process left and right channel data and clamp to short
+            for (std::size_t j = 0; j < blockSize; ++j) {
+                // Convert and store left channel sample
+                short_data[j * 2] = static_cast<short>(std::clamp(dataLeft[i + j], -1.0f, 1.0f) * 32767);
+                // Convert and store right channel sample
+                short_data[j * 2 + 1] = static_cast<short>(std::clamp(dataRight[i + j], -1.0f, 1.0f) * 32767);
             }
+
+            // Write the interleaved data to the file
+            std::fwrite(short_data, sizeof(short), blockSize * 2, file); // 2 because we have left and right channels
+            i += blockSize;
+        }
+        samples_written += size;
+    }
+}
+
+void WavWriter::writeMono(const float *data, std::size_t size) {
+    if (file) {
+        std::size_t i = 0;
+        while (i < size) {
+            std::size_t blockSize = std::min(size - i, std::size_t(1024)); // max 1024 samples per loop
+
+            // Process left and right channel data and clamp to short
+            for (std::size_t j = 0; j < blockSize; ++j) {
+                // Convert and store mono channel sample
+                short_data[j] = static_cast<short>(std::clamp(data[i + j], -1.0f, 1.0f) * 32767);
+            }
+
+            // Write the interleaved data to the file
+            std::fwrite(short_data, sizeof(short), blockSize, file); // 2 because we have left and right channels
+            i += blockSize;
         }
         samples_written += size;
     }

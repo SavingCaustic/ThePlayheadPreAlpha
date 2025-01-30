@@ -26,8 +26,9 @@ Model::Model() {
     reset();
 }
 
-void Model::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
-    this->buffer = audioBuffer;
+void Model::bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::size_t bufferSize) {
+    this->bufferLeft = audioBufferLeft;
+    this->bufferRight = audioBufferRight;
     this->bufferSize = bufferSize;
 }
 
@@ -122,8 +123,8 @@ void Model::setupParams(int upCount) {
             {vca_sustain, {"vca_sustain", 0.7f, 0, false, 0, 1, [this](float v) {
                                vcaAR.setLevel(audio::envelope::ADSFRState::SUSTAIN, v);
                            }}},
-            {vca_fade, {"vca_fade", 0.0f, 0, false, 0, 1, [this](float v) {
-                            vcaAR.setLeak(audio::envelope::ADSFRState::FADE, v);
+            {vca_fade, {"vca_fade", 0.0f, 0, true, 1, 1, [this](float v) {
+                            vcaAR.setTime(audio::envelope::ADSFRState::FADE, v);
                         }}},
             {vca_release, {"vca_release", 0.1f, 0, true, 10, 8, [this](float v) {
                                vcaAR.setTime(audio::envelope::ADSFRState::RELEASE, v);
@@ -296,7 +297,6 @@ bool Model::renderNextBlock() {
 
     vcaAR.updateDelta(vcaARslope);
     if (vcaARslope.state != audio::envelope::ADSFRState::OFF) {
-        vcaEaser.setTarget(vcaARslope.currVal + vcaARslope.gap); // + lfo1.getLFOval());
         for (std::size_t i = 0; i < bufferSize; i++) {
             if (i % chunkSize == 0) {
                 // osc1hz = osc1wf * osc1div;
@@ -318,19 +318,18 @@ bool Model::renderNextBlock() {
             sum += getSample(osc2wf, osc2idx) * osc2vol;
             sum += getSample(osc3wf, osc3idx) * osc3vol;
             sum *= 0.25f * vcaEaserVal;
-            buffer[i] = static_cast<float>(sum);
+            bufferLeft[i] = static_cast<float>(sum);
         }
-        vcaAR.commit(vcaARslope);
     } else {
         notePlaying = 0;
         for (std::size_t i = 0; i < bufferSize; i++) {
-            buffer[i] = 0;
+            bufferLeft[i] = 0;
         }
     }
     // debugging
     if (false) {
         for (std::size_t i = 0; i < bufferSize; i++) {
-            buffer[i] += static_cast<float>(i / 64.0f) * 0.01f - 0.005f;
+            bufferLeft[i] += static_cast<float>(i / 64.0f) * 0.01f - 0.005f;
         }
     }
     motherboardActions();

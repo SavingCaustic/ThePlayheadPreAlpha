@@ -3,16 +3,18 @@
 namespace audio::filter {
 
 enum class FilterType {
+    bypass,
     lowPass,
     highPass,
     bandPass,
     bandStop,
-    bypass
+    _count
 };
 
 enum class FilterPoles {
     p2,
     p4,
+    _count
 };
 
 class MultiFilter {

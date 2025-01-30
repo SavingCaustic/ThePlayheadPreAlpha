@@ -15,6 +15,16 @@ Model::Model() {
     }
 }
 
+void Model::addToLeftSample(std::size_t sampleIdx, float val) {
+    // use local buffer for spead. Possibly double..
+    this->synthBufferLeft[sampleIdx] += val;
+}
+
+void Model::addToRightSample(std::size_t sampleIdx, float val) {
+    // use local buffer for spead. Possibly double..
+    this->synthBufferRight[sampleIdx] += val;
+}
+
 void Model::reset() {
 }
 
@@ -40,8 +50,9 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
     samples[sampleID] = *sample;
 }
 
-void Model::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
-    this->buffer = audioBuffer;
+void Model::bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::size_t bufferSize) {
+    this->bufferLeft = audioBufferLeft;
+    this->bufferRight = audioBufferRight;
     this->bufferSize = bufferSize;
 }
 
@@ -136,7 +147,8 @@ bool Model::renderNextBlock() {
     // we are using synth-buffer to do dist-calculation, before sending to rack.
     // synth-buffer should be doubled - stereo.
     for (uint8_t i = 0; i < bufferSize; i++) {
-        synthBuffer[i] = 0;
+        synthBufferLeft[i] = 0;
+        synthBufferRight[i] = 0;
     }
     for (uint8_t i = 0; i < VOICE_COUNT; i++) {
         if (voices[i].checkVoiceActive()) {
@@ -144,27 +156,21 @@ bool Model::renderNextBlock() {
         }
     }
     float dist;
+
     for (uint8_t i = 0; i < bufferSize; i++) {
-        // we could add some sweet dist here..
-        dist = synthBuffer[i];
-        dist = dist * dist;         // skip polarity..
-        buffer[i] = synthBuffer[i]; // * (5 - dist) * 0.1f;
+        bufferLeft[i] = synthBufferLeft[i];
+        bufferRight[i] = synthBufferRight[i];
     }
 
     // debugging
     if (false) {
         for (std::size_t i = 0; i < bufferSize; i++) {
-            buffer[i] += AudioMath::noise() * 0.01f - 0.005f;
+            bufferLeft[i] += AudioMath::noise() * 0.01f - 0.005f;
         }
     }
 
     // not always stereo for now..
     return true;
-}
-
-void Model::addToSample(std::size_t sampleIdx, float val) {
-    // use local buffer for spead. Possibly double..
-    this->synthBuffer[sampleIdx] += val;
 }
 
 } // namespace Synth::Beatnik

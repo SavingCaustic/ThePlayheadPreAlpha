@@ -1,3 +1,4 @@
+#include "core/hallways/FactoryHallway.h"
 #include "mainDebugBeatnik.cpp"
 #include "mainDebugPatchLoad.cpp"
 #include "mainDebugSubreal.cpp"
@@ -18,7 +19,10 @@ void signal_handler(int signal) {
     }
 }
 
+FactoryHallway factoryHallway;
+
 int main() {
+    // skip binding of factory - no use really..
     std::cout << "Enter a number: ";
     int number;
 

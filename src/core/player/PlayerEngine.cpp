@@ -201,9 +201,9 @@ void PlayerEngine::sumToMaster(float *buffer, unsigned long numFrames, int outer
 
     for (std::size_t i = 0; i < TPH_RACK_COUNT; ++i) {
         if (racks[i].enabled) {
-            for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE * 2; sample += 2) {
-                *(buffer + offset + sample) += racks[i].audioBuffer[sample];         // L
-                *(buffer + offset + sample + 1) += racks[i].audioBuffer[sample + 1]; // R
+            for (std::size_t sample = 0; sample < TPH_RACK_RENDER_SIZE; sample++) {
+                *(buffer + offset + sample * 2) += racks[i].audioBufferLeft[sample];      // L
+                *(buffer + offset + sample * 2 + 1) += racks[i].audioBufferRight[sample]; // R
             }
         }
     }

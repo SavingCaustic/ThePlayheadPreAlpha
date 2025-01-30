@@ -14,10 +14,11 @@ void SynthBase::initParams() {
     }
 }
 
-void SynthBase::bindBuffers(float *audioBuffer, std::size_t bufferSize, Rack *host) {
+void SynthBase::bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::size_t bufferSize, Rack *host) {
     // Rack should later be host
     this->host = host;
-    this->buffer = audioBuffer;
+    this->bufferLeft = audioBufferLeft;
+    this->bufferRight = audioBufferRight;
     this->bufferSize = bufferSize;
 }
 

@@ -1,21 +1,22 @@
 #include "ADSFR.h"
 #include "constants.h"
+#include <iostream>
 
 namespace audio::envelope {
 
-void ADSFR::setTime(ADSFRState state, float time) {
+void ADSFR::setTime(ADSFRState state, float ohm) {
     switch (state) {
     case ADSFRState::ATTACK:
-        aFactor = calcDelta(time);
+        aK = calcDelta(ohm);
         break;
     case ADSFRState::DECAY:
-        dFactor = calcDelta(time);
+        dK = calcDelta(ohm);
         break;
     case ADSFRState::FADE:
-        fFactor = calcDelta(time);
+        fK = calcDelta(ohm);
         break;
     case ADSFRState::RELEASE:
-        rFactor = calcDelta(time);
+        rK = calcDelta(ohm);
         break;
     default:
         break;
@@ -27,7 +28,7 @@ void ADSFR::setLevel(ADSFRState state, float level) {
 }
 
 void ADSFR::setLeak(ADSFRState state, float level) {
-    fFactor = level * 0.001f;
+    fK = level * 0.00005f;
 }
 
 void ADSFR::triggerSlope(ADSFRSlope &slope, ADSFRCmd cmd) {
@@ -39,36 +40,28 @@ void ADSFR::triggerSlope(ADSFRSlope &slope, ADSFRCmd cmd) {
         setSlopeState(slope, ADSFRState::RELEASE);
         break;
     case ADSFRCmd::NOTE_REON:
+        // sus-pedal or maybe if noteon=playing note and vel < 64.
         setSlopeState(slope, ADSFRState::FADE);
         break;
     }
 }
 
-void ADSFR::updateDelta(ADSFRSlope &slope) {
+bool ADSFR::updateDelta(ADSFRSlope &slope) {
+    // returns true while slope <> OFF
     if (slope.state == ADSFRState::ATTACK) {
         if (slope.currVal > slope.goalVal) {
             stateChange(slope);
         }
     } else {
-        if (slope.state == ADSFRState::FADE) {
-            // Not working and incorrect
-            // slope.goalVal = sLevel;
-            // slope.currVal = sLevel;
-        }
         if (slope.currVal < slope.goalVal) {
             stateChange(slope);
         }
     }
-    slope.gap = (slope.targetVal - slope.currVal) * slope.factor;
+    return slope.state != ADSFRState::OFF;
 }
 
-void ADSFR::commit(ADSFRSlope &slope) {
-    slope.currVal += slope.gap;
-}
-
-float ADSFR::calcDelta(float time) const {
-    float totalSamples = time * TPH_DSP_SR * 0.001f;
-    return TPH_RACK_RENDER_SIZE / (totalSamples + 40); //+40??
+float ADSFR::calcDelta(float ohm) const {
+    return 1000.0f / ohm / TPH_DSP_SR;
 }
 
 void ADSFR::setSlopeState(ADSFRSlope &slope, ADSFRState state) {
@@ -77,34 +70,35 @@ void ADSFR::setSlopeState(ADSFRSlope &slope, ADSFRState state) {
         slope.state = ADSFRState::ATTACK;
         slope.goalVal = 1.0f;
         slope.targetVal = 1.3f;
-        slope.factor = aFactor;
+        slope.k = aK;
         break;
     case ADSFRState::DECAY:
         slope.state = ADSFRState::DECAY;
         slope.goalVal = sLevel;
         slope.targetVal = sLevel * 0.62f;
-        slope.factor = dFactor;
+        slope.k = dK;
         break;
     case ADSFRState::SUSTAIN:
+        // Not an active state for slope
         break;
     case ADSFRState::FADE:
         slope.state = ADSFRState::FADE;
         slope.goalVal = 0;
-        slope.targetVal = slope.currVal * -0.1f;
-        slope.factor = fFactor;
+        slope.targetVal = slope.currVal * -0.04f;
+        slope.k = fK;
         break;
     case ADSFRState::RELEASE:
         slope.state = ADSFRState::RELEASE;
         slope.goalVal = 0;
-        slope.targetVal = slope.currVal * -0.01f;
-        slope.factor = rFactor;
+        slope.targetVal = slope.currVal * -0.12f;
+        slope.k = rK;
         break;
     case ADSFRState::OFF:
         slope.state = ADSFRState::OFF;
         slope.currVal = 0;
         slope.goalVal = 0;
         slope.targetVal = 0;
-        slope.factor = 0;
+        slope.k = 0;
         break;
     }
 }

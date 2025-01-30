@@ -29,8 +29,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 ${ARCH_FLAGS}") # Debug symbols, no optimizations
 else()
     set(MAIN_FILE "${PROJECT_SOURCE_DIR}/src/main.cpp")
-    # set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${ARCH_FLAGS} -ftree-vectorize -flto") # Optimized Release
-    set(CMAKE_CXX_FLAGS_RELEASE "-O0 -ftree-vectorize -flto") # Fast build Release
+    # set(CMAKE_CXX_FLAGS_RELEASE "-O3..."
+    set(CMAKE_CXX_FLAGS_RELEASE "-O0 ${ARCH_FLAGS} -ftree-vectorize -flto -ffast-math") # Fast build Release
     endif()
 
 # Automatically collect all .cpp files in src/ except the main file

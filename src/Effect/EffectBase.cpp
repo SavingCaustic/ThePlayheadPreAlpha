@@ -14,9 +14,10 @@ void EffectBase::initParams() {
     }
 }
 
-void EffectBase::bindBuffers(float *audioBuffer, std::size_t bufferSize) {
+void EffectBase::bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::size_t bufferSize) {
     std::cout << "binding buffersize to " << bufferSize << std::endl;
-    this->buffer = audioBuffer;
+    this->bufferLeft = audioBufferLeft;
+    this->bufferRight = audioBufferRight;
     this->bufferSize = bufferSize;
 }
 

@@ -75,7 +75,7 @@ class Model : public SynthBase {
 
     // Public methods. These should match interface right (contract)
     void reset() override;
-    void bindBuffers(float *audioBuffer, std::size_t bufferSize);
+    void bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::size_t bufferSize);
 
     void setupParams(int upCount);
 

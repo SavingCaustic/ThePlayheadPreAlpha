@@ -22,7 +22,7 @@ class EffectBase : public EffectInterface {
     std::string resolveUPname(const int paramID);
 
     // this could be private.. ehh? called from rack
-    void bindBuffers(float *audioBuffer, std::size_t bufferSize);
+    void bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::size_t bufferSize);
 
     void pushStrParam(const std::string &name, float val);
     void initParams();
@@ -41,6 +41,6 @@ class EffectBase : public EffectInterface {
     std::unordered_map<std::string, std::string> settingVals;
 
   protected:
-    float *buffer;          // Pointer to audio buffer
-    std::size_t bufferSize; // Size of the audio buffer
+    float *bufferLeft, *bufferRight; // Pointer to audio buffer
+    std::size_t bufferSize;          // Size of the audio buffer
 };

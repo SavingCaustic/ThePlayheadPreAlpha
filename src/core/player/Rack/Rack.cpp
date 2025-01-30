@@ -3,7 +3,7 @@
 
 Rack::Rack()
     : audioIsStereo(false),
-      emitter(audioBuffer.data(), TPH_RACK_BUFFER_SIZE) {}
+      emitter(audioBufferLeft.data(), audioBufferRight.data(), TPH_RACK_RENDER_SIZE) {}
 
 Rack::~Rack() {
     delete synth;
@@ -33,8 +33,8 @@ void Rack::render(int num) {
         isStereo = synth->renderNextBlock();
     } else {
         isStereo = false;
-        float *ptr = audioBuffer.data();
-        for (int i = 0; i < TPH_RACK_BUFFER_SIZE; ++i) {
+        float *ptr = audioBufferLeft.data();
+        for (int i = 0; i < TPH_RACK_RENDER_SIZE; i++) {
             *ptr++ = 0.05f * ((static_cast<float>(rand()) / RAND_MAX) * 2.0f - 1.0f); // Noise
         }
     }
@@ -117,7 +117,7 @@ bool Rack::setSynth(SynthBase *newSynth) {
     delete synth;
     synth = newSynth;
     if (synth) {
-        synth->bindBuffers(audioBuffer.data(), audioBuffer.size());
+        synth->bindBuffers(audioBufferLeft.data(), audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
         enabled = true;
     } else {
         enabled = false;
@@ -129,7 +129,7 @@ bool Rack::setEffect(EffectBase *newEffect, int effectSlot) {
     EffectInterface **effectTarget = (effectSlot == 1) ? &effect1 : &effect2;
     *effectTarget = newEffect;
     if (*effectTarget) {
-        (*effectTarget)->bindBuffers(audioBuffer.data(), audioBuffer.size());
+        (*effectTarget)->bindBuffers(audioBufferLeft.data(), audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }
     return *effectTarget != nullptr;
 }

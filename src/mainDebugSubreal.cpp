@@ -47,6 +47,27 @@ int debugSubreal() {
     int blockSize = 128; // rack-render-size always 64 samples, so in stereo = 128
     Utils::WavWriter writer;
     writer.open("echo.wav", 48000, 2);
+
+    // try to provoke the click..
+    // velocity should be alternating!
+    int count = 200;
+    uint8_t note = 69; // 30;
+    for (int t = 0; t < 10; t++) {
+        myRack.parseMidi(0x90, note, 100);
+        for (int t = 0; t < count; t++) {
+            myRack.render(blockSize);
+            writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
+        }
+        myRack.parseMidi(0x80, note, 0);
+        for (int t = 0; t < count; t++) {
+            myRack.render(blockSize);
+            writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
+        }
+        count += 100;
+    }
+    //
+    //
+
     for (int t = 0; t < 20; t++) {
         if (t % 10 == 0) {
             float v = t;
@@ -61,14 +82,14 @@ int debugSubreal() {
         // myRack.parseMidi(0x90, note + 7, 0x70);
         for (int i = 0; i < 50; i++) {
             myRack.render(blockSize);
-            writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+            writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
         }
         // myRack.parseMidi(0x80, note + 7, 0x00);
         // myRack.parseMidi(0x80, note + 3, 0x00);
         myRack.parseMidi(0x80, note, 0x00);
         for (int i = 0; i < 50; i++) {
             myRack.render(blockSize);
-            writer.write(myRack.audioBuffer.data(), myRack.audioBuffer.size());
+            writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
         }
     }
     writer.close();

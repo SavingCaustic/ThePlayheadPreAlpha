@@ -16,13 +16,14 @@ enum class ADSFRCmd { NOTE_ON,
                       NOTE_OFF,
                       NOTE_REON };
 
-struct ADSFRSlope {
+class ADSFRSlope {
+    // this is the "capacitor"
+  public:
     ADSFRState state = ADSFRState::OFF;
     float currVal = 0;
     float targetVal = 0; // used for saturated ramping
     float goalVal = 0;   // real goal
-    float factor = 0;    // time-based exp. factor
-    float gap = 0;
+    float k = 0;         // time based exp. factor
 };
 
 class ADSFR {
@@ -31,15 +32,14 @@ class ADSFR {
     void setLevel(ADSFRState state, float level);
     void setLeak(ADSFRState state, float level);
     void triggerSlope(ADSFRSlope &slope, ADSFRCmd cmd);
-    void updateDelta(ADSFRSlope &slope);
-    void commit(ADSFRSlope &slope);
+    bool updateDelta(ADSFRSlope &slope);
 
   private:
     float sLevel = 0.5f;
-    float aFactor = 0;
-    float dFactor = 0;
-    float fFactor = 0;
-    float rFactor = 0;
+    float aK = 0;
+    float dK = 0;
+    float fK = 0;
+    float rK = 0;
 
     float calcDelta(float time) const;
     void setSlopeState(ADSFRSlope &slope, ADSFRState state);

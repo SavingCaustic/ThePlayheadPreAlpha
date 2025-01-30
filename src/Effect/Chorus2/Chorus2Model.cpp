@@ -31,8 +31,8 @@ bool Model::renderNextBlock(bool isSterero) {
     float audioInL, audioInR;
     for (std::size_t i = 0; i < bufferSize; i += 2) {
         // Read the input samples
-        audioInL = buffer[i];
-        audioInR = buffer[i]; // mono in?
+        audioInL = bufferLeft[i];
+        audioInR = bufferLeft[i]; // mono in?
 
         // Get the current LFO value and calculate the delay time
         float lfoValue = modulateLFO(1);
@@ -49,8 +49,8 @@ bool Model::renderNextBlock(bool isSterero) {
         float outputSampleR = (1 - this->mix) * audioInR + this->mix * delayOutR;
 
         // Write the output back to the buffer
-        buffer[i] = outputSampleL;
-        buffer[i + 1] = outputSampleR;
+        bufferLeft[i] = outputSampleL;
+        bufferRight[i] = outputSampleR;
 
         // Write the current input samples to the delay buffer (for feedback)
         delayBuffer[wrIndex] = processLPF(audioInL) * (1 - this->feedback) + delayOutL * this->feedback;

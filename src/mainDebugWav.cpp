@@ -8,9 +8,10 @@ Utils::WavReader reader;
 Utils::WavWriter writer;
 
 int debugWav() {
-    reader.open("assets/Synth/Beatnik/samples/lm-2/conga-h.wav");
+    // snare-m is MONO
+    reader.open("assets/Synth/Beatnik/samples/lm-2/snare-m.wav");
     // reader.open("assets/Synth/Beatnik/samples/HR16A/Alesis_HR16A_43.wav");
-    writer.open("snare-copy.wav", 48000, 1);
+    writer.open("snare-m-copy.wav", 48000, 1);
 
     // Reserve memory for data based on the WAV file's header information
     Utils::WavHeader header;
@@ -30,8 +31,8 @@ int debugWav() {
         delete[] data; // Free memory on failure
         return -1;
     }
-
-    writer.write(data, totalSamples);
+    // ah this no work any more since data is interleaved..
+    writer.writeMono(data, totalSamples);
 
     reader.close();
     writer.close();

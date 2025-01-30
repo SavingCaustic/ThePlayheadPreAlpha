@@ -10,9 +10,9 @@
     
     "22": "vcf_cutoff",    
     "23": "vcf_resonance",
-    "24": "vcf_type",
-    "25": "vcf_shape",
-    "26": "vcf_cutoff_kt",
+    "24": "vcf_cutoff_kt",
+    "25": "vcf_type",
+    "26": "vcf_shape",
     "27": "vcf_cutoff_vt",
 
     "28": "peg_atime",
