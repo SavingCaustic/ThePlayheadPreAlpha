@@ -17,7 +17,9 @@ void Rack::setPlayerEngine(PlayerEngine &engine) {
 
 void Rack::sendLog(int code, const std::string &message) {
     if (playerEngine) {
-        playerEngine->sendError(code, message);
+        // uhm - string used here - not good.
+        // playerEngine->logTemp.code = code;
+        // playerEngine->logTemp.message = &message;
     }
 }
 

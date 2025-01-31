@@ -29,6 +29,8 @@ class PlayerEngine {
   public:
     PlayerEngine(); // Add reference to constructor
 
+    void sendAudioLog();
+
     void bindMessageInQueue(MessageInQueue &hMessageInQueue);
     void bindMessageOutQueue(MessageOutQueue &hMessageOutQueue);
     void bindLoggerQueue(AudioLoggerQueue &hAudioLoggerQueue);
@@ -53,6 +55,8 @@ class PlayerEngine {
     bool loadSynth(SynthBase *&synth, int rackID);
     bool loadEffect(EffectBase *&effect, int rackID, int effectSlot);
 
+    LoggerRec logTemp;
+
     bool setupRackWithSynth(int rackId, const std::string &synthName);
     // R    bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
     // R    Rack *getRack(std::size_t position) const;
@@ -61,8 +65,6 @@ class PlayerEngine {
     int64_t calcTimeLeftUs(std::chrono::time_point<std::chrono::high_resolution_clock> nextFrameTime, int64_t frameDurationMicroSec);
 
     void sendLoadStats(std::chrono::time_point<std::chrono::high_resolution_clock> nextFrameCount, int64_t frameDurationMicroSec);
-
-    void sendError(int code, const std::string &message);
 
     CCManager ccManager;
     ObjectManager objectManager;

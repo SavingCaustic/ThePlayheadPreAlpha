@@ -34,7 +34,7 @@ int debugBeatnik() {
     sampleTmp = nullptr;
     //
     sampleTmp = new audio::sample::SimpleSample();
-    Synth::Beatnik::Factory::buildSample(sampleTmp, "lm-2/snare-m.wav");
+    Synth::Beatnik::Factory::buildSample(sampleTmp, "stereo/Stereo.wav"); //"lm-2/snare-m.wav");
     myBeatnik->samples[1] = *sampleTmp;
     std::cout << "sample length is: " << sampleTmp->length << std::endl;
     sampleTmp = nullptr;
@@ -56,14 +56,11 @@ int debugBeatnik() {
         writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }
     myRack.parseMidi(0x90, 61, 100);
-    for (int i = 0; i < 6000; i++) {
+    for (int i = 0; i < 100; i++) {
         myRack.render(blockSize);
         writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }
-    for (int i = 0; i < 1; i++) {
-        myRack.parseMidi(0x80, 60, 0);
-    }
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 2500; i++) {
         myRack.render(blockSize);
         writer.write(myRack.audioBufferLeft.data(), myRack.audioBufferRight.data(), TPH_RACK_RENDER_SIZE);
     }

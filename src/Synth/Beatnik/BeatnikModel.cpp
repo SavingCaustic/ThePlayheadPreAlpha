@@ -152,7 +152,7 @@ bool Model::renderNextBlock() {
     }
     for (uint8_t i = 0; i < VOICE_COUNT; i++) {
         if (voices[i].checkVoiceActive()) {
-            voices[i].renderNextVoiceBlock(bufferSize);
+            voices[i].renderNextVoiceBlock(TPH_RACK_RENDER_SIZE);
         }
     }
     float dist;

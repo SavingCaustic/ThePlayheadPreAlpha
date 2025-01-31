@@ -94,11 +94,6 @@ bool PlayerEngine::sendMessage(int rackId, const char *target, float paramValue,
     return true;
 }
 
-void PlayerEngine::sendError(int code, const std::string &message) {
-    // dunno if this should be kept. But still, units have to be context-aware..
-    audioLoggerQueue->addAudioLog(code, message);
-}
-
 float PlayerEngine::getLoadAvg() {
     // this should really be atomic.. and maybe skip altogether..
     return this->loadAvg;
@@ -108,9 +103,8 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
     // Get the current time in microseconds
     // Calculate time for next frame based on sample rate and numFrames
     if (!audioHallwaySetup) {
-        std::cout << "duh!" << std::endl;
+        std::cout << "setting up audio hallway." << std::endl;
         initAudioHallway();
-        std::cout << "duh2!" << std::endl;
     }
     int64_t frameDurationMicroSec = static_cast<long>(numFrames * (1'000'000.0 / TPH_DSP_SR));
     std::chrono::time_point nextFrameTime = std::chrono::high_resolution_clock::now() + std::chrono::microseconds(frameDurationMicroSec);
@@ -180,10 +174,14 @@ void PlayerEngine::sendLoadStats(std::chrono::time_point<std::chrono::high_resol
     // Update loadAvg with smoothing
     this->loadAvg = (alpha * rawLoad) + ((1 - alpha) * this->loadAvg);
 
-    sendError(LOG_INFO, "Stat: " + std::to_string(this->loadAvg));
-    sendError(LOG_INFO, "TimeLeftUs: " + std::to_string(timeLeftUs));
-    LoggerRec logTemp;
-    FORMAT_LOG_MESSAGE(logTemp, LOG_CRITICAL, "some milliseconds left.. %s", "..awsome");
+    FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "Usage percent: %f", this->loadAvg);
+    sendAudioLog();
+
+    FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "Time left (uS): %d", timeLeftUs);
+    sendAudioLog();
+}
+
+void PlayerEngine::sendAudioLog() {
     audioHallway.logMessage(logTemp);
 }
 

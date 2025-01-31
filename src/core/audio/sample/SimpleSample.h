@@ -28,39 +28,46 @@ class SimpleSample {
         isStereo = false;
     }
 
-    float getSamplesToBuffer(float *stereoBuffer, int bufferSize, float currPos, float rate) {
+    float getSamplesToBuffer(float *leftBuffer, float *rightBuffer, int bufferSize, float currPos, float rate) {
         if (!data) {
             throw std::runtime_error("Sample data is not mounted.");
         }
 
-        uint32_t intPos = 0;
-        int rightOffset = (isStereo) ? 1 : 0;
-
-        // Calculate the number of samples that can be safely read before padding
-        // should be called stereoSamplesToFill
-        int stereoSamplesToFill = std::min(bufferSize / 2, static_cast<int>((length / (isStereo + 1) - currPos) / rate));
         int i = 0;
 
-        // Fill the buffer with actual sample data
-        // This could be SIMD-optimized by calculating an array of currPos i guess..
-        for (i = 0; i < stereoSamplesToFill * 2; i += 2) {
-            intPos = static_cast<uint32_t>(currPos);
+        // Mono Processing
+        if (!isStereo) {
+            int samplesToFill = std::min(bufferSize, static_cast<int>((length - currPos) / rate));
+
+            for (i = 0; i < samplesToFill; i++) {
+                uint32_t sampleIdx = static_cast<uint32_t>(currPos); // Directly cast currPos
+                leftBuffer[i] = data[sampleIdx];
+                currPos += rate;
+            }
+        }
+        // Stereo Processing
+        else {
+            int samplesToFill = std::min(bufferSize, static_cast<int>((length - currPos) / rate));
+
+            for (i = 0; i < samplesToFill; i++) {
+                uint32_t sampleIdx = static_cast<uint32_t>(currPos) * 2; // x2 must happen *after* cast
+                leftBuffer[i] = data[sampleIdx];
+                rightBuffer[i] = data[sampleIdx + 1];
+                currPos += rate;
+            }
+        }
+
+        // Zero-padding
+        while (i < bufferSize) {
+            leftBuffer[i] = 0.0f;
             if (isStereo)
-                intPos *= 2;
-            stereoBuffer[i] = data[intPos];
-            stereoBuffer[i + 1] = data[intPos + rightOffset];
-            currPos += rate;
+                rightBuffer[i] = 0.0f;
+            i++;
         }
 
-        // Pad the remaining buffer space with zeros if needed
-        for (; i < bufferSize; i += 2) {
-            stereoBuffer[i] = 0.0f;
-            stereoBuffer[i + 1] = 0.0f;
-        }
-
-        // Return the updated position, considering end-of-sample logic
+        // Looping behavior
         if (currPos >= length) {
-            currPos = 0.0f; // Reset to the start if looping is desired
+            currPos = 0.0f;
         }
 
         return currPos;
@@ -70,7 +77,7 @@ class SimpleSample {
     bool isStereo;   // Whether the sample is stereo
     uint32_t length; // Length of the sample in frames (not bytes)
   private:
-    const float *data; // Pointer to the sample data
+    const float *data; // Pointer to the sample data (*as interleaved* if stereo)
 };
 
 } // namespace audio::sample

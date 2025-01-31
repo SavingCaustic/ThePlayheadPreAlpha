@@ -70,6 +70,9 @@ class Model : public SynthBase {
 
     void motherboardActions();
 
+    float voiceBufferLeft[TPH_RACK_RENDER_SIZE];
+    float voiceBufferRight[TPH_RACK_RENDER_SIZE];
+
     float *bufferLeft, *bufferRight; // Pointer to audio buffer, minimize write so:
     float synthBufferLeft[TPH_RACK_RENDER_SIZE], synthBufferRight[TPH_RACK_RENDER_SIZE];
 
