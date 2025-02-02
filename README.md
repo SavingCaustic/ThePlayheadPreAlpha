@@ -1,4 +1,7 @@
 # ThePlayheadPreAlpha
+
+## This repository is a clone repository. Master repository is on european servers.
+
 Ok all, I'm releasing this hoping that some of you may get it running.
 It's by no means a ready-to-use app or DAW, but a first step in creating a fantastic such.
 Of course, this engine could also be used in other contexts.

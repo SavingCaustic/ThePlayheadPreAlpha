@@ -2,6 +2,7 @@
 
 namespace audio::filter {
 
+// removed bandstop.
 enum class FilterType {
     bypass,
     lowPass,
