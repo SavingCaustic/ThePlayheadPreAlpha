@@ -19,8 +19,8 @@ struct ASRSlope {
     float currVal = 0;
     float targetVal = 0; // used for saturated ramping
     float goalVal = 0;   // real goal
-    float factor = 0;    // time-based exp. factor
-    float gap = 0;
+    float k = 0;         // time based exp. factor
+    float kGain = 1;     // keyboard tracking support.
 };
 
 class ASR {
@@ -31,8 +31,8 @@ class ASR {
     void commit(ASRSlope &slope);
 
   private:
-    float aFactor = 0;
-    float rFactor = 0;
+    float aK = 0;
+    float rK = 0;
 
     float calcDelta(float time) const;
     void setSlopeState(ASRSlope &slope, ASRState state);

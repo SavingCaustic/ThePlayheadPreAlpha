@@ -24,6 +24,7 @@ class ADSFRSlope {
     float targetVal = 0; // used for saturated ramping
     float goalVal = 0;   // real goal
     float k = 0;         // time based exp. factor
+    float kGain = 1;     // keyboard tracking support.
 };
 
 class ADSFR {

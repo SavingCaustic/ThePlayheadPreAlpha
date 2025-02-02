@@ -3,13 +3,13 @@
 
 namespace audio::envelope {
 
-void ASR::setTime(ASRState state, float time) {
+void ASR::setTime(ASRState state, float ohm) {
     switch (state) {
     case ASRState::ATTACK:
-        aFactor = calcDelta(time);
+        aK = calcDelta(ohm);
         break;
     case ASRState::RELEASE:
-        rFactor = calcDelta(time);
+        rK = calcDelta(ohm);
         break;
     default:
         break;
@@ -41,17 +41,10 @@ void ASR::updateDelta(ASRSlope &slope) {
             stateChange(slope);
         }
     }
-    // here is the error!
-    slope.gap = (slope.targetVal - slope.currVal) * slope.factor;
 }
 
-void ASR::commit(ASRSlope &slope) {
-    slope.currVal += slope.gap;
-}
-
-float ASR::calcDelta(float time) const {
-    float totalSamples = time * TPH_DSP_SR * 0.001f;
-    return TPH_RACK_RENDER_SIZE / (totalSamples + 40);
+float ASR::calcDelta(float ohm) const {
+    return 1000.0f / ohm / TPH_DSP_SR;
 }
 
 void ASR::setSlopeState(ASRSlope &slope, ASRState state) {
@@ -60,7 +53,7 @@ void ASR::setSlopeState(ASRSlope &slope, ASRState state) {
         slope.state = ASRState::ATTACK;
         slope.goalVal = 1.0f;
         slope.targetVal = 1.3f;
-        slope.factor = aFactor;
+        slope.k = aK;
         break;
     case ASRState::SUSTAIN:
         slope.state = ASRState::SUSTAIN;
@@ -71,14 +64,14 @@ void ASR::setSlopeState(ASRSlope &slope, ASRState state) {
         slope.state = ASRState::RELEASE;
         slope.goalVal = 0;
         slope.targetVal = slope.currVal * -0.01f;
-        slope.factor = rFactor;
+        slope.k = rK;
         break;
     case ASRState::OFF:
         slope.state = ASRState::OFF;
         slope.currVal = 0;
         slope.goalVal = 0;
         slope.targetVal = 0;
-        slope.factor = 0;
+        slope.k = 0;
         break;
     }
 }

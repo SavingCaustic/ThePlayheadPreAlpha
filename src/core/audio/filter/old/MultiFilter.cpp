@@ -80,6 +80,19 @@ void MultiFilter::initFilter() {
         b2 = (1.0 - rk + k2) / bh;
         break;
 
+    case FilterType::bandStop:
+        //
+        // "Digital Audio Signal Processing" by Udo Zölzer does not provide z-transform
+        // coefficients for the bandstop filter, so these were derived by studying
+        // http://www.earlevel.com/main/2012/11/26/biquad-c-source-code/
+        //
+        a0 = (1.0 + k2) / bh;
+        a1 = (2.0 * (k2 - 1.0)) / bh;
+        a2 = a0;
+        b1 = a1;
+        b2 = (1.0 - rk + k2) / bh;
+        break;
+
     case FilterType::bypass:
         return;
 

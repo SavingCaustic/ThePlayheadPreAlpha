@@ -20,7 +20,8 @@ Model::Model() {
 }
 
 Model::~Model() {
-    std::cout << "destructing LUT's" << std::endl;
+    FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "destructing luts %s", "...");
+    sendAudioLog();
     delete lut1;
     delete lut2;
 }
@@ -43,13 +44,14 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
             auto *lut = reinterpret_cast<audio::osc::LUT *>(object);
             // Push the current LUT to the destructor queue, or delete it directly
             if (lut1) {
-                std::cout << "deleting LUT1.. " << std::endl;
+                FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "destructing lut %d", 1);
+                sendAudioLog();
                 recordDelete.ptr = lut1;
                 recordDelete.deleter = [](void *ptr) { delete static_cast<audio::osc::LUT *>(ptr); }; // Create deleter for LUT
                 // moved to ObjectManager: destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
             }
             // Assign the new LUT
-            std::cout << "setting new lut-1 wave" << std::endl;
+            // std::cout << "setting new lut-1 wave" << std::endl;
             lut1 = lut;
             updateVoiceLUT(*lut1, 1);
         } else {
@@ -68,7 +70,8 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
                 // moved to ObjectManager: destructorQueue.push(lut1, sizeof(audio::osc::LUT), false, "LUT");
             }
             // Assign the new LUT
-            std::cout << "setting new lut-2 wave" << std::endl;
+            FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "setting new wave for lut %d", 2);
+            sendAudioLog();
             lut2 = lut;
             updateVoiceLUT(*lut2, 2);
         } else {
@@ -108,8 +111,13 @@ void Model::setupParams(int upCount) {
         // after declaration, indexation requested, see below..
         SynthBase::paramDefs = {
             {UP::modwheel, {"modwheel", 0.0f, 0, false, 0, 1, [this](float v) {
-                                /* NOT VERIFIED */
                                 modwheel = v;
+                                if (lfo1_mw_control == MW::LFOcontrol::speed) {
+                                    Model::setLFO1speed();
+                                }
+                                if (lfo2_mw_control == MW::LFOcontrol::speed) {
+                                    Model::setLFO2speed();
+                                }
                             }}},
 
             {UP::osc_mix, {"osc_mix", 0.5f, 0, false, 0, 1, [this](float v) {
@@ -119,7 +127,6 @@ void Model::setupParams(int upCount) {
                                    osc1_fmsens = v;
                                }}},
             {UP::osc1_detune, {"osc1_detune", 0.5f, 0, false, -25, 25, [this](float v) {
-                                   // easer should be at model. skipping easer for now
                                    osc1_detune = v;
                                }}},
             {UP::osc2_oct, {"osc2_oct", 0.5f, 7, false, -3, 3, [this](float v) {
@@ -129,7 +136,6 @@ void Model::setupParams(int upCount) {
                                  osc2_semi = round(v);
                              }}},
             {UP::osc2_detune, {"osc2_detune", 0.5f, 0, false, -25, 25, [this](float v) {
-                                   // easer should be at model. skipping easer for now
                                    osc2_detune = v;
                                }}},
 
@@ -139,12 +145,13 @@ void Model::setupParams(int upCount) {
             {UP::vcf_resonance, {"vcf_resonance", 0.0f, 0, false, 0, 1, [this](float v) {
                                      vcf_resonance = v;
                                  }}},
-            {UP::vcf_type, {"vcf_type", 0.2f, 5, false, 0, 4, [this](float v) {
-                                // OFF, LFP, HPF, BPF & NOTCH not totally safe but compact:
+            {UP::vcf_type, {"vcf_type", 0.0f, 4, false, 0, 3, [this](float v) {
+                                // Bypass, LFP, HPF, BPF
                                 filterType = static_cast<audio::filter::FilterType>(static_cast<int>(v));
+                                // FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "filterType set to val %d", static_cast<int>(v));
+                                // sendAudioLog();
                             }}},
             {UP::vcf_shape, {"vcf_shape", 0.0f, 4, false, 0, 3, [this](float v) {
-                                 // not totally safe but compact:
                                  int i = round(v);
                                  filterPoles = static_cast<audio::filter::FilterPoles>(i % 2);
                                  vcfInverse = (i > 1);
@@ -158,42 +165,37 @@ void Model::setupParams(int upCount) {
 
             {UP::peg_atime, {"peg_atime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max
                                  pegAR.setTime(audio::envelope::ASRState::ATTACK, v);
-                                 FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "hey peg attack with val %f", v);
-                                 sendAudioLog();
-                                 // sendLog(105, "setting attack to " + std::to_string(v));
                              }}},
             {UP::peg_rtime, {"peg_rtime", 0.5f, 0, true, 10, 8, [this](float v) { // 8192 max
                                  pegAR.setTime(audio::envelope::ASRState::RELEASE, v);
                              }}},
             {UP::pb_range, {"pb_range", 0.0f, 11, false, 2, 12, [this](float v) {
-                                // of what really..
-                                pb_range = v;
+                                pb_range = round(v) * 100;
                             }}},
-            {UP::peg_asemis, {"peg_asemis", 0.5f, 0, false, -12, 12, [this](float v) { // +/- 12 semis
-                                  peg_asemis = round(v);
+            {UP::peg_asemis, {"peg_asemis", 0.5f, 11, false, -5, 5, [this](float v) { // +/- 1,2,5,7,12 semis
+                                  peg_asemis = pegDepth2Semis[round(v) + 5];
                               }}},
-            {UP::peg_rsemis, {"peg_rsemis", 0.5f, 0, false, -12, 12, [this](float v) { // +/- 12 semis
-                                  peg_rsemis = round(v);
+            {UP::peg_rsemis, {"peg_rsemis", 0.5f, 11, false, -5, 5, [this](float v) { // +/- 12 semis
+                                  peg_rsemis = pegDepth2Semis[round(v) + 5];
                               }}},
+            // WOW WE HAVE ONE OVER HERE!
 
             {UP::lfo1_speed, {"lfo1_speed", 0.5f, 0, true, 100, 9, [this](float v) {
+                                  lfo1_speed = v;
                                   setLFO1speed();
-                                  FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "setting lfo1-speed (mHz) to %f", v);
-                                  sendAudioLog();
                               }}},
-            {UP::lfo1_depth, {"lfo1_depth", 0.0f, 0, false, 0, 1, [this](float v) {
+            {UP::lfo1_depth, {"lfo1_depth", 0.0f, 0, true, 2, 10, [this](float v) {
                                   // of what really..
-                                  lfo1_depth = v;
-                                  FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "setting lfo1-depth to %f", v);
+                                  lfo1_depth = (v - 2) * 0.01f;
+                                  FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "setting lfo1-depth to %f", lfo1_depth);
                                   sendAudioLog();
                               }}},
             {UP::lfo1_shape, {"lfo1_shape", 0.0f, audio::lfo::LFOShape::_count, false, 0, audio::lfo::LFOShape::_count - 1, [this](float v) {
-                                  // of what really..
                                   lfo1.setShape(static_cast<audio::lfo::LFOShape>(static_cast<int>(v)));
                                   FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "setting lfo1-shape to %f", v);
                                   sendAudioLog();
                               }}},
-            {UP::lfo1_routing, {"lfo1_routing", 0.3f, 6, false, 0, 5, [this](float v) {
+            {UP::lfo1_routing, {"lfo1_routing", 0.0f, 4, false, 0, 3, [this](float v) {
                                     lfo1_routing = static_cast<LFO1::Routing>(static_cast<int>(v));
                                     FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "setting lfo1-routing to %f", v);
                                     sendAudioLog();
@@ -203,7 +205,9 @@ void Model::setupParams(int upCount) {
                              }}},
             {UP::lfo1_mw_control, {"lfo1_mw_control", 0.0f, MW::LFOcontrol::_count, false, 0, MW::LFOcontrol::_count - 1, [this](float v) {
                                        lfo1_mw_control = static_cast<MW::LFOcontrol>(static_cast<int>(v));
+                                       setLFO1speed();
                                    }}},
+
             /* next bank */
             {UP::osc_mix_kt, {"osc_mix_kt", 0.5f, 0, false, -1, 1, [this](float v) {
                                   osc_mix_kt = v;
@@ -220,12 +224,14 @@ void Model::setupParams(int upCount) {
             {UP::osc1_fmsens_vt, {"osc1_fmsens_vt", 0.5f, 0, false, -1, 1, [this](float v) {
                                       osc1_fmsens_vt = v;
                                   }}},
-            {UP::osc2_freq_kt, {"osc2_freq_kt", 0.5f, 11, false, 0, 12, [this](float v) {
-                                    osc2_freq_kt = v / 6.0f;
+            {UP::osc2_freq_kt, {"osc2_freq_kt", 0.5f, 5, false, 0, 4, [this](float v) {
+                                    // When using steps *NO DECIMALS!*
+                                    osc2_freq_kt = v * 0.5f;
+                                    FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "setting osc2-freq_kt to %f", osc2_freq_kt);
+                                    sendAudioLog();
                                 }}},
 
             {UP::vcf_attack, {"vcf_attack", 0.0f, 0, true, 2, 11, [this](float v) { // 8192 max
-                                  // um - this is no good. how to use rate_kt?
                                   vcfAR.setTime(audio::envelope::ADSFRState::ATTACK, v - 1.5f);
                               }}},
             {UP::vcf_decay, {"vcf_decay", 0.8f, 0, true, 5, 7, [this](float v) { // 8192 max
@@ -238,51 +244,43 @@ void Model::setupParams(int upCount) {
                                    vcfAR.setTime(audio::envelope::ADSFRState::RELEASE, v);
                                }}},
             {UP::vcf_fade, {"vcf_fade", 0.3f, 0, false, 0, 1, [this](float v) {
-                                vcfAR.setTime(audio::envelope::ADSFRState::FADE, v);
+                                vcfAR.setLeak(audio::envelope::ADSFRState::FADE, v);
                             }}},
-            {UP::vcf_rate_kt, {"vcf_rate_kt", 0.0f, 0, false, 0, 1, [this](float v) {
+            {UP::vcf_rate_kt, {"vcf_rate_kt", 0.0f, 0, false, 0, 5, [this](float v) {
                                    vcf_rate_kt = v;
                                }}},
             {UP::vca_attack, {"vca_attack", 0.0f, 0, true, 2, 11, [this](float v) { // 8192 max
-                                  std::cout << "setting vca_attack to " << v << std::endl;
-                                  vcaAR.setTime(audio::envelope::ADSFRState::ATTACK, v);
+                                  vcaAR.setTime(audio::envelope::ADSFRState::ATTACK, v - 1.5f);
                               }}},
             {UP::vca_decay, {"vca_decay", 0.5f, 0, true, 5, 7, [this](float v) { // 8192 max
                                  vcaAR.setTime(audio::envelope::ADSFRState::DECAY, v);
-                                 std::cout << "setting decay to " << v << " ms" << std::endl;
                              }}},
             {UP::vca_sustain, {"vca_sustain", 0.8f, 0, false, 0, 1, [this](float v) {
                                    vcaAR.setLevel(audio::envelope::ADSFRState::SUSTAIN, v);
-                                   std::cout << "setting sustain to " << v << std::endl;
                                }}},
             {UP::vca_release, {"vca_release", 0.7f, 0, true, 10, 8, [this](float v) { //!!
                                    vcaAR.setTime(audio::envelope::ADSFRState::RELEASE, v);
-                                   std::cout << "setting release to " << v << " ms" << std::endl;
                                }}},
             {UP::vca_fade, {"vca_fade", 0.3f, 0, false, 0, 1, [this](float v) {
                                 vcaAR.setLeak(audio::envelope::ADSFRState::FADE, v);
-                                std::cout << "setting fade to " << v << std::endl;
                             }}},
-            {UP::vca_rate_kt, {"vcf_rate_kt", 0.0f, 0, false, 0, 1, [this](float v) {
+            {UP::vca_rate_kt, {"vca_rate_kt", 0.0f, 0, false, 0, 5, [this](float v) {
                                    vca_rate_kt = v;
                                }}},
 
-            {UP::lfo2_shape, {"lfo2_shape", 0.0f, audio::lfo::LFOShape::_count, false, 0, audio::lfo::LFOShape::_count - 1, [this](float v) {
-                                  // of what really..
-                                  lfo2.setShape(static_cast<audio::lfo::LFOShape>(static_cast<int>(v)));
-                              }}},
             {UP::lfo2_speed, {"lfo2_speed", 0.5f, 0, true, 100, 9, [this](float v) {
-                                  std::cout << "setting lfo2-speed (mHz) to " << v << std::endl;
                                   lfo2_speed = v;
                                   setLFO2speed();
+                              }}},
+            {UP::lfo2_depth, {"lfo2_depth", 0.0f, 0, false, 0, 1, [this](float v) {
+                                  lfo2_depth = v;
+                              }}},
+            {UP::lfo2_shape, {"lfo2_shape", 0.0f, audio::lfo::LFOShape::_count, false, 0, audio::lfo::LFOShape::_count - 1, [this](float v) {
+                                  lfo2.setShape(static_cast<audio::lfo::LFOShape>(static_cast<int>(v)));
                               }}},
             {UP::lfo2_routing, {"lfo2_routing", 0.0, LFO1::Routing::_count, false, 0, LFO1::Routing::_count - 1, [this](float v) {
                                     lfo2_routing = static_cast<LFO2::Routing>(static_cast<int>(v));
                                 }}},
-            {UP::lfo2_depth, {"lfo2_depth", 0.0f, 0, false, 0, 1, [this](float v) {
-                                  // of what really..
-                                  lfo2_depth = v;
-                              }}},
             {UP::not_used_1, {"not_used_1", 0.0f, 0, false, 0, 7, [this](float v) {
                                   // dummy
                                   lfo2_depth = lfo2_depth;
@@ -290,27 +288,12 @@ void Model::setupParams(int upCount) {
             {UP::lfo2_mw_control, {"lfo2_mw_control", 0.0f, MW::LFOcontrol::_count, false, 0, MW::LFOcontrol::_count - 1, [this](float v) {
                                        // of what really..
                                        lfo2_mw_control = static_cast<MW::LFOcontrol>(static_cast<int>(v));
+                                       setLFO2speed();
                                    }}}
 
         };
         // now reqeuest interface to reverse index.
         SynthBase::indexParams(upCount);
-    }
-}
-
-void Model::setLFO1speed() {
-    if (lfo1_mw_control == MW::LFOcontrol::speed) {
-        lfo1.setSpeed(lfo1_speed * modwheel);
-    } else {
-        lfo1.setSpeed(lfo1_speed);
-    }
-}
-
-void Model::setLFO2speed() {
-    if (lfo2_mw_control == MW::LFOcontrol::speed) {
-        lfo2.setSpeed(lfo2_speed * modwheel);
-    } else {
-        lfo2.setSpeed(lfo2_speed);
     }
 }
 
@@ -326,9 +309,8 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
         } else {
             int8_t voiceIdx = findVoiceToAllocate(param1);
             // ok now start that note..
-            FORMAT_LOG_MESSAGE(logTemp, LOG_CRITICAL, "note on in audio thread.. %s", "..awsome");
-            sendAudioLog();
-
+            // FORMAT_LOG_MESSAGE(logTemp, LOG_CRITICAL, "note on in audio thread.. %s", "..awsome");
+            // sendAudioLog();
             if (voiceIdx >= 0) {
                 voices[voiceIdx].noteOn(param1, (fParam2)); // +0.1??
             }
@@ -348,7 +330,7 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
         break;
     case 0xe0: {
         int pitchBendValue = (static_cast<int>(param2) << 7) | static_cast<int>(param1);
-        bendCents = ((pitchBendValue - 8192) / 8192.0f) * 200.0f;
+        bendCents = ((pitchBendValue - 8192) / 8192.0f) * pb_range;
         break;
     }
     }
@@ -402,45 +384,39 @@ bool Model::renderNextBlock() {
         synthBufferLeft[i] = 0;
         synthBufferRight[i] = 0;
     }
-    //
-    if (lfo1_mw_control == MW::LFOcontrol::speed) {
-        setLFO1speed();
-    }
-    if (lfo2_mw_control == MW::LFOcontrol::speed) {
-        setLFO2speed();
-    }
+
+    // optimized in params..
+    // setLFO1speed();
+    // setLFO2speed();
+
+    lfo1.updatePhase();
+    lfo2.updatePhase();
+
     //
     for (uint8_t i = 0; i < VOICE_COUNT; i++) {
         if (voices[i].checkVoiceActive()) {
             voices[i].renderNextVoiceBlock(bufferSize);
         }
     }
+    // LEFT & RIGHT..
     float dist;
     for (uint8_t i = 0; i < TPH_RACK_RENDER_SIZE; i++) {
         // we could add some sweet dist here..
         dist = synthBufferLeft[i];
-        dist = dist * dist; // skip polarity.. But we'll get problems as dist² > 5.
         dist = fmin(4.0f, dist * dist);
         bufferLeft[i] = synthBufferLeft[i] * (5 - dist) * 0.2f;
-        // 0.1 => 0.001 => (5 - 0.01) * 0.1 => 0.499 => 0.0499
-        // 0.5 => 0.25 => (5 - 0.25) * 0.1 => 0.475 => 0.287
-        // 2 => 4 => (5 - 4) * 0.1 => 0.1 => 0.2
     }
     for (uint8_t i = 0; i < TPH_RACK_RENDER_SIZE; i++) {
-        // we could add some sweet dist here..
         dist = synthBufferRight[i];
-        dist = dist * dist; // skip polarity.. But we'll get problems as dist² > 5.
         dist = fmin(4.0f, dist * dist);
         bufferRight[i] = synthBufferRight[i] * (5 - dist) * 0.2f;
     }
-    // motherboard-stuff..
-    lfo1.updatePhase();
-    lfo2.updatePhase();
 
     // debugging
     if (false) {
-        for (std::size_t i = 0; i < bufferSize; i++) {
+        for (std::size_t i = 0; i < TPH_RACK_RENDER_SIZE; i++) {
             bufferLeft[i] += AudioMath::noise() * 0.01f - 0.005f;
+            bufferRight[i] += AudioMath::noise() * 0.01f - 0.005f;
         }
     }
 
@@ -456,6 +432,22 @@ void Model::addToLeftSample(std::size_t sampleIdx, float val) {
 void Model::addToRightSample(std::size_t sampleIdx, float val) {
     // use local buffer for spead. Possibly double..
     this->synthBufferRight[sampleIdx] += val;
+}
+
+void Model::setLFO1speed() {
+    if (lfo1_mw_control == MW::LFOcontrol::speed) {
+        lfo1.setSpeed(lfo1_speed * modwheel);
+    } else {
+        lfo1.setSpeed(lfo1_speed);
+    }
+}
+
+void Model::setLFO2speed() {
+    if (lfo2_mw_control == MW::LFOcontrol::speed) {
+        lfo2.setSpeed(lfo2_speed * modwheel);
+    } else {
+        lfo2.setSpeed(lfo2_speed);
+    }
 }
 
 const audio::osc::LUT &Model::getLUT1() const {

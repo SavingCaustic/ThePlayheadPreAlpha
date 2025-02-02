@@ -7,6 +7,7 @@ enum class FilterType {
     lowPass,
     highPass,
     bandPass,
+    bandStop,
     _count
 };
 

@@ -87,11 +87,11 @@ enum UP {
 namespace LFO1 {
 enum Routing {
     off,
+    osc12,
     osc1,
     osc2,
-    osc12,
-    vcf,
-    vca,
+    //    vcf,
+    //    vca,
     _count
 };
 }
@@ -116,8 +116,9 @@ enum LFOcontrol {
 };
 } // namespace MW
 
+// NOTE: These are currently not used - let's skip them..
+/*
 namespace OSC1 {
-// curr not used..
 enum WF {
     sine,
     tri,
@@ -142,6 +143,9 @@ enum class WF {
     _count
 };
 }
+*/
+
+const std::array<int, 11> pegDepth2Semis = {-12, -7, -5, -2, -1, 0, 1, 2, 5, 7, 12};
 
 class Model : public SynthBase {
 

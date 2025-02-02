@@ -27,13 +27,11 @@ void Voice::setLUTs(const audio::osc::LUT &lut, int no) {
 void Voice::noteOn(uint8_t midiNote, float velocity) {
     notePlaying = midiNote;
     noteVelocity = velocity;
-    mixAmplitude = noteVelocity * 0.4f; // Factor to avoid too much dist on polyphony..
     // HEY! noteVelocity or mixAmplitude must ease!
     lfo1_ramp_avg = 0.0f; // even if retrigger??
     //
     osc_mix_kv = ((midiNote * 0.02f - 1) * modelRef.osc_mix_kt + 1.0f) *
                  ((velocity * 2.0f - 1) * modelRef.osc_mix_vt + 1.0f);
-    std::cout << "osc_mix_kv:" << osc_mix_kv << std::endl;
 
     osc1_fmsens_kv = ((midiNote * 0.02f - 1) * modelRef.osc1_fmsens_kt + 1.0f) *
                      ((velocity * 2.0f - 1) * modelRef.osc1_fmsens_vt + 1.0f);
@@ -45,10 +43,18 @@ void Voice::noteOn(uint8_t midiNote, float velocity) {
     rightAtt = fmin(1, fmax(0, (60 - notePlaying) * 0.04f * modelRef.vca_pan_kt));
     tracking = fmax(0, (2.0f + modelRef.senseTracking * AudioMath::noteToFloat(notePlaying) * 7));
     //
+    // vca-tracking
+    vcaARslope.kGain = exp2((notePlaying - 64) / 64.0f * modelRef.vca_rate_kt);
+    FORMAT_LOG_MESSAGE(modelRef.logTemp, LOG_INFO, "setting VCA kGain to %f", vcaARslope.kGain);
+    modelRef.sendAudioLog();
+
     modelRef.vcaAR.triggerSlope(vcaARslope, audio::envelope::ADSFRCmd::NOTE_ON);
+    // vcf-tracking
+    vcfARslope.kGain = exp2((notePlaying - 64) / 64.0f * modelRef.vcf_rate_kt);
     modelRef.vcfAR.triggerSlope(vcfARslope, audio::envelope::ADSFRCmd::NOTE_ON);
+
+    pegARslope.kGain = 1.0f;
     modelRef.pegAR.triggerSlope(pegARslope, audio::envelope::ASRCmd::NOTE_ON);
-    // peg influence = (1 - pegAr.level) * semis
     filter.initFilter();
 }
 
@@ -120,8 +126,11 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
         // :: OSC1 ::
         float fmAmp = modelRef.osc1_fmsens * osc1_fmsens_kv;
         if (modelRef.lfo2_routing == LFO2::Routing::fmSens) {
-            fmAmp *= (1 + modelRef.lfo2.getLFOval()) * lfo2amp * 5.0f;
+            // fmAmp *= (1 + modelRef.lfo2.getLFOval()) * lfo2amp * 5.0f;
+            fmAmp += modelRef.lfo2.getLFOval() * lfo2amp * 5.0f;
         }
+        if (fmAmp < 0)
+            fmAmp = 0;
 
         // calc note and cent for osc1
         float osc1cents = modelRef.bendCents + modelRef.osc1_detune + pegCents;
@@ -131,17 +140,17 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
         osc1hz = AudioMath::noteToHz(notePlaying, osc1cents);
         osc1.setAngle(osc1hz);
 
-        // bad code
+        // LFO1 reworked to be only pitch so comment out..
+        /*
         if (modelRef.lfo1_routing == LFO1::Routing::vca) {
             // vcaTarget *= 1.0f + (modelRef.lfo1.getLFOval() * modelRef.lfo1_depth) - modelRef.lfo1_depth;
             // modTarget = modTarget - modTarget * modelRef.lfo1_depth + (modelRef.lfo1.getLFOval() + 1.0f) * modTarget * modelRef.lfo1_depth * 0.5f;
         }
+        */
+        mixAmplitude = noteVelocity * 0.4f; // Factor to avoid too much dist on polyphony..
         if (modelRef.lfo2_routing == LFO2::Routing::vca) {
-            // vcaTarget *= 1.0f + (modelRef.lfo2.getLFOval() * lfo2amp) - lfo2amp;
-            // vcaTarget -= vcaTarget * lfo2amp + (modelRef.lfo2.getLFOval() + 1.0f) * vcaTarget * lfo2amp * 0.5f;
-            // modTarget = modTarget - modTarget * lfo2amp + (modelRef.lfo2.getLFOval() + 1.0f) * 0.5f * modTarget * lfo2amp;
+            mixAmplitude *= 1.0f + (modelRef.lfo2.getLFOval() * lfo2amp) - lfo2amp;
         }
-        // duh - stereo no thanks.
         for (std::size_t i = 0; i < bufferSize; i += chunkSize) {
             // chunk here.. 1/2/3. Oscillators | Filter | VCA
             AudioMath::easeLog50(fmAmp, fmAmpEaseOut);
@@ -157,19 +166,23 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
             if (modelRef.filterType != audio::filter::FilterType::bypass) {
                 float vcfVal;
                 if (modelRef.vcfInverse) {
-                    vcfVal = 100 + modelRef.vcf_cutoff * (1.0f - vcfEaserVal);
+                    vcfVal = (1.0f - vcfARslope.currVal);
                 } else {
-                    vcfVal = 100 + modelRef.vcf_cutoff * vcfEaserVal;
+                    vcfVal = vcfARslope.currVal;
                 }
                 vcfEaserVal = vcfEaserVal * 0.9 + vcfVal * 0.1;
-                filter.setCutoff(vcfEaserVal * vcf_cutoff_kv);
+                filter.setCutoff(100 + modelRef.vcf_cutoff * vcfEaserVal * vcf_cutoff_kv);
                 filter.setResonance(modelRef.vcf_resonance);
                 filter.setPoles(modelRef.filterPoles);
                 filter.setFilterType(modelRef.filterType);
                 filter.initFilter(); //??
-                // disabled while debugging:
+                // akward way to fast forward..
                 vcfARslope.currVal = vcfARslope.currVal * (1.0f - vcfARslope.k * 16.0f) + vcfARslope.targetVal * vcfARslope.k * 16.0f;
                 filter.processBlock(chunkSample, chunkSize); //, vcfEaserVal);
+            }
+            if (vcaARslope.targetVal > 2) {
+                // clamp on excessive attack (kt)
+                vcaARslope.targetVal = 2;
             }
             float delta = vcaARslope.k * (vcaARslope.targetVal - vcaARslope.currVal);
             for (std::size_t j = 0; j < chunkSize; j++) {
@@ -187,8 +200,11 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
         modelRef.vcaAR.updateDelta(vcaARslope);
         modelRef.vcfAR.updateDelta(vcfARslope);
 
+        pegARslope.currVal = pegARslope.currVal * (1.0f - pegARslope.k * 64.0f) + pegARslope.targetVal * pegARslope.k * 64.0f;
+        modelRef.pegAR.updateDelta(pegARslope);
+
     } else {
-        // Remove voice from playing
+        // Remove voice from playing??
         // maybe use return-type
     }
     return true;

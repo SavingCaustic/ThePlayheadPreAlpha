@@ -1,5 +1,7 @@
 #include "ADSFR.h"
 #include "constants.h"
+#include "core/hallways/AudioHallway.h"
+#include <cmath>
 #include <iostream>
 
 namespace audio::envelope {
@@ -28,7 +30,7 @@ void ADSFR::setLevel(ADSFRState state, float level) {
 }
 
 void ADSFR::setLeak(ADSFRState state, float level) {
-    fK = level * 0.00005f;
+    fK = level * 0.00002f;
 }
 
 void ADSFR::triggerSlope(ADSFRSlope &slope, ADSFRCmd cmd) {
@@ -66,17 +68,24 @@ float ADSFR::calcDelta(float ohm) const {
 
 void ADSFR::setSlopeState(ADSFRSlope &slope, ADSFRState state) {
     switch (state) {
-    case ADSFRState::ATTACK:
+    case ADSFRState::ATTACK: {
         slope.state = ADSFRState::ATTACK;
         slope.goalVal = 1.0f;
         slope.targetVal = 1.3f;
-        slope.k = aK;
+        // clamp (to much overshoot)..
+        slope.k = std::fmin(0.09f, aK * slope.kGain);
+        LoggerRec logTemp;
+        FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "setting attack k to %f", slope.k);
+        audioHallway.logMessage(logTemp);
+        FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "..kGain is %f", slope.kGain);
+        audioHallway.logMessage(logTemp);
         break;
+    }
     case ADSFRState::DECAY:
         slope.state = ADSFRState::DECAY;
         slope.goalVal = sLevel;
         slope.targetVal = sLevel * 0.62f;
-        slope.k = dK;
+        slope.k = dK * slope.kGain;
         break;
     case ADSFRState::SUSTAIN:
         // Not an active state for slope
@@ -85,13 +94,13 @@ void ADSFR::setSlopeState(ADSFRSlope &slope, ADSFRState state) {
         slope.state = ADSFRState::FADE;
         slope.goalVal = 0;
         slope.targetVal = slope.currVal * -0.04f;
-        slope.k = fK;
+        slope.k = fK * slope.kGain;
         break;
     case ADSFRState::RELEASE:
         slope.state = ADSFRState::RELEASE;
         slope.goalVal = 0;
         slope.targetVal = slope.currVal * -0.12f;
-        slope.k = rK;
+        slope.k = rK * slope.kGain;
         break;
     case ADSFRState::OFF:
         slope.state = ADSFRState::OFF;

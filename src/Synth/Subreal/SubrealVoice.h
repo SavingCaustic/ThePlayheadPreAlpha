@@ -7,6 +7,7 @@
 #include "core/audio/lfo/LFO.h"
 #include "core/audio/misc/Easer.h"
 #include "core/audio/osc/LUT.h"
+#include "core/hallways/AudioHallway.h"
 #include <array>
 #include <cstdlib>
 #include <iostream>

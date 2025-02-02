@@ -49,9 +49,8 @@ void PlayerEngine::bindDestructorQueue(Destructor::Queue &hDestructorQueue) {
 void PlayerEngine::initAudioHallway() {
     audioHallway.destructorQueueMount(*objectManager.destructorQueue);
     audioHallway.audioQueueMount(*audioLoggerQueue);
-    std::cout << "it should be setup.." << std::endl;
     LoggerRec logTemp;
-    FORMAT_LOG_MESSAGE(logTemp, LOG_CRITICAL, "duh - i'm at %s", "playerEngine");
+    FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "If you do good, you see me %s..", "once");
     audioHallway.logMessage(logTemp);
     audioHallwaySetup = true;
 }
@@ -177,7 +176,7 @@ void PlayerEngine::sendLoadStats(std::chrono::time_point<std::chrono::high_resol
     FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "Usage percent: %f", this->loadAvg);
     sendAudioLog();
 
-    FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "Time left (uS): %d", timeLeftUs);
+    FORMAT_LOG_MESSAGE(logTemp, LOG_INFO, "Time left (uS): %d", static_cast<int>(timeLeftUs));
     sendAudioLog();
 }
 
