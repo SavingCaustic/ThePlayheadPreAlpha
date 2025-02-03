@@ -60,6 +60,7 @@ class Voice { //: public VoiceInterface {
     float vcfEaserVal;
     float tracking;
     float lfo1_ramp_avg;
+    float noiseAvg;
 
   private:
     Model &modelRef;                          // Use reference to Model

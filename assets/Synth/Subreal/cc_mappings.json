@@ -20,7 +20,7 @@
     "30": "pb_range",
     "31": "peg_asemis",
     "32": "peg_rsemis",
-    "33": "vcf_noise",
+    "33": "noise",
 
     "34": "lfo1_speed",
     "35": "lfo1_depth",

@@ -1,5 +1,5 @@
 #pragma once
-
+#include "core/audio/AudioMath.h"
 namespace audio::filter {
 
 // removed bandstop.
@@ -33,7 +33,7 @@ class MultiFilter {
     void initFilter();
 
     // mono only
-    void processBlock(float *buffer, int numSamples);
+    void processBlock(float *buffer, int numSamples, float noiseLevel = 0);
     float processSample(float sample, FilterPoles poles);
 
   public:

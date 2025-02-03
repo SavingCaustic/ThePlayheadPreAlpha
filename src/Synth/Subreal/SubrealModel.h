@@ -44,7 +44,7 @@ enum UP {
     pb_range,
     peg_asemis,
     peg_rsemis,
-    vcf_noise,
+    noise,
 
     lfo1_speed,
     lfo1_depth,
@@ -218,6 +218,8 @@ class Model : public SynthBase {
 
     int peg_asemis;
     int peg_rsemis;
+    float noise_o2 = 0;
+    float noise_vcf = 0;
 
     int pb_range;
     MW::LFOcontrol lfo1_mw_control;

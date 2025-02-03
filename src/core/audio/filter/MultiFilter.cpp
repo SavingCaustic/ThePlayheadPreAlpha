@@ -90,7 +90,7 @@ void MultiFilter::initFilter() {
 }
 
 // we need to know if this is stereo or mono.. always momo for now..
-void MultiFilter::processBlock(float *buffer, int numSamples) {
+void MultiFilter::processBlock(float *buffer, int numSamples, float noiseLevel) {
     if (filterType == FilterType::bypass) {
         return;
     }
@@ -102,7 +102,7 @@ void MultiFilter::processBlock(float *buffer, int numSamples) {
             x = buffer[i];
             y = (a0 * x) + d1;
             d1 = d2 + (a1 * x) - (b1 * y);
-            d2 = (a2 * x) - (b2 * y);
+            d2 = (a2 * x) - (b2 * y) + AudioMath::noise() * noiseLevel * 0.1f;
             buffer[i] = (float)y;
         }
         break;

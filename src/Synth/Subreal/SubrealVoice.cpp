@@ -158,6 +158,7 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
             for (std::size_t j = 0; j < chunkSize; j++) {
                 chunkSample[j] = osc2.getNextSample(0);
             }
+            //
             for (std::size_t j = 0; j < chunkSize; j++) {
                 float y1 = osc1.getNextSample(chunkSample[j] * fmAmpEaseOut);
                 chunkSample[j] = y1 * (1 - oscMixEaseOut) + chunkSample[j] * oscMixEaseOut;
@@ -178,7 +179,7 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
                 filter.initFilter(); //??
                 // akward way to fast forward..
                 vcfARslope.currVal = vcfARslope.currVal * (1.0f - vcfARslope.k * 16.0f) + vcfARslope.targetVal * vcfARslope.k * 16.0f;
-                filter.processBlock(chunkSample, chunkSize); //, vcfEaserVal);
+                filter.processBlock(chunkSample, chunkSize, modelRef.noise_vcf); //, vcfEaserVal);
             }
             if (vcaARslope.targetVal > 2) {
                 // clamp on excessive attack (kt)
@@ -189,6 +190,14 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
                 mixAmpAvg = mixAmpAvg * 0.95f + mixAmplitude * 0.05f;
                 vcaARslope.currVal += delta;
                 chunkSample[j] = chunkSample[j] * vcaARslope.currVal * mixAmpAvg;
+            }
+            // generate noise if needed..
+            if (false) {
+                if (modelRef.noise_o2 > 0 && pegARslope.state == audio::envelope::ASRState::ATTACK) {
+                    for (std::size_t j = 0; j < chunkSize; j++) {
+                        chunkSample[j] += 0.2 * AudioMath::noise() * modelRef.noise_o2 * (1 - pegARslope.currVal);
+                    }
+                }
             }
             // send to model (sum)
             for (std::size_t j = 0; j < chunkSize; j++) {

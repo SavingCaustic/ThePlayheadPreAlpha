@@ -84,19 +84,7 @@ void Model::updateSetting(const std::string &type, void *object, uint32_t size, 
         throw std::invalid_argument("Unknown key for updateSetting: " + type);
     }
 }
-/*
-void Model::buildLUT(audio::osc::LUT &lut, const std::string val) {
-    std::vector<float> values;
-    std::istringstream stream(val);
-    std::string token;
-    int h = 1;
-    while (std::getline(stream, token, ',')) {
-        lut.applySine(h, std::stof(token));
-        h++;
-    }
-    lut.normalize();
-}
-*/
+
 void Model::reset() {
 }
 
@@ -178,6 +166,15 @@ void Model::setupParams(int upCount) {
             {UP::peg_rsemis, {"peg_rsemis", 0.5f, 11, false, -5, 5, [this](float v) { // +/- 12 semis
                                   peg_rsemis = pegDepth2Semis[round(v) + 5];
                               }}},
+            {UP::noise, {"noise", 0.5f, 0, false, -1, 1, [this](float v) { // +/- 12 semis
+                             if (v > 0) {
+                                 noise_vcf = v * v; // ha, v*v solves both amplitude and polarity
+                                 noise_o2 = 0;
+                             } else {
+                                 noise_o2 = v * v;
+                                 noise_vcf = 0;
+                             }
+                         }}},
             // WOW WE HAVE ONE OVER HERE!
 
             {UP::lfo1_speed, {"lfo1_speed", 0.5f, 0, true, 100, 9, [this](float v) {
