@@ -16,7 +16,7 @@ class SynthInterface : public MidiRecieverInterface {
     virtual void reset() = 0; // Reset the synth to its default state
     // virtual void parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) = 0; // Handle MIDI input
     virtual bool renderNextBlock() = 0; // Process the next audio block
-    virtual void pushStrParam(const std::string &name, float val) = 0;
+    virtual void pushStrParam(const char *name, float val) = 0;
     virtual nlohmann::json getParamDefsAsJSON() = 0;
     virtual void bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::size_t TPH_RACK_RENDER_SIZE) = 0;
     // virtual void updateSetting(Constructor::Record::type, record.value, record.ptr, record.isStereo) = 0;
@@ -32,7 +32,7 @@ class SynthInterface : public MidiRecieverInterface {
   protected:
     // belonging to class, not instance
     // belonging to instance, because they may be overridden by patch settings.
-    std::unordered_map<int, std::string> ccMappings; // MIDI CC -> parameter name mappings
-    float *bufferLeft, *bufferRight;                 // Pointer to audio buffer
-    std::size_t bufferSize;                          // Size of the audio buffer
+    std::unordered_map<uint8_t, std::array<char, 16>> ccMappings; // Fixed-size char arrays
+    float *bufferLeft, *bufferRight;                              // Pointer to audio buffer
+    std::size_t bufferSize;                                       // Size of the audio buffer
 };

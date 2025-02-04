@@ -23,12 +23,12 @@
 using json = nlohmann::json;
 
 namespace Synth::Beatnik {
+constexpr int VOICE_COUNT = 12;
 
 enum UP {
-    a_pan,
-    b_pan,
-    c_pan,
-    d_pan,
+    X_volume,
+    X_pitch,
+    X_pan,
     up_count
 };
 
@@ -47,7 +47,7 @@ class Model : public SynthBase {
         return SynthBase::getParamDefsAsJson();
     }
 
-    void pushStrParam(const std::string &name, float val) override {
+    void pushStrParam(const char *name, float val) override {
         return SynthBase::pushStrParam(name, val);
     }
 
@@ -63,7 +63,6 @@ class Model : public SynthBase {
   public:
     std::vector<Voice> voices; // Vector to hold Voice objects
     std::array<audio::sample::SimpleSample, 12> samples;
-    // std::vector<audio::sample::SimpleSample> samples; // Vector ho hold sample objects
 
     // void renderVoice();
     int8_t findVoiceToAllocate(uint8_t note);

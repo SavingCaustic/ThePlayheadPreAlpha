@@ -99,8 +99,28 @@ std::string SynthBase::resolveUPname(const int paramID) {
     return "";
 }
 
-void SynthBase::pushStrParam(const std::string &name, float val) {
-    int upEnum = resolveUPenum(name);
+void SynthBase::pushStrParam(const char *name, float val) {
+    char normalizedName[16];      // Stack-allocated buffer for renamed param
+    const char *finalName = name; // Pointer to use as param name
+    // Check if the second character is '_'
+    if (name[1] == '_') {
+        char prefix = name[0]; // First character (e.g., 'a', 'b', 'c')
+        if (prefix >= 'a' && prefix <= 'z') {
+            paramIdx = prefix - 'a'; // Convert to index (a=0, b=1, c=2, ...)
+        }
+        normalizedName[0] = 'X'; // Replace first character but keep the format
+        // Copy the rest of the parameter name unchanged, starting from index 1
+        int i = 1;
+        while (name[i] && i < (sizeof(normalizedName) - 1)) {
+            normalizedName[i] = name[i];
+            i++;
+        }
+        normalizedName[i] = '\0';   // Null-terminate
+        finalName = normalizedName; // Use modified name
+    } else {
+        finalName = name;
+    }
+    int upEnum = resolveUPenum(finalName);
     if (upEnum != -1) {
         auto it = paramDefs.find(upEnum);             // Look for the parameter in the definitions
         const ParamDefinition &paramDef = it->second; // Get the parameter definition
@@ -123,9 +143,8 @@ void SynthBase::pushStrParam(const std::string &name, float val) {
         }
         // now affect the dsp.
         invokeLambda(it->first, paramDef);
-
     } else {
-        std::cerr << "Parameter not found: " << name << "\n";
+        std::cerr << "Parameter not found: " << finalName << "\n";
     }
 }
 

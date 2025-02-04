@@ -36,12 +36,17 @@ class Voice {
 
     uint8_t notePlaying;
 
+  public:
+    float volume = 0.8f;
+    float pan = 0.0f;
+    float pitch = 1.0f;
+    //
   protected:
     audio::envelope::ADSFR vcaAR;
     audio::envelope::ADSFRSlope vcaARslope;
     audio::misc::Easer oscMixEaser;
     audio::misc::Easer vcaEaser;
-    float pan;
+    //
     int sampleID;
     float currSamplePos = 0;
     float noteVelocity;

@@ -32,12 +32,14 @@ class SynthBase : public SynthInterface {
     void sendLog(int code, const std::string &message);
     void sendAudioLog();
 
-    void pushStrParam(const std::string &name, float val);
+    void pushStrParam(const char *name, float val);
+    // void pushStrParam(const std::string &name, float val);
     void initParams();
     void pushAllParams();
     void indexParams(const int upCount);
 
   public:
+    uint8_t paramIdx = 255; // 255 = unvalid
     LoggerRec logTemp;
     Rack *host = nullptr;
     // static std::unordered_map<int, ParamDefinition> paramDefs;

@@ -1,10 +1,59 @@
 {
     "1": "modulation",
 
-    "16": "N_volume",
-    "17": "N_pan",
-    "18": "N_pitch",
-    "19": "N_attack",
-    "20": "N_decay",
-    "21": "N_dynamics"
+    "16": "a_volume",
+    "17": "a_pan",
+    "18": "a_pitch",
+    "19": "a_attack",
+    "20": "a_decay",
+    "21": "a_dynamics",
+
+    "22": "b_volume",
+    "23": "b_pan",
+    "24": "b_pitch",
+    "25": "b_attack",
+    "26": "b_decay",
+    "27": "b_dynamics",
+
+    "28": "c_volume",
+    "29": "c_pan",
+    "30": "c_pitch",
+    "31": "c_attack",
+    "32": "c_decay",
+    "33": "c_dynamics",
+
+    "34": "d_volume",
+    "35": "d_pan",
+    "36": "d_pitch",
+    "37": "d_attack",
+    "38": "d_decay",
+    "39": "d_dynamics",
+
+    "40": "e_volume",
+    "41": "e_pan",
+    "42": "e_pitch",
+    "43": "e_attack",
+    "44": "e_decay",
+    "45": "e_dynamics",
+
+    "46": "f_volume",
+    "47": "f_pan",
+    "48": "f_pitch",
+    "49": "f_attack",
+    "50": "f_decay",
+    "51": "f_dynamics",
+
+    "52": "g_volume",
+    "53": "g_pan",
+    "54": "g_pitch",
+    "55": "g_attack",
+    "56": "g_decay",
+    "57": "g_dynamics",
+
+    "58": "h_volume",
+    "59": "h_pan",
+    "60": "h_pitch",
+    "61": "h_attack",
+    "62": "h_decay",
+    "63": "h_dynamics"
 }

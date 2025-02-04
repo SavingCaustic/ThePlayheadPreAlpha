@@ -1,7 +1,6 @@
 #include "./BeatnikModel.h"
 
 namespace Synth::Beatnik {
-constexpr int VOICE_COUNT = 12;
 
 // Constructor to accept buffer and size
 Model::Model() {
@@ -57,16 +56,22 @@ void Model::bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::si
 }
 
 void Model::setupParams(int upCount) {
-    // um. we need something clever here to route parameter to sample-setting.
-    // not clear yet the routing here. maybe samples <-> voices
     if (SynthBase::paramDefs.empty()) {
         // after declaration, indexation requested, see below..
         SynthBase::paramDefs = {
-            {UP::a_pan, {"a_pan", 0.0f, 0, false, -1, 1, [this](float v) {
-                             // what would i need to do?
-                         }}},
-            {UP::b_pan, {"b_pan", 0.0f, 0, false, -1, 1, [this](float v) {
-                             // what would i need to do?
+            {UP::X_volume, {"X_volume", 0.8f, 0, false, 0, 1, [this](float v) {
+                                // what would i need to do?
+                                if (paramIdx != 255)
+                                    voices[paramIdx].volume = v;
+                            }}},
+            {UP::X_pitch, {"X_pitch", 0.5f, 0, false, 66, 150, [this](float v) {
+                               // +/- 50%
+                               if (paramIdx != 255)
+                                   voices[paramIdx].pitch = v * 0.01f;
+                           }}},
+            {UP::X_pan, {"X_pan", 0.0f, 0, false, -1, 1, [this](float v) {
+                             if (paramIdx != 255)
+                                 voices[paramIdx].pan = v;
                          }}}};
         // now reqeuest interface to reverse index.
         SynthBase::indexParams(upCount);
@@ -83,10 +88,11 @@ void Model::parseMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
             // if (param1 == notePlaying && param2 < 64) { - not working very well..
             // vcaAR.triggerSlope(vcaARslope, audio::envelope::NOTE_REON);
         } else {
-            int8_t voiceIdx = findVoiceToAllocate(param1);
+            // int8_t voiceIdx = findVoiceToAllocate(param1);
+            int8_t voiceIdx = (param1 % 12);
             // ok now start that note..
             if (voiceIdx >= 0) {
-                voices[voiceIdx].noteOn(param1, (fParam2 + 0.1));
+                voices[voiceIdx].noteOn(param1, fParam2);
             }
         }
         break;

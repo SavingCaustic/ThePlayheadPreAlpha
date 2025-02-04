@@ -18,11 +18,12 @@ void Beatnik::Voice::noteOn(uint8_t midiNote, float velocity) {
     notePlaying = midiNote;
     sampleID = (midiNote) % 12;
     currSamplePos = 0;
-    noteVelocity = velocity * velocity; // use x2 for now instead of log20.
-    float pan = 0.0f + (60 - midiNote) * 0.2f;
-    float angle = (pan + 1.0f) * 0.125;
-    leftGain = AudioMath::ccos(angle) * noteVelocity * 0.5f;
-    rightGain = AudioMath::csin(angle) * noteVelocity * 0.5f;
+    // noteVelocity = velocity * velocity; // use x2 for now instead of log20.
+    // 1.2f may cause distortion on pan! maybe not use "real" panning.
+    noteVelocity = 1.2f * velocity;
+    float angle = (this->pan + 1.0f) * 0.125f;
+    leftGain = AudioMath::ccos(angle) * noteVelocity * this->volume;
+    rightGain = AudioMath::csin(angle) * noteVelocity * this->volume;
 
     // it's all in the voice. no AR in model.
     vcaAR.triggerSlope(vcaARslope, audio::envelope::ADSFRCmd::NOTE_ON);
@@ -46,6 +47,7 @@ bool Beatnik::Voice::checkVoiceActive() {
 }
 
 bool Beatnik::Voice::renderNextVoiceBlock(std::size_t bufferSize) {
+    // currently sampleID <=> voiceID - could be a split..
     // move this tempBuffer to model later. No point in having one for each voice.
     if (modelRef.samples[sampleID].length == 0) {
         std::cout << "sample has not been setup - leaving.";
@@ -53,15 +55,14 @@ bool Beatnik::Voice::renderNextVoiceBlock(std::size_t bufferSize) {
         return false;
     }
 
-    // here's a speed constant hardcoded for lazy playback of 44k1 to 48khz.
-    float speed = 0.919f;
+    float speed = this->pitch;
     currSamplePos = modelRef.samples[sampleID].getSamplesToBuffer(modelRef.voiceBufferLeft, modelRef.voiceBufferRight, bufferSize, currSamplePos, speed);
     if (currSamplePos == 0.0f) {
         // reached end of sample, stop playing!
         vcaARslope.state = audio::envelope::ADSFRState::OFF;
+        std::cout << "played voice:" << sampleID << std::endl;
     }
 
-    // Process stereo samples
     for (std::size_t j = 0; j < bufferSize; j++) {
         // mono here..
         modelRef.addToLeftSample(j, modelRef.voiceBufferLeft[j] * leftGain);   // Left channel

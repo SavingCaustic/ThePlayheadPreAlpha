@@ -13,22 +13,27 @@ void SynthInterface::logErr(int code, const std::string &message) {
 // CC-mapping stuff
 
 void SynthInterface::setupCCmapping(const std::string &synthName) {
-    // setup for each rack right, event if same synth..
-    // Construct path dynamically based on the synth name
     std::string path = "Synth/" + synthName + "/cc_mappings.json";
     std::cout << "cc-mapping setting up on " << path << std::endl;
+
     std::string jsonData = FileDriver::assetFileRead(path);
     if (jsonData.empty()) {
         std::cerr << "Failed to read CC mapping file for " << synthName << std::endl;
         return;
     }
-    // Parse the JSON data
+
     try {
         auto ccMappingsJson = nlohmann::json::parse(jsonData);
-        // Populate the ccMappings map
         for (const auto &[cc, param] : ccMappingsJson.items()) {
             int ccNumber = std::stoi(cc);
-            ccMappings[ccNumber] = param.get<std::string>();
+            std::string paramName = param.get<std::string>();
+
+            // Ensure it fits in the buffer
+            std::array<char, 16> nameBuffer = {};
+            std::strncpy(nameBuffer.data(), paramName.c_str(), nameBuffer.size() - 1);
+            nameBuffer[nameBuffer.size() - 1] = '\0'; // Null-terminate
+
+            ccMappings[ccNumber] = nameBuffer; // Store the fixed-size array
         }
     } catch (const nlohmann::json::parse_error &e) {
         std::cerr << "JSON parse error: " << e.what() << std::endl;
@@ -38,8 +43,7 @@ void SynthInterface::setupCCmapping(const std::string &synthName) {
 void SynthInterface::handleMidiCC(uint8_t ccNumber, float value) {
     auto it = ccMappings.find(ccNumber);
     if (it != ccMappings.end()) {
-        const std::string &paramName = it->second;
-        pushStrParam(paramName, value); // Call the synth-specific parameter handling
+        pushStrParam(it->second.data(), value); // Call the synth-specific parameter handling
     } else {
         std::cerr << "CC " << static_cast<int>(ccNumber) << " not mapped." << std::endl;
     }

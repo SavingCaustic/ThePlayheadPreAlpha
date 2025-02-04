@@ -34,7 +34,7 @@ int debugBeatnik() {
     sampleTmp = nullptr;
     //
     sampleTmp = new audio::sample::SimpleSample();
-    Synth::Beatnik::Factory::buildSample(sampleTmp, "stereo/Stereo.wav"); //"lm-2/snare-m.wav");
+    Synth::Beatnik::Factory::buildSample(sampleTmp, "test/Stereo.wav"); //"lm-2/snare-m.wav");
     myBeatnik->samples[1] = *sampleTmp;
     std::cout << "sample length is: " << sampleTmp->length << std::endl;
     sampleTmp = nullptr;

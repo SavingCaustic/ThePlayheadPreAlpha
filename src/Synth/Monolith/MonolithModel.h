@@ -88,7 +88,7 @@ class Model : public SynthBase {
         return SynthBase::getParamDefsAsJson();
     }
 
-    void pushStrParam(const std::string &name, float val) override {
+    void pushStrParam(const char *name, float val) override {
         return SynthBase::pushStrParam(name, val);
     }
 
