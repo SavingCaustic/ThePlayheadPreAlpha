@@ -9,8 +9,10 @@
 #include "core/logger/AudioLoggerQueue.h"
 #include "core/messages/MessageInQueue.h"
 #include "core/messages/MessageOutQueue.h"
+#include "core/parameters/ProjectSettingsManager.h"
 #include "core/player/Rack/Rack.h"
 #include "core/timing/Rotator.h"
+#include "core/utils/FNV.h"
 #include "drivers/MidiManager.h"
 #include <array>
 #include <atomic>
@@ -41,6 +43,8 @@ class PlayerEngine {
 
     void bindConstructorQueue(Constructor::Queue &hConstructorQueue);
 
+    void bindProjectSettingsManager(ProjectSettingsManager &hProjectSettingsManager);
+
     bool sendMessage(int rackId, const char *target, float paramValue, const char *paramName, const char *paramLabel);
 
     void reset();
@@ -56,6 +60,7 @@ class PlayerEngine {
     bool loadEffect(EffectBase *&effect, int rackID, int effectSlot);
 
     LoggerRec logTemp;
+    bool test = false; // set to true by test scripts
 
     bool setupRackWithSynth(int rackId, const std::string &synthName);
     // R    bool loadRack(std::unique_ptr<Rack> rack, std::size_t position);
@@ -69,9 +74,12 @@ class PlayerEngine {
     CCManager ccManager;
     ObjectManager objectManager;
     // Destructor::Queue destructorQueue;
+    uint8_t swingCycle = 12;
+    float swingDepth = 0;
+    Rack racks[TPH_RACK_COUNT]; // Array of Rack objects - needs to be public for test scripts
+    Rotator hRotator;           // Rotator object
 
   private:
-    Rack racks[TPH_RACK_COUNT]; // Array of Rack objects
     //  Other members...
     bool audioHallwaySetup = false;
     void clockResetMethod();
@@ -80,7 +88,6 @@ class PlayerEngine {
     void sumToMaster(float *buffer, unsigned long numFrames, int outer);
     // hmm.. The racks should probably be on the stack instead, to speed up buffer management
     float noiseVolume;
-    Rotator hRotator;        // Rotator object
     bool clockReset = false; // Clock reset flag
     bool isPlaying = false;  // Indicates if the player is currently playing
     MidiDriver *hMidiDriver = nullptr;
@@ -91,6 +98,8 @@ class PlayerEngine {
     double midiInTS; // probably not used, we use it when we get it.
     MessageInQueue *messageInQueue = nullptr;
     MessageOutQueue *messageOutQueue = nullptr;
+    ProjectSettingsManager *hProjectSettingsManager;
+
     // Destructor::Queue *destructorQueue = nullptr;
 
     MessageIn newMessage;               // Declare a reusable Message object

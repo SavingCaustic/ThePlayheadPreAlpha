@@ -64,6 +64,23 @@ void WavWriter::write(const float *dataLeft, const float *dataRight, std::size_t
     }
 }
 
+void WavWriter::writeInterleaved(const float *data, std::size_t size) {
+    if (file) {
+        std::size_t i = 0;
+        while (i < size) {
+            std::size_t blockSize = std::min(size - i, std::size_t(1024)); // max 1024 samples per loop
+
+            for (std::size_t j = 0; j < blockSize; ++j) {
+                // Convert and store mono channel sample
+                short_data[j] = static_cast<short>(std::clamp(data[i + j], -1.0f, 1.0f) * 32767);
+            }
+            std::fwrite(short_data, sizeof(short), blockSize, file);
+            i += blockSize;
+        }
+        samples_written += size;
+    }
+}
+
 void WavWriter::writeMono(const float *data, std::size_t size) {
     if (file) {
         std::size_t i = 0;

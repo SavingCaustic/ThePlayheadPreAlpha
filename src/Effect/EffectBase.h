@@ -1,4 +1,5 @@
 #pragma once
+#include "core/hallways/AudioHallway.h"
 #include <Effect/EffectInterface.h>
 #include <core/ext/nlohmann/json.hpp>
 #include <core/parameters/params.h>
@@ -29,6 +30,10 @@ class EffectBase : public EffectInterface {
     void pushAllParams();
     void indexParams(const int upCount);
 
+    void processClock(const uint8_t clock24) {
+        // by default do nothing, but probably to be overridden.
+    }
+
     // void setupCCmapping(const std::string &effectName);
     //  void handleMidiCC(int ccNumber, float value);
 
@@ -39,6 +44,7 @@ class EffectBase : public EffectInterface {
     std::unordered_map<std::string, int> paramIndex;
     std::unordered_map<int, float> paramVals;
     std::unordered_map<std::string, std::string> settingVals;
+    LoggerRec logTemp;
 
   protected:
     float *bufferLeft, *bufferRight; // Pointer to audio buffer

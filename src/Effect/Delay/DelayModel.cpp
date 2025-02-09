@@ -3,19 +3,20 @@
 
 namespace Effect::Delay {
 
-// Constructor to accept buffer and size
 Model::Model() {
-    // ok now we lock buffersize assuming 48k. 48k * 1.28 => 128kB
     reset();
     setupParams(UP::up_count); // creates the array with attributes and lambdas for parameters - NOT INTERFACE
     EffectBase::initParams();
-    delayBuffer.reserve(BUFFER_SIZE);
-    delayBuffer.resize(BUFFER_SIZE); // maybe later times 2..
-    std::fill(delayBuffer.begin(), delayBuffer.end(), 0.0f);
+    delayBufferLeft.reserve(BUFFER_SIZE);
+    delayBufferLeft.resize(BUFFER_SIZE);
+    std::fill(delayBufferLeft.begin(), delayBufferLeft.end(), 0.0f);
+    delayBufferRight.reserve(BUFFER_SIZE);
+    delayBufferRight.resize(BUFFER_SIZE);
+    std::fill(delayBufferRight.begin(), delayBufferRight.end(), 0.0f);
 }
 
 void Model::reset() {
-    wrPointer = 0;
+    wrPointer = 8192;
     rdPointer = 0;
 }
 
@@ -23,11 +24,9 @@ void Model::setupParams(int upCount) {
     if (EffectBase::paramDefs.empty()) {
         // after declaration, indexation requested, see below..
         EffectBase::paramDefs = {
-            {UP::time, {"time", 0.5f, 0, true, 20, 6, [this](float v) {
-                            // 20 - 1280 mS
-                            time = v / 1000;
-                            sampleGap = round(time * TPH_DSP_SR);
-                            std::cout << "time:" << time << std::endl;
+            {UP::time, {"time", 0.5f, 11, false, 0, 10, [this](float v) {
+                            delayInClocks = idx2clocks[static_cast<uint8_t>(v)];
+                            // trust the clock to set the actual buffer index.
                         }}},
             {UP::mix, {"mix", 0.5f, 0, false, 0, 1, [this](float v) {
                            mix = v;
@@ -42,53 +41,68 @@ void Model::setupParams(int upCount) {
                            }}},
             {UP::noise, {"noise", 0.0f, 0, false, 0, 1, [this](float v) {
                              noise = v;
-                         }}}}; // Removed the extra semicolon here
+                         }}}};
         EffectBase::indexParams(upCount);
     }
 }
 
-bool Model::renderNextBlock(bool isSterero) {
-    // agnostic. Stereo-processing but keeping monoOut if monoIn
+void Model::processClock(const uint8_t clock24) {
+    if (clock24 % 12 == 0) {
+        clockTick = true;
+    }
+
+    // for every even 8th, measure the distance in sampleTime compared to where we were last 8th
+    if (clock24 % 12 == 0) {
+        // Calculate the gap between the current write pointer and the last 8th note write position
+        int testSampleGap = (wrPointer + 65536 - this->last8thWritePos) % 65536;
+
+        this->last8thWritePos = wrPointer; // Update the position of the last 8th note
+        // If the gap is significantly different from the last known gap, update the tempo
+        if (abs(this->clockSampleGap * 12 - testSampleGap) > 100) {
+            this->clockSampleGap = testSampleGap / 12;
+            FORMAT_LOG_MESSAGE(logTemp, LOG_INFO,
+                               "Tempo change detected.. gap now %d", this->clockSampleGap);
+            audioHallway.logMessage(logTemp);
+        }
+    }
+}
+
+bool Model::renderNextBlock(bool isStereo) {
+    // Always process left..
+    uint16_t rdPtr = rdPointer;
+    uint16_t wrPtr = wrPointer;
     debugCnt++;
-    if (debugCnt % 1024 == 0) {
-        // std::cout << "debug: " << bufferSize << std::endl;
+    // 1) Read from delay buffer
+    for (uint8_t i = 0; i < bufferSize; i++) {
+        iBuffer[i] = delayBufferLeft[rdPtr++];
+        highCutLeft = highCutLeft * 0.9f + iBuffer[i] * 0.1f; // about 1 khz
+        iBuffer[i] = (highCutLeft * highcut + iBuffer[i] * (1.0f - highcut));
     }
 
-    float delayOutL, delayOutR;
-    float audioInL, audioInR;
-    int currGap = 0.5f * ((wrPointer - rdPointer) & (BUFFER_SIZE - 1));
-    AudioMath::easeLog5(sampleGap, sampleGapEaseOut);
-    rdPointer = (wrPointer - static_cast<int>(round(sampleGapEaseOut) * 2)) & (BUFFER_SIZE - 1);
+    // 2) Mix with input and write back to delay buffer
+    for (uint8_t i = 0; i < bufferSize; i++) {
+        iBuffer[i] = bufferLeft[i] * (1 - feedback) + iBuffer[i] * feedback;
+        delayBufferLeft[wrPtr++] = iBuffer[i];
+        //}
 
-    for (std::size_t i = 0; i < bufferSize; i += 2) {
-        //
-        delayOutL = delayBuffer[rdPointer];
-        delayOutR = delayBuffer[rdPointer + 1];
-        // calc rms
-        RMS = RMS * 0.95f + (delayOutL + delayOutR) * (delayOutL + delayOutR) * 0.05f;
-        //
-        noisePink = noisePink * 0.8f + AudioMath::noise() * 0.2f; // 2 kHz
-        highCutLeft = highCutLeft * 0.9f + delayOutL * 0.1f;      // about 1 khz
-        highCutRight = highCutRight * 0.9f + delayOutR * 0.1f;
-        delayOutL = (highCutLeft * highcut + delayOutL * (1.0f - highcut));
-        delayOutR = (highCutRight * highcut + delayOutR * (1.0f - highcut));
-        // add noise
-        delayOutL += RMS * noisePink * noise * 0.2f;
-        delayOutR += RMS * noisePink * noise * 0.2f;
-        //
-        audioInL = bufferLeft[i];
-        audioInR = bufferRight[i];
-        //
-        delayBuffer[wrPointer] = audioInL * (1 - feedback) + delayOutL * feedback;
-        delayBuffer[wrPointer + 1] = audioInR * (1 - feedback) + delayOutR * feedback;
-        //
-        bufferLeft[i] = delayOutL * mix + audioInL * (1 - mix);
-        bufferRight[i] = delayOutR * mix + audioInR * (1 - mix);
-        //
-        wrPointer = (wrPointer + 2) & (BUFFER_SIZE - 1);
-        rdPointer = (rdPointer + 2) & (BUFFER_SIZE - 1);
+        // 3) Mix output and write back to host buffer
+        // for (uint16_t i = 0; i < bufferSize; i++) {
+        bufferLeft[i] = bufferLeft[i] * (1 - mix) + iBuffer[i] * mix;
+        // just avoid noise now..
+        bufferRight[i] = bufferLeft[i];
     }
-    return isSterero;
+    int iTemp = wrPointer; // we must use position *before its updated.
+    wrPointer = wrPtr;
+    iTemp -= clockSampleGap * delayInClocks;
+    rdPointer = (iTemp + 65536) % 65536;
+
+    /*
+    if (clockTick) {
+        bufferLeft[0] = 0.4f;
+        clockTick = false;
+    };
+    */
+    return isStereo;
 }
 
 } // namespace Effect::Delay

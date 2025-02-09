@@ -187,6 +187,8 @@ class Model : public SynthBase {
     const audio::osc::LUT &getLUT1() const;
     const audio::osc::LUT &getLUT2() const;
 
+    uint8_t masterTune; // copy from audioHallway
+
     // params here.
     float modwheel = 0.0f;
     float osc_mix = 0.5f;

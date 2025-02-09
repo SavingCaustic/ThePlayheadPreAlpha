@@ -192,7 +192,7 @@ bool Voice::renderNextVoiceBlock(std::size_t bufferSize) {
                 chunkSample[j] = chunkSample[j] * vcaARslope.currVal * mixAmpAvg;
             }
             // generate noise if needed..
-            if (false) {
+            if (true) {
                 if (modelRef.noise_o2 > 0 && pegARslope.state == audio::envelope::ASRState::ATTACK) {
                     for (std::size_t j = 0; j < chunkSize; j++) {
                         chunkSample[j] += 0.2 * AudioMath::noise() * modelRef.noise_o2 * (1 - pegARslope.currVal);

@@ -26,7 +26,7 @@ class Unit {
         case Utils::Hash::fnv1a_hash("synth"):
             switch (methodFNV) {
             case Utils::Hash::fnv1a_hash("patchLoad"): {
-                dataStoreRef.loadSynthPatch(strValue, rackID);
+                dataStoreRef.synthPatchLoad(strValue, rackID);
                 // Reference to the synth for convenience
                 auto &synth = dataStoreRef.project.racks[rackID].synth;
                 // do same stuff as in project. Code copied for now..

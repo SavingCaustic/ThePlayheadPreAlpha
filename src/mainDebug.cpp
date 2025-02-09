@@ -1,5 +1,6 @@
 #include "core/hallways/FactoryHallway.h"
 #include "mainDebugBeatnik.cpp"
+#include "mainDebugPE.cpp"
 #include "mainDebugPatchLoad.cpp"
 #include "mainDebugSubreal.cpp"
 #include "mainDebugSubrealKV.cpp"
@@ -51,6 +52,9 @@ int main() {
             break;
         case 6:
             debugPatchLoad();
+            break;
+        case 7:
+            debugPE();
             break;
         default:
             std::cout << "illegal option" << std::endl;

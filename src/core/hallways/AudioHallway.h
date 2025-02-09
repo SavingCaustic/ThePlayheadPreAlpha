@@ -37,6 +37,13 @@ class AudioHallway {
         }
     }
 
+    void setMasterTune(const uint16_t newVal) {
+        masterTune = newVal;
+    }
+
+  public:
+    uint16_t masterTune;
+
   private:
     Destructor::Queue *destructorQueue = nullptr;
     AudioLoggerQueue *audioLoggerQueue = nullptr;

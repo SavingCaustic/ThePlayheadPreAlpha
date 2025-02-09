@@ -16,6 +16,8 @@ class EffectInterface {
     virtual nlohmann::json getParamDefsAsJSON() = 0;
     virtual void bindBuffers(float *audioBufferLeft, float *audioBufferRight, std::size_t bufferSize) = 0;
 
+    virtual void processClock(const uint8_t clock24) = 0;
+
     // Optionally, you can add methods to interact with parameters if needed
   protected:
     // belonging to class, not instance

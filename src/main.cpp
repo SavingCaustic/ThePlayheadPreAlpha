@@ -14,7 +14,8 @@
 #include "core/messages/MessageInQueue.h"
 #include "core/messages/MessageOutQueue.h"
 #include "core/messages/MessageOutReader.h"
-#include "core/parameters/SettingsManager.h"
+#include "core/parameters/ProjectSettingsManager.h"
+#include "core/parameters/ServerSettingsManager.h"
 #include "core/player/PlayerEngine.h"
 #include "core/player/Rack/Rack.h"
 #include "core/runner/StudioRunner.h"
@@ -60,6 +61,9 @@ MessageInQueue sMessageInQueue(8);
 MessageOutQueue sMessageOutQueue;
 MessageOutReader sMessageOutReader(sMessageOutQueue, nullptr); // Initialize without connection
 
+// for project top-settings..
+ProjectSettingsManager sProjectSettingsManager;
+
 Constructor::Queue sConstructorQueue;
 // with factories being stateless, it's API and PlayerEngine that needs to know sConstructorQueue
 Storage::DataStore sDataStore;
@@ -90,6 +94,7 @@ int main() {
     factoryHallway.constructorQueueMount(sConstructorQueue);
     factoryHallway.loggerMount(sLoggerQueue);
     factoryHallway.datastoreMount(sDataStore);
+    factoryHallway.projectSettingsMount(sProjectSettingsManager);
     // Create the object
     crow::SimpleApp api;
     // Remove default signal handler
@@ -98,7 +103,7 @@ int main() {
     signal(SIGINT, signal_handler);
     //
     std::unordered_map<std::string, std::string> deviceSettings;
-    SettingsManager::jsonRead(deviceSettings, "device.json");
+    ServerSettingsManager::jsonRead(deviceSettings, "server.json");
     // initialize
     AudioMath::initialize();
     // Kickstart the StudioRunner (low-priority job scheduler)
@@ -120,6 +125,7 @@ int main() {
     sPlayerEngine.bindMidiManager(sMidiManager);
     sPlayerEngine.bindConstructorQueue(sConstructorQueue);
     sPlayerEngine.bindDestructorQueue(sDestructorQueue);
+    sPlayerEngine.bindProjectSettingsManager(sProjectSettingsManager);
 
     sLoggerHandler.start();
     sDestructorWorker.start();

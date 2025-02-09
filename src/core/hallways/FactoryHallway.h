@@ -1,6 +1,7 @@
 #pragma once
 #include "core/factory/constructor/Queue.h"
 #include "core/logger/LoggerQueue.h"
+#include "core/parameters/ProjectSettingsManager.h"
 #include "core/storage/DataStore.h"
 #include <iostream>
 
@@ -19,6 +20,10 @@ class FactoryHallway {
 
     void datastoreMount(Storage::DataStore &dStore) {
         dataStore = &dStore;
+    }
+
+    void projectSettingsMount(ProjectSettingsManager &psManager) {
+        projectSettingsManager = &psManager;
     }
 
     bool constructorPush(void *ptr, uint32_t size, bool isStereo, const char *type, int rackID) {
@@ -43,18 +48,36 @@ class FactoryHallway {
     }
 
     Storage::DataStore &storeGetRef() {
+        // called from static classes. Maybe provide ref to hallway instead..
         return *dataStore;
     }
 
     void storeLoadProject(const std::string &projectName) {
         // this should go but i'm not there..
-        dataStore->loadProject(projectName);
+        dataStore->projectLoad(projectName);
+    }
+
+    void test() {
+        // do nothing
+    }
+
+    /*
+    ProjectSettingsManager &psGetRef() {
+        // called from static classes. Maybe provide ref to hallway instead..
+        return *projectSettingsManager;
+    }
+    */
+
+    void pushProjectSetting(const std::string &key, const std::string &value) {
+        std::cout << "picabo2" << std::endl;
+        projectSettingsManager->setSetting(key, value);
     }
 
   private:
     Constructor::Queue *constructorQueue = nullptr;
     LoggerQueue *loggerQueue = nullptr;
     Storage::DataStore *dataStore = nullptr;
+    ProjectSettingsManager *projectSettingsManager = nullptr;
 };
 
 extern FactoryHallway factoryHallway;

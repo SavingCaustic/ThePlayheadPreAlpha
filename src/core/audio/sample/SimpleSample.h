@@ -13,7 +13,11 @@ class SimpleSample {
             throw std::invalid_argument("Invalid sample data or size.");
         }
         isStereo = stereoFlag;
-        length = sampleSize;
+        if (!isStereo) {
+            length = sampleSize;
+        } else {
+            length = sampleSize * 0.5;
+        }
         data = samplePtr;
     }
 
@@ -54,6 +58,9 @@ class SimpleSample {
                 leftBuffer[i] = data[sampleIdx];
                 rightBuffer[i] = data[sampleIdx + 1];
                 currPos += rate;
+                /*if (currPos > 350000) {
+                    std::cout << "interesting" << std::endl;
+                }*/
             }
         }
 

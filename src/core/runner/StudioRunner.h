@@ -17,7 +17,7 @@ class StudioRunner {
     }
 
     void reset() {
-        SettingsManager::jsonRead(settings, "device.json");
+        ServerSettingsManager::jsonRead(settings, "server.json");
     }
 
     // Starts the thread

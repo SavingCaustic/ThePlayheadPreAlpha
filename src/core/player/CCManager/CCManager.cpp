@@ -6,7 +6,7 @@ CCManager::CCManager(PlayerEngine &playerEngine) : playerEngine(playerEngine) {}
 void CCManager::updateMidiSettings(const std::string &strScrollerCC, const std::string &strSubScrollerCC, const std::string &strScrollerDials) {
     this->scrollerCC = std::stoi(strScrollerCC);
     this->subScrollerCC = std::stoi(strSubScrollerCC);
-    std::cout << "setting scrolerCC to " << this->scrollerCC << std::endl;
+    std::cout << "setting scrollerCC to " << strScrollerCC << std::endl;
     // Initialize the scroller dials to zero
     std::fill(std::begin(ccScrollerDials), std::end(ccScrollerDials), 0);
 

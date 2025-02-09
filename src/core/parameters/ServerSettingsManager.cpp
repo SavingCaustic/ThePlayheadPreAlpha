@@ -1,10 +1,10 @@
-#include "./SettingsManager.h"
+#include "./ServerSettingsManager.h"
 #include "drivers/FileDriver.h"
 #include <iostream>
 
 /* this class is used to read device.json and such. */
 
-void SettingsManager::jsonRead(std::unordered_map<std::string, std::string> &settingsMap, const std::string &sFilename) {
+void ServerSettingsManager::jsonRead(std::unordered_map<std::string, std::string> &settingsMap, const std::string &sFilename) {
     // Read the file in /assets (read-only)
     std::string assetsContent = FileDriver::assetFileRead(sFilename); // Assuming this returns the file as a string
     nlohmann::json assetsJson;
@@ -46,7 +46,7 @@ void SettingsManager::jsonRead(std::unordered_map<std::string, std::string> &set
     }
 }
 
-void SettingsManager::loadJsonToSettings(const std::string &sFilename, bool isUser, std::unordered_map<std::string, std::string> &settingsMap) {
+void ServerSettingsManager::loadJsonToSettings(const std::string &sFilename, bool isUser, std::unordered_map<std::string, std::string> &settingsMap) {
     // NOT USED ANY MORE
     //  Read the JSON file (assuming FileDriver::readUserFile returns nlohmann::json)
     std::string fileContent = FileDriver::userFileRead(sFilename); // Assuming this returns a string

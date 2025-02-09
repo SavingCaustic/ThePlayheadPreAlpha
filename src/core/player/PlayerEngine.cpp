@@ -1,6 +1,4 @@
 #include "./PlayerEngine.h"
-#include "chrono"
-#include "core/utils/FNV.h"
 
 thread_local AudioHallway audioHallway;
 
@@ -8,6 +6,7 @@ PlayerEngine::PlayerEngine()
     : noiseVolume(0.2f), isWritingMessage(false), hRotator(), objectManager(racks), ccManager(*this) {
     this->rackReceivingMidi = 0; // meh
     this->loadAvg = 0.0f;
+    this->hRotator.setTempo(125);
 }
 
 void PlayerEngine::reset() {
@@ -44,6 +43,10 @@ void PlayerEngine::bindLoggerQueue(AudioLoggerQueue &hAudioLoggerQueue) {
 void PlayerEngine::bindDestructorQueue(Destructor::Queue &hDestructorQueue) {
     // really just a proxy
     objectManager.destructorQueue = &hDestructorQueue;
+}
+
+void PlayerEngine::bindProjectSettingsManager(ProjectSettingsManager &psManager) {
+    hProjectSettingsManager = &psManager;
 }
 
 void PlayerEngine::initAudioHallway() {
@@ -118,8 +121,53 @@ void PlayerEngine::renderNextBlock(float *buffer, unsigned long numFrames) {
         turnRackAndRender();
         sumToMaster(buffer, numFrames, outer);
     }
-    int64_t timeLeftUs = calcTimeLeftUs(nextFrameTime, frameDurationMicroSec);
+    // rotate the main wheel so the rest can follow
+    bool newEight = this->hRotator.frameTurn();
+    if (newEight && this->isPlaying) {
+        // we got a new eighth. Increase on all racks(?)
+        for (uint8_t i = 0; i < TPH_RACK_COUNT; i++) {
+            if (this->racks[i].enabled) {
+                // this->racks[i]->hPatternPlayer->incEightCounter();
+            }
+        }
+    }
 
+    if (true) { // this->test) {
+        if (hProjectSettingsManager->checkNewSetting()) {
+            if (hProjectSettingsManager->checkSingleNewSetting()) {
+                // ok fine..
+                std::cout << "found new kwy " << hProjectSettingsManager->newSettingKey << " with value of " << hProjectSettingsManager->getNewSetting() << std::endl;
+                uint32_t newKey = Utils::Hash::fnv1a(hProjectSettingsManager->newSettingKey);
+                std::string *val = hProjectSettingsManager->getNewSetting();
+                int intVal;
+                switch (newKey) {
+                case Utils::Hash::fnv1a_hash("bpm"):
+                    intVal = std::stoi(*val);
+                    // passing "120" to 120 to the tempo engine - will it work??
+                    if (intVal > 40 && intVal < 250) {
+                        hRotator.setTempo(intVal, false);
+                    }
+                    break;
+                case Utils::Hash::fnv1a_hash("master_tune"):
+                    intVal = std::stoi(*val);
+                    if (intVal > 420 && intVal < 460) {
+                        AudioMath::setMasterTune(static_cast<float>(intVal));
+                    }
+                default:
+                    std::cout << "unknown project setting " << hProjectSettingsManager->newSettingKey << std::endl;
+                }
+            } else {
+                // so iterate over many new settings.. maybe only if not running - i dunno..
+            }
+            hProjectSettingsManager->clearCommit();
+        }
+    }
+
+    if (this->test) {
+        return;
+    }
+    //
+    int64_t timeLeftUs = calcTimeLeftUs(nextFrameTime, frameDurationMicroSec);
     if (timeLeftUs > 500) {
         // check if there's any parameter - permanent or not(?) that should be forwarded to a rack module..
         auto optionalMessage = messageInQueue->pop();
@@ -209,6 +257,7 @@ void PlayerEngine::sumToMaster(float *buffer, unsigned long numFrames, int outer
 bool PlayerEngine::pollMidiIn() {
     MidiMessage newMessage;
     uint8_t remappedCC = 0;
+    // if (!midiManager.)
     this->rackReceivingMidi = 1;
     if (this->rackReceivingMidi >= 0) {
         while (midiManager->getNextMessage(newMessage)) {
@@ -250,7 +299,6 @@ void PlayerEngine::turnRackAndRender() {
     for (std::size_t i = 0; i < TPH_RACK_COUNT; ++i) {
         if (racks[i].enabled) {                     // Check if the rack is initialized (i.e., not null)
             racks[i].probeNewClock(hRotator.pulse); // Call probeNewClock
-
             if (isPlaying) {
                 racks[i].probeNewTick(hRotator.pulse); // Call probeNewTick if playing
             }

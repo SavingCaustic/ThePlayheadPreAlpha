@@ -146,7 +146,7 @@ class MidiDriver {
     }
 
     RtMidiIn *midiIn;
-    bool is_running;
+    bool is_running = false;
     std::string deviceName;
     MidiMessage buffer[BufferSize];       // Buffer array holding MidiMessage structs
     std::atomic<size_t> bufferWriteIndex; // Write index (producer side)

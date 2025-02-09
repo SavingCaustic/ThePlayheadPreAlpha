@@ -76,10 +76,17 @@ class Rack {
   public:
     alignas(32) std::array<float, TPH_RACK_RENDER_SIZE> audioBufferLeft;
     alignas(32) std::array<float, TPH_RACK_RENDER_SIZE> audioBufferRight;
+    LoggerRec logTmp;
     bool audioIsStereo = false;
     RackEmitter emitter;
     bool enabled = false;
-    int debugCnt = 0;
+    bool swingOverride = false;
+    uint8_t swingCycle = 12;
+    float swingDepth = 0;
+
+    uint16_t debugCnt = 0;
+    uint16_t nextClockPulse;
+    uint8_t clock24;
 
     SynthInterface *synth = nullptr;
     EffectInterface *effect1 = nullptr;
@@ -88,5 +95,8 @@ class Rack {
     EventorInterface *eventor2 = nullptr;
 
   private:
+    void calcNextClockPulse();
+    float calcSwungClock(const uint8_t swingCycle, const float swingDepth);
+
     PlayerEngine *playerEngine = nullptr;
 };

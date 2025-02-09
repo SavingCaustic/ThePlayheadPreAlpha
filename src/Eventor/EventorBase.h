@@ -23,6 +23,10 @@ class EventorBase : public EventorInterface {
         this->midiReciever = midiReciever;
     }
 
+    void processClock() {
+        // by default do nothing, but probably to be overridden.
+    }
+
   protected:
     void sendMidi(uint8_t cmd, uint8_t param1, uint8_t param2) {
         midiReciever->parseMidi(cmd, param1, param2);

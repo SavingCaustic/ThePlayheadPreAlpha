@@ -3,7 +3,7 @@
 #include "core/api/rpcParser.h"
 #include "core/messages/MessageInQueue.h"
 #include "core/messages/MessageOutReader.h"
-#include "core/parameters/SettingsManager.h"
+#include "core/parameters/ServerSettingsManager.h"
 #include "crow/json.h"
 #include "drivers/FileDriver.h"
 

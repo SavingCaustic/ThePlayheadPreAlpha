@@ -3,6 +3,11 @@
 <head>
     <title>The Playhead audio server</title>
     <style>
+        body {
+            background-color:#333;
+            color:#ccc;
+            font-family: sans-serif;
+        }
 
         #logo {
             position: absolute;
@@ -11,19 +16,27 @@
         }
 
         h2 {
+            font-family: sans-serif;
+            color:#c80;
             margin:0px;
             font-size:1rem;
             margin-top:0.8rem;
         }
 
         a {
-            border:2px solid #999;
-            border-radius:5px;
-            padding:2px 5px; 
+            font-family: sans-serif;
+            background-color: #ddc;
+            border:1px solid #222;
+            box-shadow:2px 2px 2px #000;
+            padding:8px 8px; 
             margin:3px;
+            color:#000;
+            font-weight: bold;
             display: inline-block;
             text-decoration: none;
         }
+
+
     </style>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -74,6 +87,9 @@
     
     <h2>Project</h2>
     <a href="/rpc?method=project.load&value=demo" target="if">Load demo project</a>
+    <a href="/rpc?method=project.set&key=bpm&value=88" target="if">88 bpm</a>
+    <a href="/rpc?method=project.set&key=bpm&value=120" target="if">120 bpm</a>
+    <a href="/rpc?method=project.set&key=master_tune&value=428" target="if">428 Hz</a>
 
     <h2>Rack</h2>
     <a href="/rpc?method=rack.mount&key=synth&value=Subreal&rack_id=0" target="if">Mount Subreal to zero</a>

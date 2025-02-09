@@ -10,11 +10,22 @@ class DataStore {
     Project project;
     // std::vector<Unit> synthPatches; // Store standalone patches
 
-    void loadProject(const std::string &projectName);
+    void projectLoad(const std::string &projectName);
 
-    void saveProject(const std::string &filename) const;
+    void projectSave(const std::string &filename) const;
 
-    void loadSynthPatch(const std::string &filename, size_t rackID);
+    void synthPatchLoad(const std::string &filename, size_t rackID);
+    // void synthPatchSave(const std::string &filename, size_t rackID);
+
+    void settingsSet(const std::string &key, const std::string &value) {
+        project.settings[key] = value;
+    }
+
+    // void settingsGet(const std::string &key, const std::string &value) {
+
+    std::map<std::string, std::string> settingsGetCopy() {
+        return project.settings; // Safe copy
+    }
 };
 
 } // namespace Storage

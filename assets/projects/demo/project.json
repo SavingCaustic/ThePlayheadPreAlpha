@@ -1,7 +1,7 @@
 {
     "settings": {
         "tempo": "120",
-        "time_signature": "5/4"
+        "time_signature": "4/4"
     },
     "racks": [
         {
@@ -52,7 +52,8 @@
                     "d_sample":"lm-2/hihat-closed.wav",
                     "e_sample":"lm-2/hihat-open.wav",
                     "f_sample":"lm-2/clap.wav",
-                    "g_sample":"lm-2/cowb.wav"
+                    "g_sample":"lm-2/cowb.wav",
+                    "h_sample":"test/Stereo.wav"
                 },
                 "params": {
                 }

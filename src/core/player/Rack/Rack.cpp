@@ -23,9 +23,59 @@ void Rack::sendLog(int code, const std::string &message) {
     }
 }
 
-void Rack::clockReset() {}
+void Rack::clockReset() {
+    // dunno really..
+    nextClockPulse = 0;
+    clock24 = 0;
+    // patternPlayer->clockReset();
+}
 
-void Rack::probeNewClock(float pulse) {}
+void Rack::probeNewClock(float pulse) {
+    // if no chance swung fire may hit, return..
+    if (pulse - nextClockPulse > 50)
+        return;
+    if (pulse >= nextClockPulse) {
+        if (this->eventor1)
+            this->eventor1->processClock();
+        if (this->eventor2)
+            this->eventor2->processClock();
+        // synth??
+        if (this->effect1)
+            this->effect1->processClock(clock24);
+        if (this->effect2)
+            this->effect2->processClock(clock24);
+        // clock management:
+        this->clock24++;
+        if (this->clock24 == 24) {
+            this->clock24 = 0;
+            FORMAT_LOG_MESSAGE(logTmp, LOG_INFO, "BEAT %d", 0);
+            // audioHallway.logMessage(logTmp);
+        }
+        this->calcNextClockPulse();
+    }
+}
+
+void Rack::calcNextClockPulse() {
+    // calculate what mPulse the next clock will happen.
+    if (this->swingOverride) {
+        // calc swing based on rack
+        this->nextClockPulse = this->calcSwungClock(this->swingCycle, this->swingDepth);
+    } else {
+        // calc swing based on PE
+        this->nextClockPulse = this->calcSwungClock(this->playerEngine->swingCycle, this->playerEngine->swingDepth);
+    }
+    // we should probably send midi clock here, at least when playing.
+}
+
+float Rack::calcSwungClock(const uint8_t swingCycle, float swingDepth) {
+    float angle = (this->clock24 % swingCycle) / swingCycle;
+    float swing = (0.5 - AudioMath::ccos(angle) * 0.5) * swingDepth * swingCycle / 4;
+    float ncp = (this->clock24 + swing) * TPH_TICKS_PER_CLOCK;
+    // echo 'At angle ' . $angle . ', swing is: ' . $swing . ', so next clock at ' . $nextClockPulse . "\r\n";
+    if (ncp >= 120.0f)
+        ncp -= 120.0f;
+    return ncp;
+}
 
 void Rack::probeNewTick(float pulse) {}
 

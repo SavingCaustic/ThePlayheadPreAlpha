@@ -2,16 +2,16 @@
 
 namespace Storage {
 
-void DataStore::loadProject(const std::string &projectName) {
+void DataStore::projectLoad(const std::string &projectName) {
     auto json = DocumentManager::loadProjectFromFile(projectName);
     project = Project::from_json(json);
 }
 
-void DataStore::saveProject(const std::string &filename) const {
+void DataStore::projectSave(const std::string &filename) const {
     DocumentManager::saveToFile(project.to_json(), filename);
 }
 
-void DataStore::loadSynthPatch(const std::string &filename, size_t rackID) {
+void DataStore::synthPatchLoad(const std::string &filename, size_t rackID) {
     if (rackID >= 4) {
         std::cerr << "Invalid rackID: " << rackID << "\n";
         return;

@@ -27,19 +27,35 @@ class Project {
             break;
         case Utils::Hash::fnv1a_hash("delete"):
             break;
+        case Utils::Hash::fnv1a_hash("set"):
+            projectSet(key, strValue);
+            break;
         default:
             std::cerr << "Unknown method: " << strMethod << std::endl;
             break;
         }
     }
 
+    static void projectSet(const std::string &key, const std::string &strValue) {
+        Storage::DataStore &dataStoreRef = factoryHallway.storeGetRef();
+        // store setting to dataStore
+        dataStoreRef.settingsSet(key, strValue);
+        // push it to audio
+        factoryHallway.test();
+        factoryHallway.pushProjectSetting(key, strValue);
+    }
+
     static void loadProject(const std::string &strValue) {
         // Step 1: Load the project into the DataStore
         Storage::DataStore &dataStoreRef = factoryHallway.storeGetRef();
-        dataStoreRef.loadProject(strValue);
-        // factoryHallway.storeLoadProject(strValue);
+        dataStoreRef.projectLoad(strValue);
+        // iterate over project settings and push one at a time..
+        for (const auto &[key, strValue] : dataStoreRef.project.settings) {
+            std::cout << "Key: " << key << ", Value: " << strValue << std::endl;
+            dataStoreRef.settingsSet(key, strValue);
+        }
+        //
         int rackID = 0;
-
         // Step 2: Iterate over each rack in the project
         for (const auto &rack : dataStoreRef.project.racks) {
             std::cout << "Rack Synth Type: " << rack.synth.type << std::endl;

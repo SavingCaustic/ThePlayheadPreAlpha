@@ -13,6 +13,7 @@ class WavWriter {
     bool open(const std::string &filename, int sample_rate, int num_channels);
     bool isOpen() const;
     void write(const float *dataLeft, const float *dataRight, std::size_t size);
+    void writeInterleaved(const float *data, std::size_t size);
     void writeMono(const float *data, std::size_t size);
     // voide writeMono..
     void close();
